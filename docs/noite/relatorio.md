@@ -41,9 +41,9 @@ Screenshots: `npm run shot` (sala) e `npm run shot -- --dev book` (livro).
 - `assets_contact.png`: folha de contato dos assets
 - `blender_N0.png`, `blender_N2.png`: prévias do Cycles
 
-## ✅ Candidata à aprovação da Fase 0 (S10, bake final)
+## ✅ Fase 0 aprovada pelo usuário (S10, bake final)
 
-Depois da sua escolha de "seguir o revisor" (S9–S10: madeira menos saturada e mais âmbar, céu âmbar, N0 0,4 m à frente, lustre mais baixo, anti-magenta), o `art-reviewer` deu **4 · 4 · 4 · 4 · 4** com o veredito **"pronto para o usuário"**. A aprovação é sua: abra `shots/latest/compare_N0.png`.
+Depois da sua escolha de "seguir o revisor" (S9–S10: madeira menos saturada e mais âmbar, céu âmbar, N0 0,4 m à frente, lustre mais baixo, anti-magenta), o `art-reviewer` deu **4 · 4 · 4 · 4 · 4** com o veredito **"pronto para o usuário"**. **Aprovada pelo usuário em 15/10/2026.**
 
 - Orçamento: draw calls N0 70 · N1 64 · N2 57; download ~27 MB (room 12,6 · props 2,5 · lightmaps 8,1 · env 2,1 · céu 0,35 · JS 1,6).
 - Pendências para depois da aprovação:

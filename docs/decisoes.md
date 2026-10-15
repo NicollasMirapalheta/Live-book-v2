@@ -190,3 +190,14 @@ Formato de cada entrada:
 - Escolha: médias de madeira com matiz ~26° (#6B4A32 estante, #725238 lambri, #7E5C3E piso) e contraste do veio −15 a −20%; balanço de branco com +4% de verde; `chandelier.bottomY` 2,35 → 2,1; latão dos props mais reflexivo.
 - Como reverter: `scripts/prepare-textures.ts`, `src/scene/Grade.tsx`, `config/room.json`, `src/scene/ShelfProps.tsx`.
 - Precisa do usuário? não.
+
+## 2026-10-15 — ✅ Fase 0 aprovada pelo usuário
+- Contexto: candidata S10 (bake final, `art-reviewer` 4/4/4/4/4), `shots/latest/compare_N0.png`.
+- Escolha: o usuário aprovou a Fase 0 no chat. Pendências visuais pós-aprovação listadas em `docs/look-dev/iteracoes.md` (S10) e no relatório.
+- Como reverter: n/a (marco).
+- Precisa do usuário? não.
+
+## 2026-10-15 — Fase 3 começa pela integração dos livros na estante
+- Contexto: CLAUDE.md lista "2. Estante + livros de teste" e "3. Seleção, destaque e descrição"; a Fase 2 (livro paramétrico) foi feita em cena isolada porque o livro não podia entrar na sala antes da aprovação. O usuário pediu "Fase 3 (livros na estante)".
+- Escolha: integrar os 6 livros de teste na estante com `shelfLayout.ts` (fecha a Fase 2) e implementar a seleção, o destaque e a descrição (Fase 3). Spec escrita em `docs/specs/fase-3-selecao.md` a partir do CLAUDE.md.
+- Precisa do usuário? não.
