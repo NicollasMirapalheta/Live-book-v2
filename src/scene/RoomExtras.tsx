@@ -46,7 +46,7 @@ export function WindowGlass({ meshes, envMap }: { meshes: Mesh[]; envMap: Textur
 /** The chandelier's candle bulbs (Chandelier_03 glass): lit, warm emitters instead of sky-reflecting glass. */
 export function CandleBulbs({ root }: { root: Object3D }) {
   useLayoutEffect(() => {
-    const mat = new MeshBasicMaterial({ color: new Color('#E8C9A0').multiplyScalar(1.1) })
+    const mat = new MeshBasicMaterial({ color: new Color('#C99A62').multiplyScalar(0.75) })
     root.traverse((o) => {
       const m = o as Mesh
       if (m.isMesh && /^Chandelier_03_glass/i.test(matName(m))) m.material = mat

@@ -7,7 +7,7 @@ import { Color, Uniform, Vector3 } from 'three'
  * stay warm, but the frame is not "orange flat" (direção de arte: o quente vem da luz).
  */
 class WhiteBalanceEffect extends Effect {
-  constructor({ gains = new Vector3(0.86, 1.0, 1.26) } = {}) {
+  constructor({ gains = new Vector3(0.85, 1.04, 1.22) } = {}) {
     super(
       'WhiteBalance',
       /* glsl */ `

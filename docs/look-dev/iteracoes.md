@@ -60,3 +60,7 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 
 ### S9 — 2026-10-15 (draft; usuário escolheu "seguir o revisor")
 - Madeiras com saturação 0,25 (estante #5A4232, lambri #66503C, piso #7A5A40); céu das janelas âmbar estourado; feixes mais fortes; N0 0,4 m à frente (z=4,95): as folhas com maçanetas enquadram as laterais e o tapete fica no pé do quadro, como na referência.
+- **art-reviewer (S9):** 4 · 4 · 4 · 4 · 3 — "iterar"; com 3 ajustes pequenos (matiz âmbar, contraste do veio, latão/lustre) pode ir ao usuário como candidata.
+
+### S10 — 2026-10-15 (draft → final)
+- Madeira mais âmbar e menos contrastada, balanço de branco anti-magenta, lustre 0,25 m mais baixo (maior no quadro), latão dos props mais reflexivo, cúpulas do lustre em vidro âmbar escuro.

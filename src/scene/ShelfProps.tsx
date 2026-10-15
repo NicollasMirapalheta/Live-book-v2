@@ -19,9 +19,9 @@ export function ShelfProps() {
           mat.emissiveIntensity = 6
           mat.toneMapped = false
         }
-        mat.envMapIntensity = /brass/i.test(mat.name) ? 0.35 : 0.6
+        mat.envMapIntensity = /brass/i.test(mat.name) ? 0.9 : 0.6
         // aged brass is satin, not mirror: the env holds the hot windows
-        if (/brass/i.test(mat.name)) mat.roughness = 1.1
+        if (/brass/i.test(mat.name)) mat.roughness = 0.9
       }
     })
   }, [scene, quality])

@@ -184,3 +184,9 @@ Formato de cada entrada:
 - Escolha: madeiras com saturação 0,25 e médias #5A4232 (estante), #66503C (lambri), #7A5A40 (piso); céu das janelas âmbar e estourado (tint 1,4/1,0/0,6 × 4,2); feixes mais fortes; `nodes.N0.position.z` 5,35 → 4,95.
 - Como reverter: `scripts/prepare-textures.ts`, `src/scene/Sky.tsx`, `config/room.json`.
 - Precisa do usuário? não (decidido).
+
+## 2026-10-15 — Look dev S10: madeira mais âmbar, anti-magenta, lustre mais baixo
+- Contexto: `art-reviewer` (S9: 4/4/4/4/3) — dominante rosado, veio da estante contrastado, lustre pequeno/alto, latão sem leitura.
+- Escolha: médias de madeira com matiz ~26° (#6B4A32 estante, #725238 lambri, #7E5C3E piso) e contraste do veio −15 a −20%; balanço de branco com +4% de verde; `chandelier.bottomY` 2,35 → 2,1; latão dos props mais reflexivo.
+- Como reverter: `scripts/prepare-textures.ts`, `src/scene/Grade.tsx`, `config/room.json`, `src/scene/ShelfProps.tsx`.
+- Precisa do usuário? não.

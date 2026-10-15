@@ -73,7 +73,7 @@
 
   "rug": { "center": [0.0, 0.0, 2.5], "size": [1.9, 0.95], "$comment": "Proporção 2:1 do tapete do Met 452828 (402×199 cm). Borda de trás em z=2.025: no N0 o tapete começa a ~89% da altura do quadro, com piso visível dos lados (referência ~90%)." },
 
-  "chandelier": { "anchor": [0.0, 3.2, -0.6], "bottomY": 2.35, "candles": 6 },
+  "chandelier": { "anchor": [0.0, 3.2, -0.6], "bottomY": 2.1, "candles": 6 },
 
   "desk": { "position": [2.3, 0.0, -1.3], "rotationYDeg": -90, "size": [1.3, 0.76, 0.8], "lamp": { "offset": [-0.35, 0.76, -0.2] } },
 
