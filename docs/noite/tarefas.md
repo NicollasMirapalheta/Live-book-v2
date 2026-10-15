@@ -2,11 +2,11 @@
 
 Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` feita (com evidência) · `[!]` bloqueada (ver `bloqueios.md`)
 
-Início da execução (preencher no T0 com a saída de `date`): `____`
+Início da execução (preencher no T0 com a saída de `date`): `Thu Oct 15 00:02:55 2026`
 
 ## Trilha A — look dev da sala
 
-- [ ] **T0 — Ambiente e scaffold**
+- [~] **T0 — Ambiente e scaffold**
   - Rodar `date` e anotar o horário de início acima. Criar a branch `noite-01`.
   - Scaffold **sem apagar o kit**: `npm create vite@latest _scaffold -- --template react-ts --no-interactive`, mover os arquivos de `_scaffold/` para a raiz (renomear `_gitignore` e mesclar com o `.gitignore` existente; não sobrescrever `CLAUDE.md`, `docs/`, `config/`, `assets/`, `scripts/`, `.claude/`) e apagar `_scaffold/`. **Nunca usar `--overwrite`.**
   - Dependências da stack (ver `CLAUDE.md`), mais `vitest`, `@playwright/test`, `tsx`, `leva`, `fflate`. `npx playwright install chromium`.

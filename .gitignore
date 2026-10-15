@@ -15,3 +15,11 @@ playwright-report/
 
 .DS_Store
 Thumbs.db
+
+# vite scaffold
+dist-ssr
+*.local
+*.log
+.vscode/*
+!.vscode/extensions.json
+.idea

@@ -65,3 +65,17 @@ Formato de cada entrada:
 - Escolha: `lightmap` (irradiância em UV2 × PBR em tempo real) para casca, estante, porta e vestíbulo; `combined` (bake completo, material unlit) para cortinas, tapete, caixilhos, quadro e escrivaninha.
 - Como reverter: `blender/bake_config.json`.
 - Precisa do usuário? não.
+
+## 2026-10-15 — Mapa de cor do couro dos livros (`leather_red_02`)
+- Contexto: o Poly Haven não publica mapa `Diffuse` para `leather_red_02`; as cores vêm como variantes `coll1`/`coll2`. O `assets:fetch` falhava num asset obrigatório.
+- Escolha: `assets/manifest.json` → `book_leather.maps` usa `coll1` (vermelho) no lugar de `Diffuse`. Como a capa é tingida preservando a luminância, a cor original da variante não importa.
+- Alternativa descartada: trocar pelo `book_leather_alt` (`brown_leather`), que é mais fosco e vintage do que a direção de arte pede para a capa.
+- Como reverter: voltar `"Diffuse"` no manifest ou apontar `src/book/materials.ts` para `book_leather_alt`.
+- Precisa do usuário? não.
+
+## 2026-10-15 — Sem `ktx`: texturas em WebP e lightmaps em RGBM PNG
+- Contexto: o KTX-Software não está instalado nesta máquina (`ktx --version` falha) e o runbook proíbe instalar software global.
+- Escolha: fallback do §5 da spec da Fase 0 — texturas via `gltf-transform webp`, lightmaps em RGBM PNG com o fator de escala em `public/lightmaps/manifest.json`.
+- Alternativa descartada: KTX2 (exige o programa `ktx`).
+- Como reverter: instalar o KTX-Software 4.4+ e rodar `npm run optimize` de novo; o script detecta o `ktx` sozinho.
+- Precisa do usuário? sim (instalar o KTX-Software quando quiser texturas KTX2).
