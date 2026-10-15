@@ -172,3 +172,9 @@ Formato de cada entrada:
 - Escolha: World do Cycles multiplicado por (0,82; 0,93; 1,15) e força 1,0 → 1,7; sol mantido em 3200 K. Médias dos albedos alinhadas à paleta (piso #7A4E32, estante #5C3D2A, lambri #674430, pedra #AA9C86). `toneMappingExposure` 1,23 no app.
 - Como reverter: `blender/build_room.py` (bloco World), `scripts/prepare-textures.ts`, `src/scene/SceneRoot.tsx`.
 - Precisa do usuário? não.
+
+## 2026-10-15 — Look dev S8: recomendações 1 e 2 do relatório aplicadas (sem resposta do usuário)
+- Contexto: o usuário pediu para continuar; as decisões 1–2 do relatório tinham recomendação. Aplicadas e reversíveis.
+- Escolha: céu do bake mais frio (×0,74/0,90/1,30, força 2,0) como preenchimento; `lighting.sun.elevationDeg` 28 → 22 (manchas mais longas, sem sair da sala — conferido no shot); pedra #A8A08E com saturação 0,4; madeiras com saturação 0,32; `curtains.tiebackY` 1,0 → 1,4.
+- Como reverter: `config/room.json`, `blender/build_room.py` (bloco World), `scripts/prepare-textures.ts`.
+- Precisa do usuário? sim, confirmar pelo `compare_N0.png`.

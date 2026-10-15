@@ -757,7 +757,7 @@ if flames:
 
 L = cfg["lighting"]
 sun_data = bpy.data.lights.new("sun", "SUN")
-sun_data.energy = 11.0
+sun_data.energy = 14.0
 sun_data.angle = math.radians(0.8)
 sun_data.color = kelvin_to_rgb(L["sun"]["kelvin"])
 sun = bpy.data.objects.new("sun", sun_data)
@@ -841,10 +841,10 @@ cool = nt.nodes.new("ShaderNodeMix")
 cool.data_type = "RGBA"
 cool.blend_type = "MULTIPLY"
 cool.inputs["Factor"].default_value = 1.0
-cool.inputs[7].default_value = (0.82, 0.93, 1.15, 1.0)
+cool.inputs[7].default_value = (0.74, 0.9, 1.3, 1.0)
 nt.links.new(mix.outputs[2], cool.inputs[6])
 bg = nt.nodes.new("ShaderNodeBackground")
-bg.inputs["Strength"].default_value = 1.7
+bg.inputs["Strength"].default_value = 2.0
 nt.links.new(cool.outputs[2], bg.inputs["Color"])
 wout = nt.nodes.new("ShaderNodeOutputWorld")
 nt.links.new(bg.outputs["Background"], wout.inputs["Surface"])

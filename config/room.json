@@ -56,7 +56,7 @@
     "rodY": 2.98,
     "rodOverhang": 0.12,
     "panelWidthGathered": 0.28,
-    "tiebackY": 1.0,
+    "tiebackY": 1.4,
     "hemY": 0.02,
     "$comment": "Dois painéis por janela, presos por abraçadeira. Ponta interna do varão em x=±1.05 (a estante termina em ±0.9). A simulação de tecido roda DEPOIS da estante existir, com a caixa da estante e as paredes como objetos de colisão."
   },
@@ -81,7 +81,7 @@
 
   "lighting": {
     "sun": {
-      "elevationDeg": 28,
+      "elevationDeg": 22,
       "lateralDeg": 5,
       "colorHex": "#FFBB78",
       "kelvin": 3200,

@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-15T05:33:13.016Z",
+  "at": "2026-10-15T09:39:11.110Z",
   "quality": "high",
   "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)",
   "browserMode": "headless + ANGLE default",
@@ -42,7 +42,7 @@
       },
       "luminance": {
         "min": 0.012747020460665226,
-        "p0_5": 0.014389029704034328
+        "p0_5": 0.014352208003401756
       },
       "tooDark": false,
       "consoleErrors": []
@@ -56,7 +56,7 @@
       },
       "luminance": {
         "min": 0.012747020460665226,
-        "p0_5": 0.012960528023540974
+        "p0_5": 0.012747020460665226
       },
       "tooDark": false,
       "consoleErrors": []
