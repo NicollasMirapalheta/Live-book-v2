@@ -118,6 +118,40 @@ export function frontFoilMask(widthM: number, heightM: number): HTMLCanvasElemen
   return c
 }
 
+/**
+ * Bookcloth (buckram) weave as a height map: over/under threads of ~0.4 mm across a tile of `tileM` meters,
+ * with slight irregularity. Returns the height canvas; normalFromMask turns it into a normal map.
+ */
+export function clothWeaveHeight(tileM: number, seed = 5): HTMLCanvasElement {
+  const N = 1024
+  const threads = Math.round(tileM / 0.0004)
+  const { c, ctx } = canvas(N, N)
+  const img = ctx.createImageData(N, N)
+  const r = rand(seed)
+  const jitterX = Array.from({ length: threads }, () => 0.85 + r() * 0.3)
+  const jitterY = Array.from({ length: threads }, () => 0.85 + r() * 0.3)
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      const u = (x / N) * threads
+      const v = (y / N) * threads
+      const iu = Math.floor(u)
+      const iv = Math.floor(v)
+      const fu = u - iu
+      const fv = v - iv
+      // warp over weft on a checkerboard, each thread a rounded ridge
+      const overWarp = (iu + iv) % 2 === 0
+      const warp = Math.sin(Math.PI * fu) * jitterX[iu % threads]
+      const weft = Math.sin(Math.PI * fv) * jitterY[iv % threads]
+      const h = overWarp ? 0.55 * warp + 0.45 * warp * weft : 0.55 * weft + 0.45 * warp * weft
+      const i = (y * N + x) * 4
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = 255
+      img.data[i + 3] = Math.round(Math.min(1, Math.max(0, h)) * 255)
+    }
+  }
+  ctx.putImageData(img, 0, 0)
+  return c
+}
+
 export function maskTexture(mask: HTMLCanvasElement): Texture {
   return texture(mask, false)
 }

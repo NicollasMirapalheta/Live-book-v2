@@ -1,5 +1,5 @@
 import { useLayoutEffect } from 'react'
-import { Color, MeshBasicMaterial, MeshPhysicalMaterial, type Mesh, type Texture } from 'three'
+import { Color, MeshBasicMaterial, MeshPhysicalMaterial, type Mesh, type Object3D, type Texture } from 'three'
 import { room } from '../config/room'
 
 const matName = (m: Mesh) => (Array.isArray(m.material) ? m.material[0]?.name : m.material?.name) ?? ''
@@ -40,6 +40,19 @@ export function WindowGlass({ meshes, envMap }: { meshes: Mesh[]; envMap: Textur
     }
     return () => mat.dispose()
   }, [meshes, envMap])
+  return null
+}
+
+/** The chandelier's candle bulbs (Chandelier_03 glass): lit, warm emitters instead of sky-reflecting glass. */
+export function CandleBulbs({ root }: { root: Object3D }) {
+  useLayoutEffect(() => {
+    const mat = new MeshBasicMaterial({ color: new Color(room.lighting.chandelier.colorHex).lerp(new Color('#ffffff'), 0.35).multiplyScalar(2.4) })
+    root.traverse((o) => {
+      const m = o as Mesh
+      if (m.isMesh && /^Chandelier_03_glass/i.test(matName(m))) m.material = mat
+    })
+    return () => mat.dispose()
+  }, [root])
   return null
 }
 

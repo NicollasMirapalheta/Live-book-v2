@@ -41,6 +41,7 @@ export function coverMaterial(
   tex: CoverTextures,
   wear: Texture,
   wearScale: Vector2,
+  weaveNormal?: Texture,
 ): MeshPhysicalMaterial {
   const tile = TILE[kind]
   const mat = new MeshPhysicalMaterial({
@@ -61,6 +62,11 @@ export function coverMaterial(
     mat.sheenRoughness = 0.7
     mat.sheenColor = new Color(SPINE_COLORS[color]).multiplyScalar(1.6)
     mat.normalScale.set(1.2, 1.2)
+    if (weaveNormal) {
+      // real bookcloth weave (procedural) instead of the curtain linen's coarse normal
+      mat.normalMap = prepare(weaveNormal, tile)
+      mat.normalScale.set(0.9, 0.9)
+    }
   }
   mat.onBeforeCompile = (shader: WebGLProgramParametersWithUniforms) => {
     shader.uniforms.wearMap = { value: wear }

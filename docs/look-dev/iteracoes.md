@@ -42,3 +42,6 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 ### S6 — 2026-10-15 ~02:20 (draft → base do bake final)
 - Madeiras com saturação 0,4 e matiz ~26° (médias #5F432F estante, #6B4A34 lambri, #785236 piso); velas do lustre 9 → 14 W (preenchimento da frente da estante); reflexo do piso atenuado nos 50 cm junto às paredes e à base da estante (contato).
 - Próximo passo: bake `final` (512 amostras, resolução cheia) + shot + revisão.
+
+### L3 (livro) — 2026-10-15 ~02:30
+- Capa de tecido com trama de buckram procedural (~0,4 mm por fio) como normal map, no lugar do normal grosso do linho das cortinas. Lâmpadas-vela do lustre como emissores quentes (antes refletiam o céu e saíam azuladas).

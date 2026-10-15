@@ -9,7 +9,7 @@ import { applyLightmaps, loadAtlasTexture, loadManifest, type LightmapManifest }
 import { PlaceholderRoom } from './PlaceholderRoom'
 import { FloorReflection } from './FloorReflection'
 import { invalidateShadows } from './shadows'
-import { FloorJoints, Flames, WindowGlass } from './RoomExtras'
+import { CandleBulbs, FloorJoints, Flames, WindowGlass } from './RoomExtras'
 
 interface RoomAssets {
   manifest: LightmapManifest
@@ -73,6 +73,7 @@ function BakedRoom({ assets }: { assets: RoomAssets }) {
       <WindowGlass meshes={unbaked} envMap={envMap} />
       <Flames meshes={unbaked} />
       <FloorJoints meshes={unbaked} />
+      <CandleBulbs root={room} />
       {reflect && <FloorReflection root={room} />}
     </>
   )

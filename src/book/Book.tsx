@@ -2,6 +2,7 @@ import { useTexture } from '@react-three/drei'
 import { useEffect, useMemo, useState } from 'react'
 import { Vector2, type Texture } from 'three'
 import {
+  clothWeaveHeight,
   frontFoilMask,
   maskTexture,
   normalFromMask,
@@ -42,28 +43,26 @@ const TEX = '/textures/book'
 
 /** Photo for the polaroid: the user's Blob, or a generated sample for the fixtures. */
 function usePhoto(book: BookProps['book']): Texture | null {
-  const [tex, setTex] = useState<Texture | null>(null)
+  // generated sample photos are synchronous; a user's Blob is decoded asynchronously
+  const sample = useMemo(() => (book.photoSeed !== undefined && !book.coverPhoto ? photoTexture(samplePhoto(book.photoSeed)) : null), [book.photoSeed, book.coverPhoto])
+  const [decoded, setDecoded] = useState<Texture | null>(null)
   useEffect(() => {
+    if (!book.coverPhoto) return
     let alive = true
     let made: Texture | null = null
-    if (book.coverPhoto) {
-      void createImageBitmap(book.coverPhoto).then((bmp) => {
-        if (!alive) return
-        made = photoTexture(bmp)
-        setTex(made)
-      })
-    } else if (book.photoSeed !== undefined) {
-      made = photoTexture(samplePhoto(book.photoSeed))
-      setTex(made)
-    } else {
-      setTex(null)
-    }
+    void createImageBitmap(book.coverPhoto).then((bmp) => {
+      if (!alive) return
+      made = photoTexture(bmp)
+      setDecoded(made)
+    })
     return () => {
       alive = false
       made?.dispose()
+      setDecoded(null)
     }
-  }, [book.coverPhoto, book.photoSeed])
-  return tex
+  }, [book.coverPhoto])
+  useEffect(() => () => sample?.dispose(), [sample])
+  return book.coverPhoto ? decoded : sample
 }
 
 /**
@@ -103,7 +102,14 @@ export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0] }: BookP
     const edge = pageEdgeTexture()
     edge.repeat.set(1, 1)
     return {
-      cover: coverMaterial(book.coverMaterial, book.color, { lum, normal, arm }, wear, new Vector2(1 / maxU, 1 / d.coverHeight)),
+      cover: coverMaterial(
+        book.coverMaterial,
+        book.color,
+        { lum, normal, arm },
+        wear,
+        new Vector2(1 / maxU, 1 / d.coverHeight),
+        book.coverMaterial === 'cloth' ? normalFromMask(clothWeaveHeight(0.11), 1.5) : undefined,
+      ),
       endpaper: endpaperMaterial(paper),
       pageEdge: pageEdgeMaterial(edge),
       pageSide: pageSideMaterial(paper),

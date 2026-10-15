@@ -2,7 +2,7 @@ import { OrbitControls, useTexture } from '@react-three/drei'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Bloom, DepthOfField, EffectComposer, N8AO, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
-import { lazy, Suspense, use, useLayoutEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, use, useLayoutEffect, useState } from 'react'
 import { EquirectangularReflectionMapping, NoToneMapping, PMREMGenerator, RepeatWrapping, SRGBColorSpace, type Texture } from 'three'
 import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js'
 import { params } from '../app/params'
@@ -56,7 +56,7 @@ function Environment() {
 
 function Table() {
   const [map, normalMap, arm] = useTexture(['/textures/book/table_color.jpg', '/textures/book/table_normal.jpg', '/textures/book/table_arm.jpg'])
-  useMemo(() => {
+  useLayoutEffect(() => {
     for (const t of [map, normalMap, arm]) {
       t.wrapS = t.wrapT = RepeatWrapping
       t.repeat.set(3.2, 2.2)
