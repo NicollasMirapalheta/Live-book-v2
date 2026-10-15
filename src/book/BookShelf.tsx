@@ -4,6 +4,7 @@ import { Color, type Group, type Mesh, type MeshStandardMaterial } from 'three'
 import { params } from '../app/params'
 import { invalidateShadows } from '../scene/shadows'
 import { Book } from './Book'
+import { backShadowTexture, contactShadowTexture } from './canvasTextures'
 import type { FixtureBook } from './fixtures'
 import { bookDimensions } from './geometry'
 import { loadBookcase, shelfBooks, shelfLayoutFor, shelfOrder } from './shelfData'
@@ -11,8 +12,8 @@ import type { PlacedBook, Shelf } from './shelfLayout'
 import { useSelection } from './useSelection'
 
 const HOVER_PULL = 0.012
-const SELECT_TURN = (-35 * Math.PI) / 180
-const SELECT_LIFT = 0.012
+const SELECT_TURN = (-50 * Math.PI) / 180
+const SELECT_LIFT = 0
 const BOOKEND_PLATE = 0.1
 const PLATE_THICKNESS = 0.004
 const HIGHLIGHT = new Color('#FFB46A')
@@ -56,7 +57,7 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
     const isSel = s.selected === book.id
     const isHot = !s.selected && (s.hovered === book.id || s.focused === book.id)
     const a = anim.current
-    const pullTarget = isSel ? d.coverWidth * 0.75 : isHot ? HOVER_PULL : 0
+    const pullTarget = isSel ? d.coverWidth * 1.05 : isHot ? HOVER_PULL : 0
     const before = a.pull + a.turn
     a.pull = approach(a.pull, pullTarget, dt, isSel ? 0.18 : 0.07)
     a.turn = approach(a.turn, isSel ? SELECT_TURN : 0, dt, 0.2)
@@ -74,7 +75,7 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
       inner.current.traverse((o) => {
         const m = (o as Mesh).material as MeshStandardMaterial | undefined
         if (m && 'emissive' in m && m.emissive) {
-          m.emissive.copy(HIGHLIGHT).multiplyScalar(0.06 * a.glow)
+          m.emissive.copy(HIGHLIGHT).multiplyScalar((isSel ? 0.12 : 0.06) * a.glow)
         }
       })
     }
@@ -107,6 +108,29 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
   )
 }
 
+/**
+ * Contact shadows of a row: a soft dark patch on the shelf board and a falloff on the back panel. The room
+ * is baked, so the real-time sun shadow cannot darken it; without these the books look pasted on.
+ */
+function RowShadows({ shelf, x0, x1 }: { shelf: Shelf; x0: number; x1: number }) {
+  const [floor, back] = useMemo(() => [contactShadowTexture(), backShadowTexture()], [])
+  const w = x1 - x0 + 0.05
+  const cx = (x0 + x1) / 2
+  const depth = shelf.zFront - shelf.zBack
+  return (
+    <group name="row_contact_shadows">
+      <mesh position={[cx, shelf.y + 0.0008, (shelf.zFront + shelf.zBack) / 2 + 0.01]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={1}>
+        <planeGeometry args={[w * 1.15, depth * 1.1]} />
+        <meshBasicMaterial color="#000" alphaMap={floor} transparent opacity={0.5} depthWrite={false} />
+      </mesh>
+      <mesh position={[cx, shelf.y + 0.12, shelf.zBack + 0.002]} renderOrder={1}>
+        <planeGeometry args={[w * 1.1, 0.24]} />
+        <meshBasicMaterial color="#000" alphaMap={back} transparent opacity={0.4} depthWrite={false} />
+      </mesh>
+    </group>
+  )
+}
+
 /** The books on the bookcase, placed by shelfLayout (spec Fase 3). */
 export function BookShelf() {
   const data = use(loadBookcase())
@@ -127,8 +151,21 @@ export function BookShelf() {
 
   useLayoutEffect(() => invalidateShadows(), [layout])
 
+  const rows = (() => {
+    const out: { shelf: Shelf; x0: number; x1: number }[] = []
+    for (const shelf of data.shelves) {
+      const row = layout.books.filter((b) => b.shelf === shelf.index)
+      if (!row.length) continue
+      out.push({ shelf, x0: Math.min(...row.map((b) => b.x - b.thickness / 2)), x1: Math.max(...row.map((b) => b.x + b.thickness / 2)) })
+    }
+    return out
+  })()
+
   return (
     <group name="bookshelf_books">
+      {rows.map((r) => (
+        <RowShadows key={r.shelf.index} shelf={r.shelf} x0={r.x0} x1={r.x1} />
+      ))}
       {layout.books.map((place) => {
         const book = books.find((b) => b.id === place.id)!
         const bookend = layout.props.find((p) => p.shelf === place.shelf && p.kind === 'bookend_pair')

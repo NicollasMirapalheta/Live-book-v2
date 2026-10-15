@@ -163,6 +163,26 @@ export function contactShadowTexture(): Texture {
   return texture(c, false)
 }
 
+/** Vertical falloff (alpha): dark at the bottom edge, fading upward — shadow of a row on the back panel. */
+export function backShadowTexture(): Texture {
+  const { c, ctx } = canvas(64, 256)
+  const g = ctx.createLinearGradient(0, 256, 0, 0)
+  g.addColorStop(0, 'rgba(255,255,255,1)')
+  g.addColorStop(0.35, 'rgba(255,255,255,0.55)')
+  g.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, 64, 256)
+  // soften the sides
+  const img = ctx.getImageData(0, 0, 64, 256)
+  for (let y = 0; y < 256; y++)
+    for (let x = 0; x < 64; x++) {
+      const k = Math.min(1, Math.min(x, 63 - x) / 12)
+      img.data[(y * 64 + x) * 4 + 3] *= k
+    }
+  ctx.putImageData(img, 0, 0)
+  return texture(c, false)
+}
+
 export function maskTexture(mask: HTMLCanvasElement): Texture {
   return texture(mask, false)
 }

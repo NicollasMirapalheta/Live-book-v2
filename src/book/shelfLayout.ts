@@ -60,6 +60,9 @@ export const PROP_WIDTH: Record<string, number> = {
 /** Distance between the two uprights of an empty bookend pair (blender/build_props.py, `gap`). */
 export const PAIR_SPAN = 0.32
 const LEAN = (8 * Math.PI) / 180
+/** Bookend upright: thickness and the height where a leaning book rests on it (build_props.py). */
+const UPRIGHT_T = 0.006
+const UPRIGHT_CONTACT = 0.13
 const MARGIN = 0.012
 const UPRIGHT_GAP = 0.004
 
@@ -144,17 +147,21 @@ export function layoutShelves(books: BookData[], shelves: Shelf[], slots: PropSl
     const row = placed.slice(rowStart)
     const last = row.at(-1)
     if (!last) continue
+    // center the row (with its uprights) in the free stretch of shelf it sits in
+    const others = props.filter((p) => p.shelf === shelf.index && p !== bookend)
+    const rowLeft = bookend.x - bookend.width / 2
+    const leftLimit = Math.max(shelf.xMin + MARGIN, ...others.filter((p) => p.x < rowLeft).map((p) => p.x + p.width / 2 + MARGIN))
+    const rightLimit = Math.min(shelf.xMax - MARGIN, ...others.filter((p) => p.x > rowLeft).map((p) => p.x - p.width / 2 - MARGIN))
     const end = last.x + last.thickness / 2
-    const blockers = props.filter((p) => p.shelf === shelf.index && p !== bookend && p.x > end)
-    const limit = Math.min(shelf.xMax - MARGIN, ...blockers.map((p) => p.x - p.width / 2))
-    // with spare room the last book leans on the closing upright
-    const leanShift = Math.sin(LEAN) * 0.24
-    if (row.length > 2 && limit - end > leanShift + 0.04) {
-      last.lean = LEAN
-      bookend.endX = end + leanShift + UPRIGHT_GAP + bookend.width / 2
-    } else {
-      bookend.endX = end + UPRIGHT_GAP + bookend.width / 2
-    }
+    const leanShift = Math.sin(LEAN) * UPRIGHT_CONTACT
+    const lean = row.length > 2 && rightLimit - end > leanShift + 0.04
+    const rowRight = end + (lean ? leanShift : UPRIGHT_GAP) + UPRIGHT_T
+    const shift = Math.max(leftLimit - rowLeft, (leftLimit + rightLimit) / 2 - (rowLeft + rowRight) / 2)
+    for (const b of row) b.x += shift
+    bookend.x += shift
+    if (lean) last.lean = LEAN
+    // the right upright's origin is its outer face; its inner face touches the row (or the leaning book)
+    bookend.endX = rowRight + shift
   }
   return { books: placed, props, overflow: queue.map((b) => b.id) }
 }
