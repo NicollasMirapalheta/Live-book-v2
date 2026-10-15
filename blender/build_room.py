@@ -59,7 +59,7 @@ M = {
     "rug": pbr_material("rug", "rug", normal_strength=0.8, metallic=0.0),
     "fringe": pbr_material("fringe", "linen", normal_strength=0.6, metallic=0.0),
     "window_paint": flat_material("window_paint", "#D3C6AA", roughness=0.42, normal_prefix="wainscot", normal_strength=0.15),
-    "brass": flat_material("brass", "#9C7A45", roughness=0.38, metallic=1.0, normal_prefix="plaster", normal_strength=0.1),
+    "brass": pbr_material("brass", "brass", normal_strength=0.4),
     "subfloor": flat_material("subfloor", "#2A1A12", roughness=0.9),
     "glass": flat_material("glass", "#F2EEE6", roughness=0.04, transmission=1.0, normal_prefix="plaster", normal_strength=0.05),
 }

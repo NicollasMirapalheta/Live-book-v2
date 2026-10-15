@@ -92,6 +92,46 @@ async function pbr(
   if (opts.disp) await save(sharp(find(key, /_(Displacement|disp)_\d+k\./i)).grayscale(), `${name}_disp`)
 }
 
+/** Smooth value noise: random pixels upscaled with a cubic kernel. */
+async function noise(size: number, cells: number, seed: number): Promise<Buffer> {
+  let x = seed
+  const rand = () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296)
+  const raw = Buffer.alloc(cells * cells)
+  for (let i = 0; i < raw.length; i++) raw[i] = Math.floor(rand() * 256)
+  return sharp(raw, { raw: { width: cells, height: cells, channels: 1 } })
+    .resize(size, size, { kernel: 'cubic' })
+    .blur(size / cells / 3)
+    .raw()
+    .toBuffer()
+}
+
+/** Aged brass (#9C7A45, roughness 0.35–0.5 with patina) for hardware and props: color, ARM, normal. */
+async function brass() {
+  const N = 1024
+  const [low, mid, fine] = await Promise.all([noise(N, 6, 3), noise(N, 24, 7), noise(N, 96, 11)])
+  const base = hexRgb('#9C7A45')
+  const patina = hexRgb('#6E5530')
+  const color = Buffer.alloc(N * N * 3)
+  const armBuf = Buffer.alloc(N * N * 3)
+  const nor = Buffer.alloc(N * N * 3)
+  for (let i = 0; i < N * N; i++) {
+    const p = Math.max(0, (low[i] / 255 - 0.45) * 1.8) * 0.7 + (mid[i] / 255 - 0.5) * 0.15
+    const t = Math.min(1, Math.max(0, p))
+    const bright = 1 + (fine[i] / 255 - 0.5) * 0.08
+    for (let c = 0; c < 3; c++) color[i * 3 + c] = Math.min(255, Math.round((base[c] * (1 - t) + patina[c] * t) * bright))
+    armBuf[i * 3] = 255
+    armBuf[i * 3 + 1] = Math.round((0.35 + 0.15 * (mid[i] / 255) + 0.12 * t) * 255)
+    armBuf[i * 3 + 2] = 255
+    nor[i * 3] = 128 + Math.round((fine[i] / 255 - 0.5) * 6)
+    nor[i * 3 + 1] = 128 + Math.round((mid[i] / 255 - 0.5) * 6)
+    nor[i * 3 + 2] = 255
+  }
+  const raw = { raw: { width: N, height: N, channels: 3 as const } }
+  await save(sharp(color, raw), 'brass_color')
+  await save(sharp(armBuf, raw), 'brass_arm')
+  await save(sharp(nor, raw), 'brass_normal')
+}
+
 async function main() {
   mkdirSync(OUT, { recursive: true })
 
@@ -125,6 +165,8 @@ async function main() {
   written.rug_color = join(OUT, 'rug_color.jpg')
   await save(sharp(find('rug_pile', /_nor_gl_\d+k\./i)), 'rug_normal')
   await save(sharp(find('rug_pile', /_arm_\d+k\./i)), 'rug_arm')
+
+  await brass()
 
   writeFileSync(join(OUT, 'textures.json'), JSON.stringify(written, null, 2))
   console.log(`[textures] ${Object.keys(written).length} mapas → blender/out/textures/`)

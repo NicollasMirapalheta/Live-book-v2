@@ -144,7 +144,7 @@ def weighted_normals(obj):
 
 
 def lathe(name: str, profile, segments: int = 20, coll: str = "room", material=None,
-          tile: float = 0.5) -> bpy.types.Object:
+          tile: float = 0.5, caps: bool = True) -> bpy.types.Object:
     """Solid of revolution around the local Y (three.js up) axis. profile: [(radius, y), ...] bottom→top."""
     bm = bmesh.new()
     uv = bm.loops.layers.uv.new("UVMap")
@@ -168,10 +168,10 @@ def lathe(name: str, profile, segments: int = 20, coll: str = "room", material=N
             for loop, (u, v) in zip(f.loops, ((u0, vs[k]), (u1, vs[k]), (u1, vs[k + 1]), (u0, vs[k + 1]))):
                 loop[uv].uv = (u * 0.3 / tile, v / tile)
     # caps
-    if profile[0][0] > 0:
-        f = bm.faces.new(list(reversed(rings[0])))
-    if profile[-1][0] > 0:
-        f = bm.faces.new(rings[-1])
+    if caps and profile[0][0] > 0:
+        bm.faces.new(list(reversed(rings[0])))
+    if caps and profile[-1][0] > 0:
+        bm.faces.new(rings[-1])
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)

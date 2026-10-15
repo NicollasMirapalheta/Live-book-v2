@@ -1,0 +1,89 @@
+{
+  "shelves": [
+    {
+      "index": 0,
+      "y": 0.83,
+      "clearHeight": 0.3225,
+      "xMin": -0.92,
+      "xMax": 0.92,
+      "zFront": -2.685,
+      "zBack": -2.96
+    },
+    {
+      "index": 1,
+      "y": 1.1825,
+      "clearHeight": 0.3225,
+      "xMin": -0.92,
+      "xMax": 0.92,
+      "zFront": -2.685,
+      "zBack": -2.96
+    },
+    {
+      "index": 2,
+      "y": 1.535,
+      "clearHeight": 0.3225,
+      "xMin": -0.92,
+      "xMax": 0.92,
+      "zFront": -2.685,
+      "zBack": -2.96
+    },
+    {
+      "index": 3,
+      "y": 1.8875,
+      "clearHeight": 0.3525,
+      "xMin": -0.92,
+      "xMax": 0.92,
+      "zFront": -2.685,
+      "zBack": -2.96
+    }
+  ],
+  "propSlots": [
+    {
+      "shelf": 0,
+      "x": -0.83,
+      "kind": "bookend_pair"
+    },
+    {
+      "shelf": 0,
+      "x": 0.7,
+      "kind": "clock"
+    },
+    {
+      "shelf": 1,
+      "x": -0.72,
+      "kind": "plant"
+    },
+    {
+      "shelf": 1,
+      "x": 0.42,
+      "kind": "bookend_pair"
+    },
+    {
+      "shelf": 2,
+      "x": -0.42,
+      "kind": "bookend_pair"
+    },
+    {
+      "shelf": 2,
+      "x": 0.74,
+      "kind": "candle"
+    },
+    {
+      "shelf": 3,
+      "x": -0.76,
+      "kind": "vase"
+    },
+    {
+      "shelf": 3,
+      "x": 0.5,
+      "kind": "bookend_pair"
+    }
+  ],
+  "bounds": {
+    "xMin": -1.0,
+    "xMax": 1.0,
+    "zBack": -3.0,
+    "zFront": -2.6,
+    "height": 2.4
+  }
+}

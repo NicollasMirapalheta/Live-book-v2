@@ -28,7 +28,7 @@ Início da execução (preencher no T0 com a saída de `date`): `Thu Oct 15 00:0
   - Casca, vestíbulo, piso em tábuas, pedra com displacement, lambri, vigas, janelas, exterior (só visível à câmera), porta dupla aberta, tapete, escrivaninha + lampião, quadro, lustre, câmeras `cam_N*` com `lensShiftY`.
   - **Pronto quando:** `npm run blender:preview -- --node N0` gera `shots/blender/N0.png` (proporção da referência), revisado pelo `art-reviewer` só no critério 1 (composição) com nota ≥ 4.
 
-- [ ] **T4 — Estante, props e cortinas** (`build_bookcase.py`, `build_props.py`, `sim_curtains.py`)
+- [x] **T4 — Estante, props e cortinas** — evidência: `public/data/bookcase.json` (4 prateleiras, y 0.83→1.887, vão 0.322 m, bate com `room.json`); apoios de latão modelados em `build_props.py`; cortinas com simulação de tecido e colisão (estante, paredes, caixilho) sem atravessar; prévias `shots/blender/N0.png` e `N2.png` (`build_bookcase.py`, `build_props.py`, `sim_curtains.py`)
   - **Pronto quando:** `public/data/bookcase.json` válido (4 níveis, coerente com `room.json`); apoios de livro de latão modelados; cortinas sem atravessar a estante; prévia `npm run blender:preview -- --node N2` salva.
 
 - [ ] **T5 — Bake, denoise, export e otimização**
