@@ -5,7 +5,7 @@
     "atlas_shell": {
       "size": 2048,
       "mode": "lightmap",
-      "objects": ["floor", "wall_*", "ceiling", "beam_*", "brace_*", "wainscot_*", "door_frame", "door_leaf_*", "vestibule_*"]
+      "objects": ["floor", "rug", "rug_fringe", "desk", "wall_*", "ceiling", "beam_*", "brace_*", "wainscot_*", "door_frame", "door_leaf_*", "vestibule_*"]
     },
     "atlas_bookcase": {
       "size": 1024,
@@ -15,7 +15,7 @@
     "atlas_props": {
       "size": 2048,
       "mode": "combined",
-      "objects": ["curtain_left_*", "curtain_right_*", "tieback_*", "rug", "rug_fringe", "window_*_frame", "desk", "picture_frame*"]
+      "objects": ["curtain_left_*", "curtain_right_*", "tieback_*", "window_*_frame", "picture_frame*"]
     }
   },
   "env": { "node": "N1", "width": 2048, "height": 1024 }

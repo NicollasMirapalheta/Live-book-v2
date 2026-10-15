@@ -284,11 +284,11 @@ for i, bz in enumerate(beams["zPositions"]):
 # knee braces (mãos-francesas) in the top corners of the back wall, as in the reference
 for side in (-1, 1):
     mb = MeshBuilder(f"brace_{'left' if side < 0 else 'right'}")
-    length, sec = 0.95, 0.12
+    length, sec = 0.7, 0.12
     mb.box((-length / 2, -sec / 2, ZB + 0.005), (length / 2, sec / 2, ZB + 0.005 + sec), tile=1.0, grain="x", material="beam")
     brace = mb.finish("room", M)
     bevel(brace, width=0.012, segments=2, angle=50)
-    brace.location = b((side * (XR - 0.33), H - 0.33, 0.0))
+    brace.location = b((side * (XR - 0.245), H - 0.245, 0.0))
     brace.rotation_euler = (0.0, math.radians(side * 45), 0.0)
 log("ceiling + beams + braces")
 
@@ -756,7 +756,7 @@ if flames:
 
 L = cfg["lighting"]
 sun_data = bpy.data.lights.new("sun", "SUN")
-sun_data.energy = 7.0
+sun_data.energy = 11.0
 sun_data.angle = math.radians(1.5)
 sun_data.color = kelvin_to_rgb(L["sun"]["kelvin"])
 sun = bpy.data.objects.new("sun", sun_data)

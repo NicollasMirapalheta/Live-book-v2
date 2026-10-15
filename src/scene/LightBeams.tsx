@@ -173,7 +173,7 @@ export function LightBeams() {
       new ShaderMaterial({
         vertexShader: beamVertex,
         fragmentShader: beamFragment,
-        uniforms: { uColor: { value: sunColor }, uIntensity: { value: 0.55 }, uTime: { value: 0 } },
+        uniforms: { uColor: { value: sunColor }, uIntensity: { value: 1.3 }, uTime: { value: 0 } },
         transparent: true,
         depthWrite: false,
         blending: AdditiveBlending,

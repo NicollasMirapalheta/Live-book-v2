@@ -54,7 +54,7 @@
 
   "curtains": {
     "rodY": 2.98,
-    "rodOverhang": 0.2,
+    "rodOverhang": 0.12,
     "panelWidthGathered": 0.28,
     "tiebackY": 1.0,
     "hemY": 0.02,
@@ -67,7 +67,7 @@
     "openingWidth": 1.8,
     "openingHeight": 2.4,
     "leaves": 2,
-    "openInwardDeg": 105,
+    "openInwardDeg": 98,
     "$comment": "Folhas abrem para DENTRO da sala (~100°), dobradiças em x=±0.9. Vistas de N0, as faces internas com maçaneta enquadram as laterais da imagem. initial."
   },
 
@@ -81,8 +81,8 @@
 
   "lighting": {
     "sun": {
-      "elevationDeg": 32,
-      "lateralDeg": 15,
+      "elevationDeg": 28,
+      "lateralDeg": 5,
       "colorHex": "#FFBB78",
       "kelvin": 3200,
       "travelDirectionFormula": "travel = (sin(L)·cos(E), -sin(E), cos(L)·cos(E)), com E = elevationDeg e L = lateralDeg. É a direção em que a luz VIAJA (de trás da parede do fundo para a câmera). L > 0 desloca as manchas para +X. Usar a mesma fórmula no Blender (convertendo eixos) e no three.js.",

@@ -68,7 +68,7 @@ export function DynamicLights() {
         ref={sun}
         position={sunPos}
         color={new Color(room.lighting.sun.colorHex)}
-        intensity={7}
+        intensity={11}
         castShadow={quality === 'high'}
         shadow-mapSize={[1024, 1024]}
         shadow-bias={-0.0004}

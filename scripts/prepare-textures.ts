@@ -166,17 +166,17 @@ async function main() {
   mkdirSync(OUT, { recursive: true })
 
   // Floor: wide varnished planks, warmed toward floor base #7A4E32.
-  await pbr('floor_wood', 'floor', { mean: '#76502F', saturation: 1.15, contrast: 1.15 }, { roughness: 0.32, spread: 0.7 })
+  await pbr('floor_wood', 'floor', { mean: '#6E4E36', saturation: 0.95, contrast: 1.15 }, { roughness: 0.32, spread: 0.7 })
   // Stone: light limestone/sandstone #A89A84–#C8BBA2, slightly warm.
-  await pbr('wall_stone', 'stone', { mean: '#B3A48A', saturation: 0.9 }, { disp: true, roughness: 0.85 })
+  await pbr('wall_stone', 'stone', { mean: '#ADA18C', saturation: 0.65 }, { disp: true, roughness: 0.85 })
   // Bookcase: dark mahogany, 25% less saturated than the source.
-  await pbr('bookcase_wood', 'bookcase', { mean: '#4F2D1F', saturation: 0.75 }, { roughness: 0.42 })
+  await pbr('bookcase_wood', 'bookcase', { mean: '#4A3124', saturation: 0.5 }, { roughness: 0.42 })
   // Wainscot + door: same wood, one tone lighter (direção de arte: mesma família).
-  await pbr('bookcase_wood', 'wainscot', { mean: '#5E3726', saturation: 0.75 }, { roughness: 0.45 })
+  await pbr('bookcase_wood', 'wainscot', { mean: '#58392A', saturation: 0.5 }, { roughness: 0.45 })
   // Desk: same family, between the two.
-  await pbr('bookcase_wood', 'desk', { mean: '#573223', saturation: 0.8 }, { roughness: 0.4 })
+  await pbr('bookcase_wood', 'desk', { mean: '#523628', saturation: 0.55 }, { roughness: 0.4 })
   // Beams: rough grey wood tinted to dark brown.
-  await pbr('beam_wood', 'beam', { mean: '#4A3022', saturation: 0.6, contrast: 1.1 }, { roughness: 0.78 })
+  await pbr('beam_wood', 'beam', { mean: '#46322A', saturation: 0.45, contrast: 1.1 }, { roughness: 0.78 })
   // Ceiling: warm plaster, never pure white.
   await pbr('ceiling_plaster', 'plaster', { mean: '#CDBFA5', contrast: 1.6 }, { roughness: 0.92, spread: 0.3 })
   // Linen: only the weave pattern (source is blue) tinted to #DCCDB0.

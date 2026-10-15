@@ -13,8 +13,8 @@ export const floorReflection: FloorReflectionUniforms = {
   tReflect: { value: null },
   reflectMatrix: { value: new Matrix4() },
   reflectMix: { value: 0 },
-  reflectStretch: { value: 0.035 },
-  reflectBoost: { value: new URLSearchParams(window.location.search).get('debug') === 'reflect' ? 30 : 2.5 },
+  reflectStretch: { value: 0.075 },
+  reflectBoost: { value: new URLSearchParams(window.location.search).get('debug') === 'reflect' ? 30 : 1.5 },
 }
 
 /** GLSL injected into the floor material (Lightmaps.ts). Replaces the env radiance by the blurred reflection. */

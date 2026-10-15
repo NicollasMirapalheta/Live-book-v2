@@ -7,7 +7,7 @@ import { Color, Uniform, Vector3 } from 'three'
  * stay warm, but the frame is not "orange flat" (direção de arte: o quente vem da luz).
  */
 class WhiteBalanceEffect extends Effect {
-  constructor({ gains = new Vector3(0.9, 1.0, 1.18) } = {}) {
+  constructor({ gains = new Vector3(0.86, 1.0, 1.26) } = {}) {
     super(
       'WhiteBalance',
       /* glsl */ `
@@ -27,16 +27,26 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
  * never pure black ("nunca preto puro").
  */
 class ShadowFloorEffect extends Effect {
-  constructor({ color = '#2A1A12' } = {}) {
+  constructor({ color = '#2A1A12', saturation = 0.86 } = {}) {
     const c = new Color(color) // three converts the sRGB hex to linear
     super(
       'ShadowFloor',
       /* glsl */ `
 uniform vec3 floorColor;
+uniform float saturation;
 void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
-  outputColor = vec4(floorColor + (1.0 - floorColor) * inputColor.rgb, inputColor.a);
+  vec3 c = inputColor.rgb;
+  // slight desaturation after AgX: warm light, not orange paint
+  c = mix(vec3(dot(c, vec3(0.2126, 0.7152, 0.0722))), c, saturation);
+  outputColor = vec4(floorColor + (1.0 - floorColor) * c, inputColor.a);
 }`,
-      { blendFunction: BlendFunction.NORMAL, uniforms: new Map([['floorColor', new Uniform(new Vector3(c.r, c.g, c.b))]]) },
+      {
+        blendFunction: BlendFunction.NORMAL,
+        uniforms: new Map<string, Uniform>([
+          ['floorColor', new Uniform(new Vector3(c.r, c.g, c.b))],
+          ['saturation', new Uniform(saturation)],
+        ]),
+      },
     )
   }
 }

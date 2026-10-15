@@ -160,3 +160,9 @@ Formato de cada entrada:
 - Escolha: `src/scene/FloorReflection.tsx` — câmera espelhada em y=0 (com plano de corte oblíquo) renderiza só a camada de objetos que vale refletir, a meia resolução; Kawase blur; o shader do piso troca a radiância especular do env por esse reflexo com amostras verticais (borrado e alongado) — o Fresnel/rugosidade do material modulam o resultado. Só re-renderiza quando a câmera se move. Céu como cúpula (hemisfério superior), para não vazar no reflexo sob as paredes.
 - Como reverter: `quality=low` desliga; ou `reflect` em `src/scene/Room.tsx`.
 - Precisa do usuário? não.
+
+## 2026-10-15 — Look dev it.2: sol mais baixo e centrado, mais forte; madeiras menos saturadas
+- Contexto: `art-reviewer` (it.1) — luz sem direção legível (nota 2), manchas fracas e só uma visível no N0; imagem laranja/vermelha saturada.
+- Escolha: `lighting.sun.elevationDeg` 32 → 28 (manchas mais longas, vindo para a câmera), `lateralDeg` 15 → 5 (as duas manchas entram no quadro do N0); força do sol no Blender 7 → 11 (e a luz dinâmica dos props igual). Albedos de madeira com saturação 0,5–0,55 e média mais marrom; pedra mais bege-acinzentada; balanço de branco um pouco mais frio. Tapete e escrivaninha passam a `lightmap` (PBR com textura própria em 2K, desenho persa nítido) no atlas da casca. `curtains.rodOverhang` 0,2 → 0,12 e mãos-francesas menores (o varão atravessava a mão-francesa). `door.openInwardDeg` 105 → 98 (face das folhas um pouco mais visível).
+- Como reverter: `config/room.json`, `blender/build_room.py` (`sun_data.energy`), `scripts/prepare-textures.ts`, `blender/bake_config.json`.
+- Precisa do usuário? não.

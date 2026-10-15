@@ -31,7 +31,7 @@ const matName = (m: Material | Material[]) => (Array.isArray(m) ? m[0]?.name : m
  * camera, blurred (Kawase) and sampled with a vertical streak in the floor shader. The room is static, so
  * the reflection is only re-rendered when the camera moves.
  */
-export function FloorReflection({ root, strength = 0.85 }: { root: Object3D; strength?: number }) {
+export function FloorReflection({ root, strength = 1.0 }: { root: Object3D; strength?: number }) {
   const gl = useThree((s) => s.gl)
   const scene = useThree((s) => s.scene)
   const size = useThree((s) => s.size)

@@ -13,3 +13,14 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 ### L2 — 2026-10-15 ~01:55 (correções aplicadas, sem nova revisão formal)
 - Título da lombada de cima para baixo (ABNT NBR 12225); corte das páginas com uma linha por folha, cadernos de 8 folhas e creme #E3D5B8 escurecendo nas bordas; grão do couro 45% menor; trama do tecido em escala de encadernação e contraste maior; frisos sólidos (sem pontos/rebites); dourado menos acobreado; canaleta 1 mm, bisel 1,2 mm; desgaste mais claro e despigmentado; luz-chave menos saturada (#FFDDB8) e env mais forte; mesa com textura em escala e DOF mais suave.
 - Pendências para a próxima rodada: tecido ainda liso a 40 cm (buckram CC0 com trama própria seria melhor); fotos de exemplo são ilustrações (a spec proíbe imagens de terceiros — trocar por fotos do usuário na Fase 6); sombra de contato da polaroid sutil.
+
+## Sala (Fase 0, frame de aprovação N0)
+
+### S1 — 2026-10-15 ~01:47 (draft)
+- Shots: `shots/latest/compare_N0.png`, `N1.png`, `N2.png`; 107/93/56 draw calls.
+- **art-reviewer:** composição 3 · luz 2 · reflexo do piso 3 · estante legível 3 · nada plástico 2 — "iterar".
+- Divergências: imagem laranja/vermelha saturada (madeira ~#7A2A1A); sol fraco e só uma mancha no N0; piso espelhado demais; folhas da porta finas e escuras; tapete borrado (bake combined de baixa resolução); estante sem leitura no N0; lampião/quadro fora do quadro; varões atravessando as mãos-francesas; bases dos apoios de latão estourando; sombras travadas no piso de cor.
+
+### S2 — 2026-10-15 ~01:53 (draft)
+- Mudanças: madeiras com saturação 0,5 e média marrom; pedra bege-acinzentada; balanço de branco mais frio e dessaturação leve pós-AgX (0,86); sol 28°/5°, força 11 (duas manchas no N0); tapete e escrivaninha em modo `lightmap` (textura 2K própria); reflexo do piso só planar, mais borrado e mais fraco; latão dos props acetinado; varões mais curtos e mãos-francesas menores; folhas da porta a 98°; céu e feixes mais fortes.
+- A faixa clara no piso junto à parede do fundo vem do lightmap (luz do céu das janelas), não do reflexo: conferido com `?off=reflect`.
