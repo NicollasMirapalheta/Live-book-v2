@@ -64,3 +64,5 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 
 ### S10 — 2026-10-15 (draft → final)
 - Madeira mais âmbar e menos contrastada, balanço de branco anti-magenta, lustre 0,25 m mais baixo (maior no quadro), latão dos props mais reflexivo, cúpulas do lustre em vidro âmbar escuro.
+- **art-reviewer (S10, bake final): 4 · 4 · 4 · 4 · 4 — "pronto para o usuário"** como candidata à aprovação da Fase 0.
+- Pendências pós-aprovação: cúpulas do lustre (porcelana do asset Chandelier_03, assada no lightmap — separar o material no Blender); faixa fria no rodapé do fundo; franja do tapete muito contrastada; veio repetido no fundo da estante; reflexo próprio das janelas na metade de trás do piso; vestíbulo escuro nas laterais e escrivaninha cortada no N0.

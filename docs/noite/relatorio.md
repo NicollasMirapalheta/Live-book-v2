@@ -41,6 +41,19 @@ Screenshots: `npm run shot` (sala) e `npm run shot -- --dev book` (livro).
 - `assets_contact.png`: folha de contato dos assets
 - `blender_N0.png`, `blender_N2.png`: prévias do Cycles
 
+## ✅ Candidata à aprovação da Fase 0 (S10, bake final)
+
+Depois da sua escolha de "seguir o revisor" (S9–S10: madeira menos saturada e mais âmbar, céu âmbar, N0 0,4 m à frente, lustre mais baixo, anti-magenta), o `art-reviewer` deu **4 · 4 · 4 · 4 · 4** com o veredito **"pronto para o usuário"**. A aprovação é sua: abra `shots/latest/compare_N0.png`.
+
+- Orçamento: draw calls N0 70 · N1 64 · N2 57; download ~27 MB (room 12,6 · props 2,5 · lightmaps 8,1 · env 2,1 · céu 0,35 · JS 1,6).
+- Pendências para depois da aprovação:
+  - cúpulas claras do lustre (é material do asset, assado);
+  - faixa fria no rodapé do fundo;
+  - franja do tapete muito contrastada;
+  - veio repetido no fundo da estante;
+  - reflexo próprio das janelas na metade de trás do piso;
+  - vestíbulo escuro nas laterais e escrivaninha cortada no N0.
+
 ## Continuação (a pedido do usuário, ~06:40–07:00)
 
 - Iteração 8 (o limite do runbook): as recomendações 1 e 2 abaixo foram **aplicadas** (preenchimento mais frio, sol 22°, pedra e madeiras menos saturadas, abraçadeiras a 1,4 m). Também: velas do lustre em tom creme, feixes mais fortes e latão dos apoios menos espelhado. Bake final refeito e screenshots atualizados.
