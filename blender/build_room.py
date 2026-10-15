@@ -757,7 +757,7 @@ if flames:
 L = cfg["lighting"]
 sun_data = bpy.data.lights.new("sun", "SUN")
 sun_data.energy = 11.0
-sun_data.angle = math.radians(1.5)
+sun_data.angle = math.radians(0.8)
 sun_data.color = kelvin_to_rgb(L["sun"]["kelvin"])
 sun = bpy.data.objects.new("sun", sun_data)
 sun.rotation_euler = sun_rotation_blender(L["sun"])
@@ -835,9 +835,16 @@ mix.data_type = "RGBA"
 nt.links.new(lp.outputs["Is Camera Ray"], mix.inputs["Factor"])
 nt.links.new(clamp.outputs["Vector"], mix.inputs[6])
 nt.links.new(env.outputs["Color"], mix.inputs[7])
+# cooler, stronger sky fill (~6500 K): the warmth must come from where the sun lands
+cool = nt.nodes.new("ShaderNodeMix")
+cool.data_type = "RGBA"
+cool.blend_type = "MULTIPLY"
+cool.inputs["Factor"].default_value = 1.0
+cool.inputs[7].default_value = (0.82, 0.93, 1.15, 1.0)
+nt.links.new(mix.outputs[2], cool.inputs[6])
 bg = nt.nodes.new("ShaderNodeBackground")
-bg.inputs["Strength"].default_value = 1.0
-nt.links.new(mix.outputs[2], bg.inputs["Color"])
+bg.inputs["Strength"].default_value = 1.7
+nt.links.new(cool.outputs[2], bg.inputs["Color"])
 wout = nt.nodes.new("ShaderNodeOutputWorld")
 nt.links.new(bg.outputs["Background"], wout.inputs["Surface"])
 log("lights + world")

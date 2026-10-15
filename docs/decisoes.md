@@ -166,3 +166,9 @@ Formato de cada entrada:
 - Escolha: `lighting.sun.elevationDeg` 32 → 28 (manchas mais longas, vindo para a câmera), `lateralDeg` 15 → 5 (as duas manchas entram no quadro do N0); força do sol no Blender 7 → 11 (e a luz dinâmica dos props igual). Albedos de madeira com saturação 0,5–0,55 e média mais marrom; pedra mais bege-acinzentada; balanço de branco um pouco mais frio. Tapete e escrivaninha passam a `lightmap` (PBR com textura própria em 2K, desenho persa nítido) no atlas da casca. `curtains.rodOverhang` 0,2 → 0,12 e mãos-francesas menores (o varão atravessava a mão-francesa). `door.openInwardDeg` 105 → 98 (face das folhas um pouco mais visível).
 - Como reverter: `config/room.json`, `blender/build_room.py` (`sun_data.energy`), `scripts/prepare-textures.ts`, `blender/bake_config.json`.
 - Precisa do usuário? não.
+
+## 2026-10-15 — Look dev it.3: céu mais frio e forte como preenchimento, exposição +0,3 EV
+- Contexto: `art-reviewer` (it.2) — tom geral sépia sem neutros; o quente deve vir só de onde o sol bate.
+- Escolha: World do Cycles multiplicado por (0,82; 0,93; 1,15) e força 1,0 → 1,7; sol mantido em 3200 K. Médias dos albedos alinhadas à paleta (piso #7A4E32, estante #5C3D2A, lambri #674430, pedra #AA9C86). `toneMappingExposure` 1,23 no app.
+- Como reverter: `blender/build_room.py` (bloco World), `scripts/prepare-textures.ts`, `src/scene/SceneRoot.tsx`.
+- Precisa do usuário? não.

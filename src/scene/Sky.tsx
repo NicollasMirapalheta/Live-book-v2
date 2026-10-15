@@ -32,7 +32,8 @@ export function Sky({ intensity = 3.4 }: { intensity?: number }) {
       frustumCulled={false}
       onUpdate={(m) => m.layers.enable(REFLECT_LAYER)}
     >
-      <meshBasicMaterial map={tex} side={BackSide} depthWrite={false} color={new Color(intensity, intensity, intensity)} fog={false} />
+      {/* warm, blown-out late-afternoon backplate (the bake keeps the real sky for the light) */}
+      <meshBasicMaterial map={tex} side={BackSide} depthWrite={false} color={new Color(intensity * 1.18, intensity * 1.0, intensity * 0.78)} fog={false} />
     </mesh>
   )
 }

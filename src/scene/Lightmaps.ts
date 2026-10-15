@@ -61,10 +61,17 @@ export async function loadAtlasTexture(info: AtlasInfo): Promise<Texture> {
   return tex
 }
 
-const LIGHTMAP_RGBM_CHUNK = ShaderChunk.lights_fragment_maps.replace(
-  'vec3 lightMapIrradiance = lightMapTexel.rgb * lightMapIntensity;',
-  'vec3 lightMapIrradiance = lightMapTexel.rgb * lightMapTexel.a * LB_RGBM_RANGE * lightMapIntensity;',
-)
+const LIGHTMAP_RGBM_CHUNK = ShaderChunk.lights_fragment_maps
+  .replace(
+    'vec3 lightMapIrradiance = lightMapTexel.rgb * lightMapIntensity;',
+    'vec3 lightMapIrradiance = lightMapTexel.rgb * lightMapTexel.a * LB_RGBM_RANGE * lightMapIntensity;',
+  )
+  // specular occlusion: the env map knows nothing about the room's shadows, the lightmap does
+  .replace(
+    'radiance += iblRadiance;',
+    'radiance += iblRadiance * clamp( smoothstep( 0.0, 1.6, dot( lightMapIrradiance, vec3( 0.2126, 0.7152, 0.0722 ) ) ), 0.15, 1.0 );\n\t// LB_RADIANCE_DONE',
+  )
+if (!LIGHTMAP_RGBM_CHUNK.includes('LB_RADIANCE_DONE')) throw new Error('lights_fragment_maps mudou: oclusão especular não aplicada')
 if (LIGHTMAP_RGBM_CHUNK === ShaderChunk.lights_fragment_maps) {
   throw new Error('three.js mudou o chunk lights_fragment_maps: o patch RGBM não foi aplicado')
 }
@@ -95,6 +102,13 @@ export function staticLightmapMaterial(
   const mat = (src as MeshStandardMaterial).isMeshStandardMaterial ? (src.clone() as MeshStandardMaterial) : new MeshStandardMaterial()
   mat.lightMap = lightMap
   mat.lightMapIntensity = intensity * CYCLES_TO_THREE
+  // the floor and the rug are seen at grazing angles: sharpen with anisotropic filtering
+  for (const t of [mat.map, mat.normalMap, mat.roughnessMap, mat.metalnessMap]) {
+    if (t && t.anisotropy < 8) {
+      t.anisotropy = 8
+      t.needsUpdate = true
+    }
+  }
   if (debugMode === 'static') {
     // look-dev: white albedo, lightmap + specular only
     mat.map = null
@@ -111,7 +125,7 @@ export function staticLightmapMaterial(
       shader.vertexShader = shader.vertexShader
         .replace('#include <common>', '#include <common>\nvarying vec3 lbWorldPos;')
         .replace('#include <project_vertex>', '#include <project_vertex>\n\tlbWorldPos = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;')
-      chunk = chunk.replace('radiance += iblRadiance;', `radiance += iblRadiance;\n${FLOOR_REFLECTION_SAMPLE}`)
+      chunk = chunk.replace('// LB_RADIANCE_DONE', FLOOR_REFLECTION_SAMPLE)
     }
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>\n#define LB_RGBM_RANGE ${range.toFixed(4)}\n${reflect ? FLOOR_REFLECTION_PARS : ''}`)
@@ -191,7 +205,6 @@ export function applyLightmaps(
       return out
     }
     mesh.material = Array.isArray(mesh.material) ? mesh.material.map(convert) : convert(mesh.material)
-    mesh.castShadow = false
     mesh.receiveShadow = false
     mesh.matrixAutoUpdate = false
     mesh.updateMatrix()

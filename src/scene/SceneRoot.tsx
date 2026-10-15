@@ -24,6 +24,10 @@ export function SceneRoot() {
         gl={{ antialias: false, toneMapping: NoToneMapping, preserveDrawingBuffer: params.shot }}
         dpr={quality === 'high' ? [1, 2] : 1}
         shadows={quality === 'high' ? 'soft' : false}
+        onCreated={({ gl }) => {
+          // +0.3 EV over the Cycles setup (the reference reads brighter); AgX reads this uniform
+          gl.toneMappingExposure = 1.23
+        }}
         camera={{ near: 0.05, far: 60 }}
       >
         <CameraRig />

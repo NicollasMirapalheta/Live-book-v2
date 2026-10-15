@@ -69,12 +69,17 @@ class MeshBuilder:
         return f
 
     def box(self, mn, mx, tile: float = 1.0, grain: str = "x", material: str | None = None,
-            uv_offset=(0.0, 0.0), color=None, skip: tuple[str, ...] = ()):
+            uv_offset=None, color=None, skip: tuple[str, ...] = ()):
         """Axis-aligned box in three.js space. `grain` is the world axis that follows texture U.
         `skip` lists faces to omit: '-x', '+x', '-y', '+y', '-z', '+z'."""
         x0, y0, z0 = mn
         x1, y1, z1 = mx
-        ou, ov = uv_offset
+        if uv_offset is None:
+            # a different patch of the texture for every piece: breaks the repetition of the grain
+            h = math.sin(x0 * 12.9898 + y0 * 78.233 + z0 * 37.719 + x1 * 4.1 + z1 * 2.3) * 43758.5453
+            ou, ov = h - math.floor(h), (h * 7.31) - math.floor(h * 7.31)
+        else:
+            ou, ov = uv_offset
 
         def uv_for(p, normal_axis):
             # the two in-plane axes, ordered so U follows `grain` when possible

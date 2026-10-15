@@ -1,13 +1,14 @@
 import { useGLTF } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { use, useLayoutEffect, useMemo } from 'react'
-import { EquirectangularReflectionMapping, PMREMGenerator, type Texture } from 'three'
+import { EquirectangularReflectionMapping, PMREMGenerator, type Mesh, type Texture } from 'three'
 import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js'
 import { params } from '../app/params'
 import { useQuality } from '../state/quality'
 import { applyLightmaps, loadAtlasTexture, loadManifest, type LightmapManifest } from './Lightmaps'
 import { PlaceholderRoom } from './PlaceholderRoom'
 import { FloorReflection } from './FloorReflection'
+import { invalidateShadows } from './shadows'
 import { FloorJoints, Flames, WindowGlass } from './RoomExtras'
 
 interface RoomAssets {
@@ -48,6 +49,16 @@ function BakedRoom({ assets }: { assets: RoomAssets }) {
 
   const reflect = quality === 'high' && !params.off.has('reflect')
   const unbaked = useMemo(() => applyLightmaps(room, assets.manifest, assets.atlases, envMap, reflect), [room, assets, envMap, reflect])
+
+  // the bookcase and the back wall shade the shelf props from the real-time sun (it comes from behind)
+  useLayoutEffect(() => {
+    room.traverse((o) => {
+      const m = o as Mesh
+      const name = (Array.isArray(m.material) ? m.material[0]?.name : m.material?.name) ?? ''
+      if (m.isMesh && /^(bookcase|stone|wainscot|window_paint)/.test(name)) m.castShadow = true
+    })
+    invalidateShadows()
+  }, [room, unbaked])
 
   useLayoutEffect(() => {
     scene.environment = envMap

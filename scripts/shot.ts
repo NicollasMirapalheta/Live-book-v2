@@ -244,7 +244,9 @@ async function main() {
   writeFileSync(statsFile, JSON.stringify(report, null, 2))
   written.push(statsFile)
 
-  for (const file of written) {
+  // look-dev/debug runs (--out or --query) never overwrite shots/latest
+  const updateLatest = !arg('out') && !extraQuery
+  for (const file of updateLatest ? written : []) {
     const target = join(latestDir, relative(outDir, file))
     mkdirSync(dirname(target), { recursive: true })
     copyFileSync(file, target)
@@ -259,7 +261,7 @@ async function main() {
     for (const e of shot.consoleErrors.slice(0, 3)) console.log(`         console: ${e.slice(0, 200)}`)
   }
   console.log(`[shot] GPU: ${gpu}`)
-  console.log(`[shot] ${relative(ROOT, outDir)} → shots/latest/`)
+  console.log(`[shot] ${relative(ROOT, outDir)}${updateLatest ? ' → shots/latest/' : ' (shots/latest intocado)'}`)
   process.exit(failed ? 1 : 0)
 }
 

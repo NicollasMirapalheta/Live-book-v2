@@ -166,15 +166,15 @@ async function main() {
   mkdirSync(OUT, { recursive: true })
 
   // Floor: wide varnished planks, warmed toward floor base #7A4E32.
-  await pbr('floor_wood', 'floor', { mean: '#6E4E36', saturation: 0.95, contrast: 1.15 }, { roughness: 0.32, spread: 0.7 })
+  await pbr('floor_wood', 'floor', { mean: '#735036', saturation: 0.7, contrast: 1.15 }, { roughness: 0.32, spread: 0.7 })
   // Stone: light limestone/sandstone #A89A84–#C8BBA2, slightly warm.
-  await pbr('wall_stone', 'stone', { mean: '#ADA18C', saturation: 0.65 }, { disp: true, roughness: 0.85 })
+  await pbr('wall_stone', 'stone', { mean: '#AA9C86', saturation: 0.55 }, { disp: true, roughness: 0.85 })
   // Bookcase: dark mahogany, 25% less saturated than the source.
-  await pbr('bookcase_wood', 'bookcase', { mean: '#4A3124', saturation: 0.5 }, { roughness: 0.42 })
+  await pbr('bookcase_wood', 'bookcase', { mean: '#5C3D2A', saturation: 0.55 }, { roughness: 0.42 })
   // Wainscot + door: same wood, one tone lighter (direção de arte: mesma família).
-  await pbr('bookcase_wood', 'wainscot', { mean: '#58392A', saturation: 0.5 }, { roughness: 0.45 })
+  await pbr('bookcase_wood', 'wainscot', { mean: '#674430', saturation: 0.55 }, { roughness: 0.45 })
   // Desk: same family, between the two.
-  await pbr('bookcase_wood', 'desk', { mean: '#523628', saturation: 0.55 }, { roughness: 0.4 })
+  await pbr('bookcase_wood', 'desk', { mean: '#5F3F2C', saturation: 0.55 }, { roughness: 0.4 })
   // Beams: rough grey wood tinted to dark brown.
   await pbr('beam_wood', 'beam', { mean: '#46322A', saturation: 0.45, contrast: 1.1 }, { roughness: 0.78 })
   // Ceiling: warm plaster, never pure white.
@@ -190,7 +190,7 @@ async function main() {
   const rugName = readdirSync(join(SRC, 'rug_albedo')).find((f) => /\.jpe?g$/i.test(f))!
   const crop = RUG_CROPS[rugName.replace(/\.jpe?g$/i, '')]
   const rug = sharp(join(SRC, 'rug_albedo', rugName)).extract(crop).rotate(90)
-  const rugImg = await colorMatch(rug, { mean: '#7E4A3A', amount: 0.4, contrast: 0.92, saturation: 0.95 })
+  const rugImg = await colorMatch(rug, { mean: '#7E4A3A', amount: 0.15, contrast: 1.05, saturation: 1.08 })
   await rugImg.resize(crop.size[0], crop.size[1], { fit: 'fill' }).jpeg({ quality: 92, mozjpeg: true }).toFile(join(OUT, 'rug_color.jpg'))
   written.rug_color = join(OUT, 'rug_color.jpg')
   await save(sharp(find('rug_pile', /_nor_gl_\d+k\./i)), 'rug_normal')

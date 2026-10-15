@@ -24,3 +24,11 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 ### S2 — 2026-10-15 ~01:53 (draft)
 - Mudanças: madeiras com saturação 0,5 e média marrom; pedra bege-acinzentada; balanço de branco mais frio e dessaturação leve pós-AgX (0,86); sol 28°/5°, força 11 (duas manchas no N0); tapete e escrivaninha em modo `lightmap` (textura 2K própria); reflexo do piso só planar, mais borrado e mais fraco; latão dos props acetinado; varões mais curtos e mãos-francesas menores; folhas da porta a 98°; céu e feixes mais fortes.
 - A faixa clara no piso junto à parede do fundo vem do lightmap (luz do céu das janelas), não do reflexo: conferido com `?off=reflect`.
+
+### S3 — 2026-10-15 ~01:58 (draft)
+- Mudanças: céu do bake mais frio e forte (preenchimento), médias de albedo na paleta, exposição +0,3 EV, estante/parede projetam sombra nos props, anisotropia 8, piso menos saturado.
+- **art-reviewer:** composição 3 · luz 3 · reflexo 3 · estante 3 · nada plástico 2 — "iterar". (Na S2 a nota do reflexo foi dada sobre um shot de depuração sem reflexo; o `shot.ts` não sobrescreve mais `shots/latest` em execuções de depuração.)
+- Divergências: véu especular frio nas superfícies horizontais (env sem oclusão); fim de tarde pouco legível (céu cinza, quadriculado fraco, feixes invisíveis no N0); tapete monocromático, veio repetido no fundo da estante e lambri, bases dos apoios chapadas.
+
+### S4 — 2026-10-15 ~02:06 (draft)
+- Mudanças: oclusão especular pelo lightmap nos estáticos (o env não sabe das sombras da sala); sol com penumbra 0,8° (quadriculado das janelas nítido e alongado no piso); céu das janelas quente e estourado no app; feixes mais fortes; tapete com o contraste original do Met; deslocamento aleatório de UV por peça (quebra a repetição do veio).

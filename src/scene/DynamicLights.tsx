@@ -48,10 +48,10 @@ export function DynamicLights() {
     s.target.position.set(target[0], 1.4, target[2])
     s.target.updateMatrixWorld()
     const cam = s.shadow.camera
-    cam.left = -1.4
-    cam.right = 1.4
-    cam.top = 1.6
-    cam.bottom = -1.6
+    cam.left = -1.6
+    cam.right = 1.6
+    cam.top = 2.0
+    cam.bottom = -2.0
     cam.near = 0.1
     cam.far = 12
     cam.updateProjectionMatrix()
