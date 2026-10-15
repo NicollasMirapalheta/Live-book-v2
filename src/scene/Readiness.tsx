@@ -34,11 +34,15 @@ function gpuName(gl: WebGLRenderingContext | WebGL2RenderingContext): string {
 export function Readiness() {
   const gl = useThree((s) => s.gl)
   const scene = useThree((s) => s.scene)
+  const camera = useThree((s) => s.camera)
   const frames = useRef(0)
 
   useEffect(() => {
-    if (params.debug) window.__SCENE__ = scene
-  }, [scene])
+    if (params.debug) {
+      window.__SCENE__ = scene
+      ;(window as unknown as Record<string, unknown>).__CAMERA__ = camera
+    }
+  }, [scene, camera])
 
   useEffect(() => {
     gl.info.autoReset = false

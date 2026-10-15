@@ -132,6 +132,36 @@ async function brass() {
   await save(sharp(nor, raw), 'brass_normal')
 }
 
+/**
+ * Book textures (public/textures/book, 1K): luminance maps normalized to a linear mean of 0.5, so the app
+ * tints them with the spine color while keeping the grain (color = tint × 2 × lum), plus normal and ARM.
+ */
+async function bookTextures() {
+  const dir = join(ROOT, 'public', 'textures', 'book')
+  mkdirSync(dir, { recursive: true })
+  const N = 1024
+  const lum = async (file: string, name: string, contrast = 1) => {
+    const g = sharp(file).removeAlpha().grayscale().resize(N, N)
+    const mean = (await g.clone().stats()).channels[0].mean
+    // stored as linear data: mean → 128 (0.5), contrast around the mean
+    await g
+      .linear(contrast * (128 / Math.max(mean, 1)), 128 * (1 - contrast))
+      .jpeg({ quality: 90 })
+      .toFile(join(dir, `${name}.jpg`))
+  }
+  await lum(find('book_leather', /_(coll1|Diffuse|diff)_\d+k\./i), 'leather_lum', 1.15)
+  await sharp(find('book_leather', /_nor_gl_\d+k\./i)).resize(N, N).jpeg({ quality: 90 }).toFile(join(dir, 'leather_normal.jpg'))
+  await (await arm(find('book_leather', /_arm_\d+k\./i), 0.42, 0.7)).resize(N, N).jpeg({ quality: 90 }).toFile(join(dir, 'leather_arm.jpg'))
+  await lum(find('curtain_linen', /_(Diffuse|diff)_\d+k\./i), 'cloth_lum', 2.4)
+  await sharp(find('curtain_linen', /_nor_gl_\d+k\./i)).resize(N, N).jpeg({ quality: 90 }).toFile(join(dir, 'cloth_normal.jpg'))
+  await (await arm(find('curtain_linen', /_arm_\d+k\./i), 0.82, 0.5)).resize(N, N).jpeg({ quality: 90 }).toFile(join(dir, 'cloth_arm.jpg'))
+  // wooden surface for the isolated scene (same wood as the desk)
+  for (const m of ['color', 'normal', 'arm']) {
+    await sharp(join(OUT, `desk_${m}.jpg`)).resize(N, N).jpeg({ quality: 90 }).toFile(join(dir, `table_${m}.jpg`))
+  }
+  console.log('[textures] livro → public/textures/book/')
+}
+
 async function main() {
   mkdirSync(OUT, { recursive: true })
 
@@ -167,6 +197,7 @@ async function main() {
   await save(sharp(find('rug_pile', /_arm_\d+k\./i)), 'rug_arm')
 
   await brass()
+  await bookTextures()
 
   writeFileSync(join(OUT, 'textures.json'), JSON.stringify(written, null, 2))
   console.log(`[textures] ${Object.keys(written).length} mapas → blender/out/textures/`)

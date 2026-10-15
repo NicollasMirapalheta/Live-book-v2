@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-15T04:45:11.341Z",
+  "quality": "high",
+  "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "browserMode": "headless + ANGLE default",
+  "darkestAllowed": 0.012747020824505738,
+  "shots": {
+    "book/book_48_bordo_couro": {
+      "stats": {
+        "calls": 52,
+        "triangles": 949,
+        "textures": 57,
+        "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+      },
+      "consoleErrors": []
+    },
+    "book/book_220_verde_tecido": {
+      "stats": {
+        "calls": 52,
+        "triangles": 957,
+        "textures": 57,
+        "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+      },
+      "consoleErrors": []
+    },
+    "book/book_640_couro_natural": {
+      "stats": {
+        "calls": 52,
+        "triangles": 957,
+        "textures": 57,
+        "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+      },
+      "consoleErrors": []
+    }
+  }
+}
