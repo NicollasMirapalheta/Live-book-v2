@@ -99,7 +99,7 @@ export default function BookDevScene() {
           <directionalLight
             position={[-0.6, 0.9, 0.5]}
             intensity={2.4}
-            color="#FFDDB8"
+            color="#FFE8D0"
             castShadow
             shadow-mapSize={[2048, 2048]}
             shadow-bias={-0.0002}

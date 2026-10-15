@@ -41,6 +41,12 @@ Screenshots: `npm run shot` (sala) e `npm run shot -- --dev book` (livro).
 - `assets_contact.png`: folha de contato dos assets
 - `blender_N0.png`, `blender_N2.png`: prévias do Cycles
 
+## Continuação (a pedido do usuário, ~06:40–07:00)
+
+- Iteração 8 (o limite do runbook): as recomendações 1 e 2 abaixo foram **aplicadas** (preenchimento mais frio, sol 22°, pedra e madeiras menos saturadas, abraçadeiras a 1,4 m). Também: velas do lustre em tom creme, feixes mais fortes e latão dos apoios menos espelhado. Bake final refeito e screenshots atualizados.
+- Livro: polaroid com verniz e sombra de contato no rebaixo, dourado menos acobreado, quinas gastas, luz-chave neutra. O "degrau creme" era a guarda de papel aparecendo na seixa; agora a placa mostra a dobra do couro.
+- `art-reviewer` (S8/L4): sala **3 · 3 · 4 · 4 · 3**, livro **3/5**. Ainda não é candidata à aprovação. O que segura: ainda puxa para o vermelho, céu das janelas cinza em vez de âmbar, e o enquadramento do N0. As decisões 1 e 3 continuam abertas: o revisor quer ainda menos saturação e a câmera do N0 0,3–0,5 m mais à frente.
+
 ## Última avaliação do art-reviewer (bake final, S7)
 
 | Critério | S1 | S5 | **Final** |
@@ -69,8 +75,8 @@ Veredito do revisor: **"iterar"**. Dá para mostrar como checkpoint de progresso
 
 ## Decisões que precisam de você
 
-1. **Temperatura geral da imagem.** O revisor insiste que a imagem está alaranjada e pede o preenchimento (céu) neutro-frio, com o quente só nas manchas de sol. Eu já esfriei duas vezes (balanço de branco e céu do bake), mantendo o sol a 3200 K e o lustre a 2400 K da direção de arte. *Recomendo:* mais um passo de esfriamento no céu do bake (#C8D2DC) e na pedra, e você decide pelo `compare_N0.png`.
-2. **Sol mais baixo (15–18°)?** As manchas ficariam mais longas e atravessariam o centro do piso, mais "fim de tarde". Mas a decisão de 14/10 subiu o sol justamente para as manchas não saírem da sala. *Recomendo:* testar 20–22° num draft (3 min).
+1. **Temperatura geral da imagem** (aplicado um passo na iteração 8; o revisor pede mais). O revisor insiste que a imagem está alaranjada e pede o preenchimento (céu) neutro-frio, com o quente só nas manchas de sol. Eu já esfriei duas vezes (balanço de branco e céu do bake), mantendo o sol a 3200 K e o lustre a 2400 K da direção de arte. *Recomendo:* mais um passo de esfriamento no céu do bake (#C8D2DC) e na pedra, e você decide pelo `compare_N0.png`.
+2. **Sol mais baixo (15–18°)?** (aplicado 22° na iteração 8) As manchas ficariam mais longas e atravessariam o centro do piso, mais "fim de tarde". Mas a decisão de 14/10 subiu o sol justamente para as manchas não saírem da sala. *Recomendo:* testar 20–22° num draft (3 min).
 3. **Posição da câmera N0.** No frame de aprovação (retrato, proporção da referência), a composição bate. Em 16:9, o vestíbulo escuro e as folhas ocupam muito da tela. Uma revisão anterior pediu para recuar a câmera; a última pede para avançar. *Recomendo:* manter o N0 como está para a aprovação e criar um nó de entrada 16:9 na Fase 1, uns 0,6 m à frente.
 4. **Teto entre as vigas:** reboco claro (spec) ou tábuas de madeira (como parece na referência)?
 5. **KTX-Software:** instalar (`ktx` 4.4+) para texturas KTX2, menores e mais leves na GPU. Hoje o fallback é WebP.
