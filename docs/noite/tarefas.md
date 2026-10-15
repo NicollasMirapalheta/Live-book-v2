@@ -44,7 +44,7 @@ Início da execução (preencher no T0 com a saída de `date`): `Thu Oct 15 00:0
 
 ## Trilha B — sem dependência visual
 
-- [ ] **T8 — Navegação (Fase 1)** — spec `docs/specs/fase-1-navegacao.md`
+- [x] **T8 — Navegação (Fase 1)** — evidência: `npm run e2e` 5/5 (avançar N0→N1→N2 e voltar; `__NAV__` só com `?e2e=1`; teclado ↑/S; arrastar gira yaw/pitch e roda limita FOV 40–70°; draw calls N0 109 · tween 128 · N1 93); shots dos 3 nós via `?node=` em `shots/latest/`; `npm run check` limpo. Os draw calls sobem durante o tween porque o reflexo do piso é re-renderizado enquanto a câmera anda (parado, ele é reaproveitado) — spec `docs/specs/fase-1-navegacao.md`
   - **Pronto quando:** `npm run e2e` passa (`e2e/navigation.spec.ts`); shots dos 3 nós via `?node=`; `npm run check` limpo.
 
 - [ ] **T9 — Livro isolado (Fase 2)** — spec `docs/specs/fase-2-livro.md`

@@ -126,6 +126,9 @@ declare global {
     __NAV__?: {
       readonly currentNode: NodeId
       readonly isTransitioning: boolean
+      readonly yaw: number
+      readonly pitch: number
+      readonly fov: number
       goTo: (id: NodeId) => Promise<void>
       step: (dir: 1 | -1) => Promise<void>
     }
@@ -139,6 +142,15 @@ if (params.e2e) {
     },
     get isTransitioning() {
       return useNavigation.getState().isTransitioning
+    },
+    get yaw() {
+      return useNavigation.getState().yaw
+    },
+    get pitch() {
+      return useNavigation.getState().pitch
+    },
+    get fov() {
+      return useNavigation.getState().fov
     },
     goTo: (id) => useNavigation.getState().goTo(id),
     step: (dir) => useNavigation.getState().step(dir),
