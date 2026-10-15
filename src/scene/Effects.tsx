@@ -1,9 +1,10 @@
 import { Bloom, EffectComposer, N8AO, Noise, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { BlendFunction, ToneMappingMode } from 'postprocessing'
 import { useQuality } from '../state/quality'
+import { ShadowFloor, WhiteBalance } from './Grade'
 
 /**
- * N8AO → Bloom (high threshold: windows, candles, lamp) → Vignette → Noise → AgX.
+ * N8AO → Bloom (high threshold: windows, candles, lamp) → Vignette → Noise → white balance → AgX → shadow floor.
  * Tone mapping happens only here (the Canvas renders with NoToneMapping).
  * DOF is prepared for the book mode and off in the room.
  */
@@ -16,7 +17,9 @@ export function Effects() {
       <Bloom luminanceThreshold={1.6} luminanceSmoothing={0.4} intensity={high ? 0.55 : 0.35} mipmapBlur radius={0.7} />
       <Vignette offset={0.32} darkness={0.42} eskil={false} />
       <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.06} />
+      <WhiteBalance />
       <ToneMapping mode={ToneMappingMode.AGX} />
+      <ShadowFloor />
     </EffectComposer>
   )
 }

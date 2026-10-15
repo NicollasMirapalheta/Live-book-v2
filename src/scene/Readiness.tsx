@@ -1,5 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
+import type { Scene } from 'three'
+import { params } from '../app/params'
 
 export interface SceneStats {
   calls: number
@@ -12,6 +14,8 @@ declare global {
   interface Window {
     __SCENE_READY__?: boolean
     __SCENE_STATS__?: SceneStats
+    /** only with ?debug=… (look-dev inspection from Playwright) */
+    __SCENE__?: Scene
   }
 }
 
@@ -29,7 +33,12 @@ function gpuName(gl: WebGLRenderingContext | WebGL2RenderingContext): string {
  */
 export function Readiness() {
   const gl = useThree((s) => s.gl)
+  const scene = useThree((s) => s.scene)
   const frames = useRef(0)
+
+  useEffect(() => {
+    if (params.debug) window.__SCENE__ = scene
+  }, [scene])
 
   useEffect(() => {
     gl.info.autoReset = false

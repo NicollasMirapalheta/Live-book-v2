@@ -34,7 +34,7 @@ Início da execução (preencher no T0 com a saída de `date`): `Thu Oct 15 00:0
 - [x] **T5 — Bake, denoise, export e otimização** — evidência: `npm run pipeline -- --quality draft` ponta a ponta em ~2,6 min (RTX 4060/OptiX); `public/models/room.glb` (10,1 MB), `props.glb` (3,2 MB), `public/lightmaps/manifest.json` + 3 atlas WebP RGBM (2,3 MB), `public/env/room_N1.hdr` (1,3 MB) + `sky.jpg`; `gltf-transform inspect` mostra `TEXCOORD_1` em todas as malhas assadas; denoise via compositor 5.x ok; tamanhos em `public/data/sizes.json`
   - **Pronto quando:** `npm run pipeline -- --quality draft` roda de ponta a ponta sem erro; `public/models/room.glb`, `public/lightmaps/manifest.json` e `public/env/room_N1.*` existem; `gltf-transform inspect` mostra `TEXCOORD_1` nas malhas com lightmap; tamanhos registrados.
 
-- [ ] **T6 — Cena no navegador**
+- [x] **T6 — Cena no navegador** — evidência: `npm run shot` gera N0/N1/N2 + `N0_approval.png` + `compare_N0.png` + `stats.json`; draw calls N0 107 · N1 93 · N2 56 (< 150); luminância mínima p0,5% = #2A1A12 (sem preto puro); 0 erros no console; GPU RTX 4060 (ANGLE D3D11). Lightmaps RGBM, especular só do env, piso com reflexo planar borrado/alongado (tier high), vidro, feixes + poeira, props PBR com sombra do sol (shadow map sob demanda), pós N8AO/Bloom/Vinheta/Grão/balanço de branco/AgX/piso de sombra, tiers `?quality=low`, `lensShiftY`
   - Room com lightmaps, especular só do env nos estáticos, piso refletor, vidro, feixes, poeira, props dinâmicos, pós AgX, tiers, câmera com `lensShiftY`.
   - **Pronto quando:** `npm run shot` gera N0/N1/N2 + `N0_approval.png` + `compare_N0.png` + `stats.json`; draw calls < 150 em todos os nós; sem alerta de preto puro; nenhum erro no console.
 

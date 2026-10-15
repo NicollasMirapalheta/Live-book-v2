@@ -147,3 +147,16 @@ Formato de cada entrada:
 - Escolha: cada objeto é desembrulhado sozinho (planar em metros para piso, teto, tapete e pedra; grade do tecido nas cortinas; `lightmap_pack` no resto) e os retângulos dos objetos são empacotados em prateleiras com densidade de texel única (busca binária). Pesos menores para vestíbulo e corpos das paredes. Resultado draft: shell 55 px/m, estante 61 px/m, props 127 px/m (final: o dobro). Lightmaps em RGBM (alpha = multiplicador) gravados como WebP lossless e carregados com `ImageBitmap` sem pré-multiplicação.
 - Como reverter: `blender/bake.py` → `unwrap()`.
 - Precisa do usuário? não.
+
+## 2026-10-15 — Pós: balanço de branco antes do AgX e piso de sombra #2A1A12
+- Contexto: com sol a 3200 K e velas a 2400 K a imagem saía "laranja chapado" (proibido na direção de arte) e alguns cantos do vestíbulo chegavam a preto puro.
+- Escolha: `src/scene/Grade.tsx` — balanço de branco em luz linear (ganhos 0,9 / 1,0 / 1,18, luminância preservada), como uma câmera a ~4000 K; depois do AgX, as sombras são erguidas até #2A1A12. As luzes continuam com as temperaturas da direção de arte.
+- Alternativa descartada: esfriar as luzes no Blender (mudaria o bake e contrariaria a direção de luz quente).
+- Como reverter: remover `<WhiteBalance />`/`<ShadowFloor />` de `src/scene/Effects.tsx`.
+- Precisa do usuário? não.
+
+## 2026-10-15 — Reflexo do piso próprio (não `MeshReflectorMaterial`)
+- Contexto: o material do drei mistura o reflexo na cor difusa (multiplicado pelo lightmap) e não combina com o patch de lightmap RGBM.
+- Escolha: `src/scene/FloorReflection.tsx` — câmera espelhada em y=0 (com plano de corte oblíquo) renderiza só a camada de objetos que vale refletir, a meia resolução; Kawase blur; o shader do piso troca a radiância especular do env por esse reflexo com amostras verticais (borrado e alongado) — o Fresnel/rugosidade do material modulam o resultado. Só re-renderiza quando a câmera se move. Céu como cúpula (hemisfério superior), para não vazar no reflexo sob as paredes.
+- Como reverter: `quality=low` desliga; ou `reflect` em `src/scene/Room.tsx`.
+- Precisa do usuário? não.

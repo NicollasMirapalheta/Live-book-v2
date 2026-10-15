@@ -3,9 +3,11 @@ import { useThree } from '@react-three/fiber'
 import { use, useLayoutEffect, useMemo } from 'react'
 import { EquirectangularReflectionMapping, PMREMGenerator, type Texture } from 'three'
 import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js'
+import { params } from '../app/params'
 import { useQuality } from '../state/quality'
 import { applyLightmaps, loadAtlasTexture, loadManifest, type LightmapManifest } from './Lightmaps'
 import { PlaceholderRoom } from './PlaceholderRoom'
+import { FloorReflection } from './FloorReflection'
 import { FloorJoints, Flames, WindowGlass } from './RoomExtras'
 
 interface RoomAssets {
@@ -44,7 +46,8 @@ function BakedRoom({ assets }: { assets: RoomAssets }) {
     return rt.texture
   }, [gl, assets.env])
 
-  const unbaked = useMemo(() => applyLightmaps(room, assets.manifest, assets.atlases, envMap), [room, assets, envMap])
+  const reflect = quality === 'high' && !params.off.has('reflect')
+  const unbaked = useMemo(() => applyLightmaps(room, assets.manifest, assets.atlases, envMap, reflect), [room, assets, envMap, reflect])
 
   useLayoutEffect(() => {
     scene.environment = envMap
@@ -59,6 +62,7 @@ function BakedRoom({ assets }: { assets: RoomAssets }) {
       <WindowGlass meshes={unbaked} envMap={envMap} />
       <Flames meshes={unbaked} />
       <FloorJoints meshes={unbaked} />
+      {reflect && <FloorReflection root={room} />}
     </>
   )
 }

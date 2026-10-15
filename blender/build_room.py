@@ -302,13 +302,13 @@ def wainscot_run(mb, axis, plane, sign, u0, u1, panel_w=WS["panelWidth"]):
     bb = WS["baseboardHeight"]
     rail = WS["railHeight"]
 
-    # the face against the wall and the underside on the floor are never seen
+    # the face against the wall is never seen (the underside is: the floor reflection looks up at it)
     wall_face = ("-" if sign > 0 else "+") + axis
 
     def box(ua, ub, y0, y1, d0, d1, grain_u=True):
         a, c = plane + sign * d0, plane + sign * d1
         lo, hi = min(a, c), max(a, c)
-        skip = (wall_face, "-y") if d0 == 0.0 else ()
+        skip = (wall_face,) if d0 == 0.0 else ()
         if axis == "z":
             mb.box((ua, y0, lo), (ub, y1, hi), tile=1.0, grain="x" if grain_u else "y", material="wainscot", skip=skip)
         else:

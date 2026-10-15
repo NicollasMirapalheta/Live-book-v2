@@ -14,6 +14,7 @@ import {
   type Object3D,
   type WebGLProgramParametersWithUniforms,
 } from 'three'
+import { FLOOR_REFLECTION_PARS, FLOOR_REFLECTION_SAMPLE, floorReflection } from './floorReflectionShader'
 
 export interface AtlasInfo {
   file: string
@@ -83,17 +84,19 @@ export function bakedName(obj: Object3D, manifest: LightmapManifest): string | u
  * - the env map only as specular (no diffuse IBL: the lightmap already has it),
  * - no direct contribution from the real-time lights (they exist for the dynamic objects).
  */
-export function staticLightmapMaterial(src: Material, lightMap: Texture, range: number, intensity: number, envMap: Texture | null) {
+export function staticLightmapMaterial(
+  src: Material,
+  lightMap: Texture,
+  range: number,
+  intensity: number,
+  envMap: Texture | null,
+  reflect = false,
+) {
   const mat = (src as MeshStandardMaterial).isMeshStandardMaterial ? (src.clone() as MeshStandardMaterial) : new MeshStandardMaterial()
   mat.lightMap = lightMap
   mat.lightMapIntensity = intensity * CYCLES_TO_THREE
-  if (debugMode === 'static-noenv') {
-    mat.envMap = null
-    mat.map = null
-    mat.vertexColors = false
-    mat.color.set('#ffffff')
-  }
   if (debugMode === 'static') {
+    // look-dev: white albedo, lightmap + specular only
     mat.map = null
     mat.vertexColors = false
     mat.color.set('#ffffff')
@@ -102,16 +105,24 @@ export function staticLightmapMaterial(src: Material, lightMap: Texture, range: 
   mat.envMapIntensity = 1
   mat.aoMap = null
   mat.onBeforeCompile = (shader: WebGLProgramParametersWithUniforms) => {
+    let chunk = LIGHTMAP_RGBM_CHUNK
+    if (reflect) {
+      Object.assign(shader.uniforms, floorReflection)
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 lbWorldPos;')
+        .replace('#include <project_vertex>', '#include <project_vertex>\n\tlbWorldPos = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;')
+      chunk = chunk.replace('radiance += iblRadiance;', `radiance += iblRadiance;\n${FLOOR_REFLECTION_SAMPLE}`)
+    }
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\n#define LB_RGBM_RANGE ${range.toFixed(4)}`)
+      .replace('#include <common>', `#include <common>\n#define LB_RGBM_RANGE ${range.toFixed(4)}\n${reflect ? FLOOR_REFLECTION_PARS : ''}`)
       // includes are expanded only after onBeforeCompile: patch the chunk text itself
-      .replace('#include <lights_fragment_maps>', `${LIGHTMAP_RGBM_CHUNK}\n\tiblIrradiance = vec3( 0.0 );`)
+      .replace('#include <lights_fragment_maps>', `${chunk}\n\tiblIrradiance = vec3( 0.0 );`)
       .replace(
         '#include <lights_fragment_end>',
         '#include <lights_fragment_end>\n\treflectedLight.directDiffuse = vec3( 0.0 );\n\treflectedLight.directSpecular = vec3( 0.0 );',
       )
   }
-  mat.customProgramCacheKey = () => `lb-static-${range}`
+  mat.customProgramCacheKey = () => `lb-static-${range}-${reflect}`
   return mat
 }
 
@@ -150,6 +161,7 @@ export function applyLightmaps(
   manifest: LightmapManifest,
   atlases: Record<string, Texture>,
   envMap: Texture | null,
+  reflectFloor = false,
 ): Mesh[] {
   const unbaked: Mesh[] = []
   const cache = new Map<string, Material>()
@@ -172,7 +184,7 @@ export function applyLightmaps(
           debugLightmap
             ? combinedMaterial(m, tex, atlas.range, entry.mode === 'lightmap' ? manifest.intensity : manifest.intensity)
             : entry.mode === 'lightmap'
-              ? staticLightmapMaterial(m, tex, atlas.range, manifest.intensity, envMap)
+              ? staticLightmapMaterial(m, tex, atlas.range, manifest.intensity, envMap, reflectFloor && /^floor@/.test(m.name))
               : combinedMaterial(m, tex, atlas.range, manifest.intensity)
         cache.set(key, out)
       }

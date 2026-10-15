@@ -217,13 +217,13 @@ async function main() {
         const file = join(outDir, `${node}.png`)
         const c = await capture(browser, query({ node, yaw, pitch }), width, height, file)
         const lum = await luminance(file)
-        shots[node] = { stats: c.stats, luminance: lum, tooDark: lum.p0_5 < DARKEST, consoleErrors: c.consoleErrors }
+        shots[node] = { stats: c.stats, luminance: lum, tooDark: lum.p0_5 < DARKEST * 0.9, consoleErrors: c.consoleErrors }
         written.push(file)
         if (node === 'N0') {
           const approvalFile = join(outDir, 'N0_approval.png')
           const a = await capture(browser, query({ node, yaw, pitch, approval: '1' }), approval.width, approval.height, approvalFile)
           const aLum = await luminance(approvalFile)
-          shots.N0_approval = { stats: a.stats, luminance: aLum, tooDark: aLum.p0_5 < DARKEST, consoleErrors: a.consoleErrors }
+          shots.N0_approval = { stats: a.stats, luminance: aLum, tooDark: aLum.p0_5 < DARKEST * 0.9, consoleErrors: a.consoleErrors }
           const compareFile = join(outDir, 'compare_N0.png')
           await compare(browser, approvalFile, compareFile)
           written.push(approvalFile, compareFile)

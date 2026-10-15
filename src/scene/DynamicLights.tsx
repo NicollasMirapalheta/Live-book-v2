@@ -1,9 +1,14 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useThree } from '@react-three/fiber'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { Color, type DirectionalLight } from 'three'
 import { room, sunTravelDirection } from '../config/room'
 import { useQuality } from '../state/quality'
+import { setShadowInvalidator } from './shadows'
 
 /**
+ * The chandelier light casts no shadow: a point-light shadow re-renders every caster six times per frame
+ * (cube map), which alone would cost ~60 draw calls. The sun shadow is enough to seat the props.
+ *
  * Real-time lights for the dynamic objects only (books, shelf props). The baked room ignores them
  * (see staticLightmapMaterial). Intensities follow the Cycles setup: sun 7 W/m² = irradiance 7,
  * chandelier ≈ 17 candles × 9 W / 4π.
@@ -11,6 +16,28 @@ import { useQuality } from '../state/quality'
 export function DynamicLights() {
   const sun = useRef<DirectionalLight>(null)
   const quality = useQuality((s) => s.quality)
+  const gl = useThree((s) => s.gl)
+
+  // Props and books only move on explicit actions: render the shadow map once and on demand
+  // (call invalidateShadows() after moving a dynamic object).
+  useEffect(() => {
+    gl.shadowMap.autoUpdate = false
+    let frames = 0
+    let raf = 0
+    const tick = () => {
+      gl.shadowMap.needsUpdate = true
+      if (++frames < 3) raf = requestAnimationFrame(tick)
+    }
+    tick()
+    setShadowInvalidator(() => {
+      gl.shadowMap.needsUpdate = true
+    })
+    return () => {
+      cancelAnimationFrame(raf)
+      gl.shadowMap.autoUpdate = true
+      setShadowInvalidator(null)
+    }
+  }, [gl, quality])
   const travel = sunTravelDirection()
   const target = room.bookcase.center
   const ch = room.chandelier
@@ -53,9 +80,6 @@ export function DynamicLights() {
         intensity={12}
         decay={2}
         distance={0}
-        castShadow={quality === 'high'}
-        shadow-mapSize={[512, 512]}
-        shadow-bias={-0.001}
       />
     </>
   )

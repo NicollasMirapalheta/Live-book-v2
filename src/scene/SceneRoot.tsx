@@ -9,6 +9,7 @@ import { NodeMarkers } from '../navigation/NodeMarkers'
 import { useQuality } from '../state/quality'
 import { DynamicLights } from './DynamicLights'
 import { Effects } from './Effects'
+import { LightBeams } from './LightBeams'
 import { Readiness } from './Readiness'
 import { Room } from './Room'
 import { ShelfProps } from './ShelfProps'
@@ -29,11 +30,12 @@ export function SceneRoot() {
         {!params.shot && <LookControls />}
         <Suspense fallback={null}>
           <Room />
-          <ShelfProps />
-          <Sky />
-          <DynamicLights />
+          {!params.off.has('props') && <ShelfProps />}
+          {!params.off.has('sky') && <Sky />}
+          {!params.off.has('lights') && <DynamicLights />}
+          {!params.off.has('beams') && <LightBeams />}
           <NodeMarkers />
-          <Effects />
+          {!params.off.has('effects') && <Effects />}
           <Readiness />
         </Suspense>
       </Canvas>

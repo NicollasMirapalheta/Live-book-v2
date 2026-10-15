@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { NodeIO, type Document } from '@gltf-transform/core'
+import { NodeIO, PropertyType, type Document } from '@gltf-transform/core'
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions'
 import { dedup, flatten, join as joinMeshes, meshopt, prune, textureCompress, weld } from '@gltf-transform/functions'
 import { MeshoptDecoder, MeshoptEncoder } from 'meshoptimizer'
@@ -118,7 +118,8 @@ async function optimizeModel(name: string, ktx: boolean, maxRes = 2048) {
     stripCombined(doc, assign)
     tagMaterials(doc, assign)
     await doc.transform(
-      dedup(),
+      // materials are not deduplicated: the tagged clones (name@atlas:mode) must survive
+      dedup({ propertyTypes: [PropertyType.ACCESSOR, PropertyType.MESH, PropertyType.TEXTURE] }),
       flatten(),
       joinMeshes({ keepNamed: false }),
       prune({ keepAttributes: true, keepIndices: false }),

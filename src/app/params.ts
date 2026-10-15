@@ -22,6 +22,8 @@ export const params = {
   approval: search.get('approval') === '1',
   /** look-dev views: 'lightmap' shows only the decoded lightmaps (white albedo) */
   debug: search.get('debug') ?? undefined,
+  /** look-dev bisection: comma list of parts to skip (beams, sky, effects, reflect, props, lights) */
+  off: new Set((search.get('off') ?? '').split(',').filter(Boolean)),
   /** book screenshot preset (0..2) for ?dev=book&shot=1 */
   preset: num('preset'),
 }
