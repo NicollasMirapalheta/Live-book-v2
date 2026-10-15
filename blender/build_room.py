@@ -780,7 +780,7 @@ for w in cfg["windows"]:
 ch_color = kelvin_to_rgb(L["chandelier"]["kelvin"])
 for i, p in enumerate(tips):
     ld = bpy.data.lights.new(f"candle_{i}", "POINT")
-    ld.energy = 9.0
+    ld.energy = 14.0
     ld.shadow_soft_size = 0.015
     ld.color = ch_color
     lo = bpy.data.objects.new(f"candle_{i}", ld)

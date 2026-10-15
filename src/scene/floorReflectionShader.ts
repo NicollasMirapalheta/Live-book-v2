@@ -1,6 +1,11 @@
-import { Matrix4, type WebGLRenderTarget } from 'three'
+import { Matrix4, Vector4, type WebGLRenderTarget } from 'three'
+import { room } from '../config/room'
+
+const bc = room.bookcase
 
 export interface FloorReflectionUniforms {
+  roomBounds: { value: Vector4 }
+  contactBox: { value: Vector4 }
   tReflect: { value: WebGLRenderTarget['texture'] | null }
   reflectMatrix: { value: Matrix4 }
   reflectMix: { value: number }
@@ -10,6 +15,10 @@ export interface FloorReflectionUniforms {
 
 /** Shared uniforms: the floor material reads them in its patched shader (see Lightmaps.ts). */
 export const floorReflection: FloorReflectionUniforms = {
+  roomBounds: { value: new Vector4(room.walls.left.x, room.walls.right.x, room.walls.back.z, room.walls.front.z) },
+  contactBox: {
+    value: new Vector4(bc.center[0] - bc.width / 2, bc.center[0] + bc.width / 2, bc.center[2] - bc.depth / 2, bc.center[2] + bc.depth / 2),
+  },
   tReflect: { value: null },
   reflectMatrix: { value: new Matrix4() },
   reflectMix: { value: 0 },
@@ -24,6 +33,8 @@ uniform mat4 reflectMatrix;
 uniform float reflectMix;
 uniform float reflectStretch;
 uniform float reflectBoost;
+uniform vec4 roomBounds; // xMin, xMax, zMin, zMax (inner faces of the walls)
+uniform vec4 contactBox; // bookcase footprint: xMin, xMax, zMin, zMax
 varying vec3 lbWorldPos;
 `
 
@@ -41,6 +52,12 @@ export const FLOOR_REFLECTION_SAMPLE = /* glsl */ `
 			wsum += w;
 		}
 		refl /= wsum;
-		radiance = mix( radiance, refl * reflectBoost, reflectMix );
+		// contact: the reflection fades near the walls and under the bookcase (nothing is mirrored that close
+		// to a vertical surface in a rough varnish; avoids the "set standing on the floor" look)
+		float dWall = min( min( lbWorldPos.x - roomBounds.x, roomBounds.y - lbWorldPos.x ), min( lbWorldPos.z - roomBounds.z, roomBounds.w - lbWorldPos.z ) );
+		vec2 dBox = max( vec2( contactBox.x - lbWorldPos.x, lbWorldPos.x - contactBox.y ), vec2( contactBox.z - lbWorldPos.z, lbWorldPos.z - contactBox.w ) );
+		float dCase = max( max( dBox.x, dBox.y ), 0.0 );
+		float contact = smoothstep( 0.0, 0.5, min( dWall, dCase ) );
+		radiance = mix( radiance, refl * reflectBoost * mix( 0.3, 1.0, contact ), reflectMix );
 	}
 `

@@ -37,3 +37,8 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 ### S5 — 2026-10-15 ~02:15 (draft)
 - **Bug estrutural corrigido:** `MeshBuilder.finish()` recalculava normais em caixas abertas (face junto à parede omitida) e invertia faces do lambri/rodapé — o bake as iluminava por dentro (rodapé quase preto, "estante flutuando"). Agora as faces saem orientadas por construção, sem recálculo.
 - Reflexo do piso: alongamento 0,11 → 0,06 e ganho 1,25 → 1,0 (o véu cinza-azulado no fundo do piso era o reflexo das janelas espalhado em ângulo rasante, conferido com `debug=reflect-clear`); saturação global 0,8; latão dos props menos fosco.
+- **art-reviewer (S5):** 3 · 3 · 3 · 3 · 2 — "iterar". Encontro piso/parede: bug de geometria resolvido, restava shading; madeira ainda vermelha (afeta o rebatimento: corrigir antes do final).
+
+### S6 — 2026-10-15 ~02:20 (draft → base do bake final)
+- Madeiras com saturação 0,4 e matiz ~26° (médias #5F432F estante, #6B4A34 lambri, #785236 piso); velas do lustre 9 → 14 W (preenchimento da frente da estante); reflexo do piso atenuado nos 50 cm junto às paredes e à base da estante (contato).
+- Próximo passo: bake `final` (512 amostras, resolução cheia) + shot + revisão.
