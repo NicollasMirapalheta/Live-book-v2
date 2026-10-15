@@ -95,7 +95,7 @@
 
   "nodes": {
     "N0": {
-      "position": [0.0, 1.6, 5.35], "yawDeg": 0, "pitchDeg": 0, "fovDeg": 46, "lensShiftY": 0.23,
+      "position": [0.0, 1.6, 4.95], "yawDeg": 0, "pitchDeg": 0, "fovDeg": 46, "lensShiftY": 0.23,
       "role": "entrada / frame de aprovação", "initial": true,
       "$comment": "Medido na referência: parede do fundo ocupa ~90% da largura, horizonte a ~29% do topo, verticais paralelas. A câmera fica no vestíbulo, atrás da porta."
     },

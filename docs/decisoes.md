@@ -178,3 +178,9 @@ Formato de cada entrada:
 - Escolha: céu do bake mais frio (×0,74/0,90/1,30, força 2,0) como preenchimento; `lighting.sun.elevationDeg` 28 → 22 (manchas mais longas, sem sair da sala — conferido no shot); pedra #A8A08E com saturação 0,4; madeiras com saturação 0,32; `curtains.tiebackY` 1,0 → 1,4.
 - Como reverter: `config/room.json`, `blender/build_room.py` (bloco World), `scripts/prepare-textures.ts`.
 - Precisa do usuário? sim, confirmar pelo `compare_N0.png`.
+
+## 2026-10-15 — Look dev S9: seguir o revisor (escolha do usuário)
+- Contexto: o usuário escolheu "seguir o revisor" para a próxima rodada da sala.
+- Escolha: madeiras com saturação 0,25 e médias #5A4232 (estante), #66503C (lambri), #7A5A40 (piso); céu das janelas âmbar e estourado (tint 1,4/1,0/0,6 × 4,2); feixes mais fortes; `nodes.N0.position.z` 5,35 → 4,95.
+- Como reverter: `scripts/prepare-textures.ts`, `src/scene/Sky.tsx`, `config/room.json`.
+- Precisa do usuário? não (decidido).

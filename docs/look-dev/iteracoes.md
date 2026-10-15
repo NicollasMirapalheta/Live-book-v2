@@ -56,3 +56,7 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 ### S8 + L4 — 2026-10-15 (continuação pedida pelo usuário)
 - Sala: recomendações 1–2 do relatório aplicadas (céu do bake mais frio/forte, sol 22°, força 14), pedra #A8A08E (sat 0,4), madeiras sat 0,32, abraçadeiras a 1,4 m, velas do lustre creme, feixes mais fortes, latão dos apoios com menos reflexo do céu.
 - Livro: polaroid com cartão creme texturizado, foto com verniz brilhante (clearcoat) e sombra de contato no rebaixo; dourado menos acobreado; desgaste mais forte nas quinas; face interna das placas com o material da capa (a "dobra" do couro) — o degrau creme apontado pelo revisor era a guarda de papel aparecendo na seixa.
+- **art-reviewer (S8/L4):** sala 3 · 3 · 4 · 4 · 3; livro 3/5 — "iterar".
+
+### S9 — 2026-10-15 (draft; usuário escolheu "seguir o revisor")
+- Madeiras com saturação 0,25 (estante #5A4232, lambri #66503C, piso #7A5A40); céu das janelas âmbar estourado; feixes mais fortes; N0 0,4 m à frente (z=4,95): as folhas com maçanetas enquadram as laterais e o tapete fica no pé do quadro, como na referência.

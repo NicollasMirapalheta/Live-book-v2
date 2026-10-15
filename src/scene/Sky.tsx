@@ -9,7 +9,7 @@ import { REFLECT_LAYER } from './FloorReflection'
  * plane (a background would leak into the reflection under the walls). Display-referred JPEG, boosted to
  * read as bright outdoor light after AgX.
  */
-export function Sky({ intensity = 3.4 }: { intensity?: number }) {
+export function Sky({ intensity = 4.2 }: { intensity?: number }) {
   const tex = useTexture('/env/sky.jpg')
   const geometry = useMemo(() => {
     // upper hemisphere + ~10° below the horizon (all the windows can show); below it the reflection stays dark
@@ -33,7 +33,7 @@ export function Sky({ intensity = 3.4 }: { intensity?: number }) {
       onUpdate={(m) => m.layers.enable(REFLECT_LAYER)}
     >
       {/* warm, blown-out late-afternoon backplate (the bake keeps the real sky for the light) */}
-      <meshBasicMaterial map={tex} side={BackSide} depthWrite={false} color={new Color(intensity * 1.18, intensity * 1.0, intensity * 0.78)} fog={false} />
+      <meshBasicMaterial map={tex} side={BackSide} depthWrite={false} color={new Color(intensity * 1.4, intensity * 1.0, intensity * 0.6)} fog={false} />
     </mesh>
   )
 }
