@@ -108,10 +108,11 @@ class MeshBuilder:
 
     def finish(self, coll: str, materials: dict[str, bpy.types.Material] | list | None = None,
                merge: bool = True) -> bpy.types.Object:
-        """merge=False keeps loose quads as built (their winding already faces the right way)."""
+        """Faces are wound outward by construction (box() and face()); no normal recalculation:
+        on open boxes (a face skipped against a wall) it flips normals inward and the bake lights
+        them from inside."""
         if merge:
             bmesh.ops.remove_doubles(self.bm, verts=self.bm.verts, dist=1e-5)
-            bmesh.ops.recalc_face_normals(self.bm, faces=self.bm.faces)
         mesh = bpy.data.meshes.new(self.name)
         self.bm.to_mesh(mesh)
         self.bm.free()

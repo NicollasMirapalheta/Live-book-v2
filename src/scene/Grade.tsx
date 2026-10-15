@@ -27,7 +27,7 @@ void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor)
  * never pure black ("nunca preto puro").
  */
 class ShadowFloorEffect extends Effect {
-  constructor({ color = '#2A1A12', saturation = 0.86 } = {}) {
+  constructor({ color = '#2A1A12', saturation = 0.8 } = {}) {
     const c = new Color(color) // three converts the sRGB hex to linear
     super(
       'ShadowFloor',

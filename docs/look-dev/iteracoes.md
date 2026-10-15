@@ -32,3 +32,8 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 
 ### S4 — 2026-10-15 ~02:06 (draft)
 - Mudanças: oclusão especular pelo lightmap nos estáticos (o env não sabe das sombras da sala); sol com penumbra 0,8° (quadriculado das janelas nítido e alongado no piso); céu das janelas quente e estourado no app; feixes mais fortes; tapete com o contraste original do Met; deslocamento aleatório de UV por peça (quebra a repetição do veio).
+- **art-reviewer (S4):** composição 3 · luz 3 (melhorou: quadriculado nítido) · reflexo 3 · estante 3 · nada plástico 2 — "iterar"; bake final só depois de resolver o encontro piso/parede.
+
+### S5 — 2026-10-15 ~02:15 (draft)
+- **Bug estrutural corrigido:** `MeshBuilder.finish()` recalculava normais em caixas abertas (face junto à parede omitida) e invertia faces do lambri/rodapé — o bake as iluminava por dentro (rodapé quase preto, "estante flutuando"). Agora as faces saem orientadas por construção, sem recálculo.
+- Reflexo do piso: alongamento 0,11 → 0,06 e ganho 1,25 → 1,0 (o véu cinza-azulado no fundo do piso era o reflexo das janelas espalhado em ângulo rasante, conferido com `debug=reflect-clear`); saturação global 0,8; latão dos props menos fosco.

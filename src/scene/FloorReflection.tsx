@@ -21,7 +21,7 @@ import { floorReflection } from './floorReflectionShader'
 export const REFLECT_LAYER = 3
 const REFLECTED = /^(stone|window_paint|glass|linen|bookcase|wainscot|brass|beam|plaster|chandelier|curtain|tieback|door|desk)/
 
-const REFLECT_CLEAR = new Color('#1a110b')
+const REFLECT_CLEAR = new Color(new URLSearchParams(window.location.search).get('debug') === 'reflect-clear' ? '#ff00ff' : '#1a110b')
 const prevClear = new Color()
 
 const matName = (m: Material | Material[]) => (Array.isArray(m) ? m[0]?.name : m.name) ?? ''
