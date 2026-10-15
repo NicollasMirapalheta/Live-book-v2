@@ -1,0 +1,45 @@
+.nav-ui {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+}
+
+.nav-btn {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 236, 205, 0.35);
+  background: rgba(30, 20, 14, 0.55);
+  color: #f3e6cf;
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: rgba(60, 40, 26, 0.75);
+}
+
+.nav-btn:focus-visible {
+  outline: 2px solid #e8c88f;
+  outline-offset: 3px;
+}
+
+.nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.nav-fade {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  pointer-events: none;
+  z-index: 20;
+}

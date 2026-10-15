@@ -6,7 +6,7 @@ Início da execução (preencher no T0 com a saída de `date`): `Thu Oct 15 00:0
 
 ## Trilha A — look dev da sala
 
-- [~] **T0 — Ambiente e scaffold**
+- [x] **T0 — Ambiente e scaffold** — evidência: `npm run check` ok; `npm run shot -- --node N0` gera N0/N0_approval/compare_N0 (`shots/latest/`); GPU do screenshot: ANGLE D3D11 NVIDIA RTX 4060 (headless, sem SwiftShader); Blender 5.2.2 com OptiX; `ktx` ausente → fallback WebP (ver decisoes.md)
   - Rodar `date` e anotar o horário de início acima. Criar a branch `noite-01`.
   - Scaffold **sem apagar o kit**: `npm create vite@latest _scaffold -- --template react-ts --no-interactive`, mover os arquivos de `_scaffold/` para a raiz (renomear `_gitignore` e mesclar com o `.gitignore` existente; não sobrescrever `CLAUDE.md`, `docs/`, `config/`, `assets/`, `scripts/`, `.claude/`) e apagar `_scaffold/`. **Nunca usar `--overwrite`.**
   - Dependências da stack (ver `CLAUDE.md`), mais `vitest`, `@playwright/test`, `tsx`, `leva`, `fflate`. `npx playwright install chromium`.

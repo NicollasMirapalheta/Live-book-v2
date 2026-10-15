@@ -5,3 +5,4 @@ Todo placeholder no código é marcado com `// PLACEHOLDER` e listado aqui. A Fa
 | Onde | O quê | Por quê | Como substituir |
 |------|-------|---------|-----------------|
 | Estante (props) | Globo antigo ausente | Sem globo CC0 nem textura de mapa antigo em domínio público verificada | Encontrar mapa antigo em domínio público, modelar esfera + suporte de latão em `build_props.py` |
+| `src/scene/PlaceholderRoom.tsx` | Sala em cor chapada (planos + caixa da estante) | Permitir navegação e screenshots antes de existir `public/models/room.glb` | Some sozinho quando o pipeline gerar o `room.glb` (`Room.tsx` passa a carregar o modelo) |
