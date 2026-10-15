@@ -108,7 +108,7 @@ export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0] }: BookP
         { lum, normal, arm },
         wear,
         new Vector2(1 / maxU, 1 / d.coverHeight),
-        book.coverMaterial === 'cloth' ? normalFromMask(clothWeaveHeight(0.11), 1.5) : undefined,
+        book.coverMaterial === 'cloth' ? normalFromMask(clothWeaveHeight(0.11), 0.9) : undefined,
       ),
       endpaper: endpaperMaterial(paper),
       pageEdge: pageEdgeMaterial(edge),

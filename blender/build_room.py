@@ -483,10 +483,11 @@ log("door")
 vx = V["width"] / 2
 vz0, vz1, vh = ZF + T, V["zTo"], V["height"]
 mb = MeshBuilder("vestibule_shell")
-mb.box((-vx - 0.2, -0.05, vz0), (-vx, vh + 0.05, vz1 + 0.2), tile=2.0, grain="z", material="plaster")
-mb.box((vx, -0.05, vz0), (vx + 0.2, vh + 0.05, vz1 + 0.2), tile=2.0, grain="z", material="plaster")
+# the shell overlaps the front wall by 5 cm: no seam for light to leak through at the corner
+mb.box((-vx - 0.2, -0.05, vz0 - 0.05), (-vx, vh + 0.05, vz1 + 0.2), tile=2.0, grain="z", material="plaster")
+mb.box((vx, -0.05, vz0 - 0.05), (vx + 0.2, vh + 0.05, vz1 + 0.2), tile=2.0, grain="z", material="plaster")
 mb.box((-vx - 0.2, -0.05, vz1), (vx + 0.2, vh + 0.05, vz1 + 0.2), tile=2.0, grain="x", material="plaster")
-mb.box((-vx - 0.2, vh, vz0), (vx + 0.2, vh + 0.15, vz1 + 0.2), tile=2.0, grain="x", material="plaster")
+mb.box((-vx - 0.2, vh, vz0 - 0.05), (vx + 0.2, vh + 0.15, vz1 + 0.2), tile=2.0, grain="x", material="plaster")
 mb.finish("room", M)
 mb = MeshBuilder("vestibule_wainscot")
 wainscot_run(mb, "x", -vx, +1, vz0, vz1)

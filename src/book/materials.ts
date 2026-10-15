@@ -65,7 +65,8 @@ export function coverMaterial(
     if (weaveNormal) {
       // real bookcloth weave (procedural) instead of the curtain linen's coarse normal
       mat.normalMap = prepare(weaveNormal, tile)
-      mat.normalScale.set(0.9, 0.9)
+      mat.normalMap.anisotropy = 16
+      mat.normalScale.set(0.6, 0.6)
     }
   }
   mat.onBeforeCompile = (shader: WebGLProgramParametersWithUniforms) => {

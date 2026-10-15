@@ -45,3 +45,10 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 
 ### L3 (livro) — 2026-10-15 ~02:30
 - Capa de tecido com trama de buckram procedural (~0,4 mm por fio) como normal map, no lugar do normal grosso do linho das cortinas. Lâmpadas-vela do lustre como emissores quentes (antes refletiam o céu e saíam azuladas).
+
+### S7 — 2026-10-15 ~02:35 (**bake FINAL**: 512 amostras, casca 2048 px / 106 px/m, props 2048 px / 337 px/m)
+- Também: faixa RGBM dos lightmaps limitada a 12 (precisão nos escuros), env map 1024×512, texturas WebP q72 (download ~27 MB).
+- **art-reviewer:** composição 3 · luz 3 · reflexo **4** · estante **4** · nada plástico **3** (S5: 3/3/3/3/2). Livro **3/5** (era 2). Veredito "iterar"; mostrar ao usuário como checkpoint de progresso, não como candidato à aprovação.
+- Divergências restantes (viraram próximos passos no relatório): dominante vermelho-laranja; vestíbulo escuro e profundo no N0 16:9; fim de tarde pouco legível (céu cinza, feixes fracos no N0); faixa fria no fundo do piso; props/têxteis genéricos (cúpulas do lustre, abraçadeiras baixas, quadro e lampião fora do quadro do N0).
+- Defeitos técnicos corrigidos depois desta revisão (re-bake final): costura de luz nas quinas do vestíbulo; moiré da trama do livro de tecido.
+- Limite de iterações: 6 drafts + final (runbook: até 8). Parei aqui porque os itens restantes de maior impacto (temperatura geral da luz, elevação do sol, posição do N0) contradizem decisões anteriores do próprio revisor ou da direção de arte e precisam da sua escolha — ver "Decisões que precisam de você".

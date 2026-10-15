@@ -38,7 +38,7 @@ Início da execução (preencher no T0 com a saída de `date`): `Thu Oct 15 00:0
   - Room com lightmaps, especular só do env nos estáticos, piso refletor, vidro, feixes, poeira, props dinâmicos, pós AgX, tiers, câmera com `lensShiftY`.
   - **Pronto quando:** `npm run shot` gera N0/N1/N2 + `N0_approval.png` + `compare_N0.png` + `stats.json`; draw calls < 150 em todos os nós; sem alerta de preto puro; nenhum erro no console.
 
-- [ ] **T7 — Laço de look dev**
+- [x] **T7 — Laço de look dev** — evidência: 6 iterações draft + bake final (512 amostras) em `docs/look-dev/iteracoes.md`; última nota do `art-reviewer` 3/3/4/4/3 (não atingiu ≥ 4 em todos; o que falta está no relatório, com as decisões que dependem do usuário); `shots/latest/compare_N0.png`
   - Até 8 iterações `draft` + 1 `final` (ver runbook).
   - **Pronto quando:** notas ≥ 4 nos 5 critérios **ou** iterações esgotadas com o que falta registrado; iterações em `docs/look-dev/iteracoes.md`.
 
@@ -52,4 +52,4 @@ Início da execução (preencher no T0 com a saída de `date`): `Thu Oct 15 00:0
 
 ## Encerramento
 
-- [ ] **T10 — Relatório** — `docs/noite/relatorio.md` conforme o runbook, commit final, `git status` limpo.
+- [x] **T10 — Relatório** — `docs/noite/relatorio.md`, commit final, `git status` limpo — `docs/noite/relatorio.md` conforme o runbook, commit final, `git status` limpo.

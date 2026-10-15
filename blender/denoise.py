@@ -118,6 +118,9 @@ for atlas, spec in bake_cfg["atlases"].items():
     # small hot spots (flames, the lamp body) may clip: precision in the darks matters more
     peak = float(np.percentile(rgb.max(axis=2)[coverage] if coverage.any() else rgb.max(axis=2), 99.7)) if rgb.size else 1.0
     rng = float(max(1.0, np.ceil(peak * 1.25)))
+    # irradiance next to the flames would waste the 8-bit precision of the darks: clip the hot spots
+    if spec["mode"] == "lightmap":
+        rng = min(rng, 12.0)
     m = np.clip(rgb.max(axis=2) / rng, 1.0 / 255.0, 1.0)
     m = np.ceil(m * 255.0) / 255.0
     enc = np.clip(rgb / (m[:, :, None] * rng), 0.0, 1.0)

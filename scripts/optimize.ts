@@ -124,7 +124,7 @@ async function optimizeModel(name: string, ktx: boolean, maxRes = 2048) {
       joinMeshes({ keepNamed: false }),
       prune({ keepAttributes: true, keepIndices: false }),
       weld(),
-      textureCompress({ encoder: sharp, targetFormat: ktx ? undefined : 'webp', resize: [res, res], quality: 82 }),
+      textureCompress({ encoder: sharp, targetFormat: ktx ? undefined : 'webp', resize: [res, res], quality: 72 }),
       meshopt({ encoder: MeshoptEncoder, level: 'medium' }),
     )
     const out = join(PUB, 'models', `${name}${suffix}.glb`)
@@ -166,7 +166,10 @@ function env() {
       continue
     }
     const dst = join(PUB, 'env', f)
-    copyFileSync(src, dst)
+    if (f.endsWith('.hdr')) {
+      // the env only feeds blurred specular (PMREM): 1024×512 is enough and ~4× smaller
+      execFileSync(process.execPath, [join(ROOT, 'node_modules', 'tsx', 'dist', 'cli.mjs'), join(ROOT, 'scripts', 'resize-hdr.ts'), src, dst, '1024'], { stdio: 'inherit' })
+    } else copyFileSync(src, dst)
     sizes[f] = mb(dst)
     console.log(`[optimize] env ${f} ${mb(dst)}`)
   }
