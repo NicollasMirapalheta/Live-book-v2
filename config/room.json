@@ -1,0 +1,115 @@
+{
+  "$comment": "Fonte única de medidas da sala. Lida pelos scripts do Blender (blender/*.py) e pelo app (src/). Valores marcados com 'initial' podem ser ajustados no look dev; toda mudança vai para docs/decisoes.md.",
+
+  "$conventions": {
+    "units": "metros e graus",
+    "axes": "padrão three.js: X para a direita, Y para cima, Z em direção à porta. A câmera em N0 olha para -Z (parede do fundo). No Blender (Z para cima): (x, y, z)three -> (x, -z, y)blender.",
+    "walls": "walls.* são as FACES INTERNAS. A espessura (room.wallThickness) cresce para fora da sala.",
+    "sizes": "rug.size = [x, z]; picture.size = [largura, altura]; tudo o mais em [x, y, z].",
+    "local": "desk.lamp.offset está no espaço local da escrivaninha ANTES da rotação: X ao longo da largura, Y para cima, +Z para o lado de quem senta.",
+    "lensShift": "nodes.*.lensShiftY = quanto o centro óptico desce, em fração da ALTURA do quadro (positivo = mostra mais piso e o horizonte sobe na imagem), mantendo as verticais paralelas. Ex.: 0.21 deixa o horizonte a ~29% do topo. No three.js: ajustar a matriz de projeção (termo elements[9]) ou usar setViewOffset. No Blender: camera.shift_y com sinal OPOSTO (negativo mostra mais embaixo), escalado por altura/maior lado do quadro. Em ambos, CONFERIR o sinal pela posição do horizonte no screenshot."
+  },
+
+  "room": { "width": 5.5, "depth": 6.0, "height": 3.2, "wallThickness": 0.3 },
+
+  "walls": {
+    "back": { "z": -3.0 },
+    "front": { "z": 3.0 },
+    "left": { "x": -2.75 },
+    "right": { "x": 2.75 }
+  },
+
+  "vestibule": {
+    "zFrom": 3.3, "zTo": 5.5, "width": 2.2, "height": 2.7,
+    "$comment": "Corredor curto e escuro atrás da porta (mesmos materiais de lambri e reboco, sem janelas). Abriga a câmera de N0 e fecha a sala para a luz do céu vinda de +Z durante o bake."
+  },
+
+  "wainscot": {
+    "height": 0.8, "panelWidth": 0.6, "railHeight": 0.06, "baseboardHeight": 0.15,
+    "$comment": "Medido na referência: a régua do lambri fica na altura do topo da base da estante (0.8)."
+  },
+
+  "ceiling": {
+    "beams": { "axis": "x", "width": 0.22, "height": 0.28, "zPositions": [-1.8, 0.0, 1.8] }
+  },
+
+  "bookcase": {
+    "center": [0.0, 0.0, -2.8],
+    "width": 1.8,
+    "height": 2.4,
+    "depth": 0.4,
+    "baseCabinetHeight": 0.8,
+    "corniceHeight": 0.1,
+    "shelfLevels": 4,
+    "boardThickness": 0.03,
+    "sidePilasterWidth": 0.08,
+    "baseDoors": 2
+  },
+
+  "windows": [
+    { "id": "window_left", "centerX": -1.75, "sillY": 0.85, "width": 1.0, "height": 2.0, "panes": { "cols": 3, "rows": 5 }, "frameDepth": 0.12 },
+    { "id": "window_right", "centerX": 1.75, "sillY": 0.85, "width": 1.0, "height": 2.0, "panes": { "cols": 3, "rows": 5 }, "frameDepth": 0.12 }
+  ],
+
+  "curtains": {
+    "rodY": 2.98,
+    "rodOverhang": 0.2,
+    "panelWidthGathered": 0.28,
+    "tiebackY": 1.0,
+    "hemY": 0.02,
+    "$comment": "Dois painéis por janela, presos por abraçadeira. Ponta interna do varão em x=±1.05 (a estante termina em ±0.9). A simulação de tecido roda DEPOIS da estante existir, com a caixa da estante e as paredes como objetos de colisão."
+  },
+
+  "door": {
+    "wallZ": 3.0,
+    "centerX": 0.0,
+    "openingWidth": 1.6,
+    "openingHeight": 2.4,
+    "leaves": 2,
+    "openInwardDeg": 95,
+    "$comment": "Folhas abrem para DENTRO da sala (~95°), dobradiças em x=±0.8. Vistas de N0, as faces internas com maçaneta enquadram as laterais da imagem. initial."
+  },
+
+  "rug": { "center": [0.0, 0.0, 2.2], "size": [2.6, 1.3], "$comment": "Proporção ~2:1 do tapete do Met (402×199 cm)." },
+
+  "chandelier": { "anchor": [0.0, 3.2, -0.6], "bottomY": 2.35, "candles": 6 },
+
+  "desk": { "position": [2.3, 0.0, -1.3], "rotationYDeg": -90, "lamp": { "offset": [0.0, 0.76, -0.35] } },
+
+  "picture": { "wall": "left", "center": [-2.73, 1.75, -0.3], "size": [0.7, 0.9] },
+
+  "lighting": {
+    "sun": {
+      "elevationDeg": 32,
+      "lateralDeg": 15,
+      "colorHex": "#FFBB78",
+      "kelvin": 3200,
+      "travelDirectionFormula": "travel = (sin(L)·cos(E), -sin(E), cos(L)·cos(E)), com E = elevationDeg e L = lateralDeg. É a direção em que a luz VIAJA (de trás da parede do fundo para a câmera). L > 0 desloca as manchas para +X. Usar a mesma fórmula no Blender (convertendo eixos) e no three.js.",
+      "$comment": "initial. Com janelas de 0.85 a 2.85 m e elevação 32°, as manchas do quadriculado caem aproximadamente entre z=-1.6 e z=+1.6, dentro da sala."
+    },
+    "chandelier": { "kelvin": 2400, "colorHex": "#FF9E40" },
+    "deskLamp": { "kelvin": 2700 },
+    "darkestShadowHex": "#2A1A12"
+  },
+
+  "nodes": {
+    "N0": {
+      "position": [0.0, 1.6, 4.6], "yawDeg": 0, "pitchDeg": 0, "fovDeg": 46, "lensShiftY": 0.21,
+      "role": "entrada / frame de aprovação", "initial": true,
+      "$comment": "Medido na referência: parede do fundo ocupa ~90% da largura, horizonte a ~29% do topo, verticais paralelas. A câmera fica no vestíbulo, atrás da porta."
+    },
+    "N1": { "position": [0.0, 1.6, 0.9], "yawDeg": 0, "pitchDeg": -3, "fovDeg": 55, "lensShiftY": 0, "role": "meio da sala", "initial": true },
+    "N2": {
+      "position": [0.0, 1.55, -1.0], "yawDeg": 0, "pitchDeg": 0, "fovDeg": 50, "lensShiftY": 0,
+      "role": "frente da estante", "initial": true,
+      "$comment": "A 1.6 m da frente da estante, enquadra da base (0.8) à cornija (2.3)."
+    }
+  },
+
+  "edges": [["N0", "N1"], ["N1", "N2"]],
+
+  "screenshot": {
+    "width": 1920, "height": 1080,
+    "approval": { "width": 1000, "height": 1084, "$comment": "Mesma proporção da referência (retrato). Usada no compare_N0." }
+  }
+}

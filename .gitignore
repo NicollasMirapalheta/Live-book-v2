@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env.local
+
+# assets brutos e saídas pesadas (regeráveis)
+assets/source/
+blender/out/
+logs/
+shots/*
+!shots/latest/
+
+# playwright
+test-results/
+playwright-report/
+
+.DS_Store
+Thumbs.db
