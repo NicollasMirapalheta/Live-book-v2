@@ -66,3 +66,15 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 - Madeira mais âmbar e menos contrastada, balanço de branco anti-magenta, lustre 0,25 m mais baixo (maior no quadro), latão dos props mais reflexivo, cúpulas do lustre em vidro âmbar escuro.
 - **art-reviewer (S10, bake final): 4 · 4 · 4 · 4 · 4 — "pronto para o usuário"** como candidata à aprovação da Fase 0.
 - Pendências pós-aprovação: cúpulas do lustre (porcelana do asset Chandelier_03, assada no lightmap — separar o material no Blender); faixa fria no rodapé do fundo; franja do tapete muito contrastada; veio repetido no fundo da estante; reflexo próprio das janelas na metade de trás do piso; vestíbulo escuro nas laterais e escrivaninha cortada no N0.
+
+## Fase 3 — livros na estante e seleção
+
+### E1 — 2026-10-15
+- Os 6 livros de teste na prateleira de cima (`shelfLayout.ts`), com o par de apoios de latão fechando a fileira e o último livro inclinado; seleção desliza o livro para fora e gira a capa; painel HTML de descrição.
+- **art-reviewer:** assentamento 2 · lombadas 2 · luz 3 · gesto 2 — livro inclinado sem apoio, fileira no canto, sem sombra de contato, seleção pouco legível.
+
+### E2
+- Fileira centralizada no vão, livro inclinado encostado no apoio na altura dele, sombras de contato (prateleira + fundo), seleção maior. **art-reviewer:** 3 · 3 · 3 · 2 — seleção flutuando e capa lavada; apoios vazios nas outras prateleiras.
+
+### E3
+- Seleção 0,7× a largura e 28° (base apoiada), realce 3–4%, apoios só na prateleira com livros e trazidos para a frente.

@@ -201,3 +201,9 @@ Formato de cada entrada:
 - Contexto: CLAUDE.md lista "2. Estante + livros de teste" e "3. Seleção, destaque e descrição"; a Fase 2 (livro paramétrico) foi feita em cena isolada porque o livro não podia entrar na sala antes da aprovação. O usuário pediu "Fase 3 (livros na estante)".
 - Escolha: integrar os 6 livros de teste na estante com `shelfLayout.ts` (fecha a Fase 2) e implementar a seleção, o destaque e a descrição (Fase 3). Spec escrita em `docs/specs/fase-3-selecao.md` a partir do CLAUDE.md.
 - Precisa do usuário? não.
+
+## 2026-10-15 — Fase 3: pares de apoios vazios escondidos; pose da seleção
+- Contexto: `art-reviewer` (2ª revisão da Fase 3) — pares de apoios sem livros nas prateleiras de baixo parecem esquecidos; o livro selecionado flutuava à frente da prateleira (avanço de 20 cm > profundidade do livro) e o realce lavava a capa.
+- Escolha: apoios só aparecem nas prateleiras com livros (o par da fileira vem para a frente, junto das lombadas); seleção avança 0,7× a largura do livro e gira 28° (spec: ~0,6× e ~20°); realce 3–4%.
+- Como reverter: `src/scene/ShelfProps.tsx`, constantes em `src/book/BookShelf.tsx`.
+- Precisa do usuário? não.

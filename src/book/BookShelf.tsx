@@ -12,7 +12,7 @@ import type { PlacedBook, Shelf } from './shelfLayout'
 import { useSelection } from './useSelection'
 
 const HOVER_PULL = 0.012
-const SELECT_TURN = (-50 * Math.PI) / 180
+const SELECT_TURN = (-28 * Math.PI) / 180
 const SELECT_LIFT = 0
 const BOOKEND_PLATE = 0.1
 const PLATE_THICKNESS = 0.004
@@ -57,7 +57,8 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
     const isSel = s.selected === book.id
     const isHot = !s.selected && (s.hovered === book.id || s.focused === book.id)
     const a = anim.current
-    const pullTarget = isSel ? d.coverWidth * 1.05 : isHot ? HOVER_PULL : 0
+    // the base stays on the board: the book never comes out further than ~70% of its depth
+    const pullTarget = isSel ? d.coverWidth * 0.7 : isHot ? HOVER_PULL : 0
     const before = a.pull + a.turn
     a.pull = approach(a.pull, pullTarget, dt, isSel ? 0.18 : 0.07)
     a.turn = approach(a.turn, isSel ? SELECT_TURN : 0, dt, 0.2)
@@ -75,7 +76,7 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
       inner.current.traverse((o) => {
         const m = (o as Mesh).material as MeshStandardMaterial | undefined
         if (m && 'emissive' in m && m.emissive) {
-          m.emissive.copy(HIGHLIGHT).multiplyScalar((isSel ? 0.12 : 0.06) * a.glow)
+          m.emissive.copy(HIGHLIGHT).multiplyScalar((isSel ? 0.04 : 0.03) * a.glow)
         }
       })
     }

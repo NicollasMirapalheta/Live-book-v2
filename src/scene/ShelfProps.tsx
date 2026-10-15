@@ -46,7 +46,10 @@ export function ShelfProps() {
       if (p.kind === 'bookend_pair') {
         const end = p.endX ?? p.x
         const center = (p.x + end) / 2
-        node.position.set(center, shelf.y, node.position.z)
+        const holdsBooks = layout.books.some((b) => b.shelf === p.shelf)
+        // empty pairs read as forgotten on a bare shelf; the pair holding a row comes forward with the books
+        node.visible = holdsBooks
+        node.position.set(center, shelf.y, holdsBooks ? shelf.zFront - 0.07 : node.position.z)
         node.getObjectByName(`prop_${p.kind}_${i}_l`)?.position.setX(p.x - center)
         node.getObjectByName(`prop_${p.kind}_${i}_r`)?.position.setX(end - center)
       } else {
