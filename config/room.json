@@ -6,6 +6,7 @@
     "axes": "padrão three.js: X para a direita, Y para cima, Z em direção à porta. A câmera em N0 olha para -Z (parede do fundo). No Blender (Z para cima): (x, y, z)three -> (x, -z, y)blender.",
     "walls": "walls.* são as FACES INTERNAS. A espessura (room.wallThickness) cresce para fora da sala.",
     "sizes": "rug.size = [x, z]; picture.size = [largura, altura]; tudo o mais em [x, y, z].",
+    "deskSize": "desk.size = [largura (X local), altura do tampo, profundidade (Z local)].",
     "local": "desk.lamp.offset está no espaço local da escrivaninha ANTES da rotação: X ao longo da largura, Y para cima, +Z para o lado de quem senta.",
     "lensShift": "nodes.*.lensShiftY = quanto o centro óptico desce, em fração da ALTURA do quadro (positivo = mostra mais piso e o horizonte sobe na imagem), mantendo as verticais paralelas. Ex.: 0.21 deixa o horizonte a ~29% do topo. No three.js: ajustar a matriz de projeção (termo elements[9]) ou usar setViewOffset. No Blender: camera.shift_y com sinal OPOSTO (negativo mostra mais embaixo), escalado por altura/maior lado do quadro. Em ambos, CONFERIR o sinal pela posição do horizonte no screenshot."
   },
@@ -30,12 +31,12 @@
   },
 
   "ceiling": {
-    "beams": { "axis": "x", "width": 0.22, "height": 0.28, "zPositions": [-1.8, 0.0, 1.8] }
+    "beams": { "axis": "x", "width": 0.22, "height": 0.28, "zPositions": [-1.5, 0.3, 2.1] }
   },
 
   "bookcase": {
     "center": [0.0, 0.0, -2.8],
-    "width": 1.8,
+    "width": 2.0,
     "height": 2.4,
     "depth": 0.4,
     "baseCabinetHeight": 0.8,
@@ -47,8 +48,8 @@
   },
 
   "windows": [
-    { "id": "window_left", "centerX": -1.75, "sillY": 0.85, "width": 1.0, "height": 2.0, "panes": { "cols": 3, "rows": 5 }, "frameDepth": 0.12 },
-    { "id": "window_right", "centerX": 1.75, "sillY": 0.85, "width": 1.0, "height": 2.0, "panes": { "cols": 3, "rows": 5 }, "frameDepth": 0.12 }
+    { "id": "window_left", "centerX": -1.75, "sillY": 0.8, "width": 1.0, "height": 1.9, "panes": { "cols": 4, "rows": 6, "transomFromTop": 0.3 }, "frameDepth": 0.12 },
+    { "id": "window_right", "centerX": 1.75, "sillY": 0.8, "width": 1.0, "height": 1.9, "panes": { "cols": 4, "rows": 6, "transomFromTop": 0.3 }, "frameDepth": 0.12 }
   ],
 
   "curtains": {
@@ -63,20 +64,20 @@
   "door": {
     "wallZ": 3.0,
     "centerX": 0.0,
-    "openingWidth": 1.6,
+    "openingWidth": 1.8,
     "openingHeight": 2.4,
     "leaves": 2,
-    "openInwardDeg": 95,
-    "$comment": "Folhas abrem para DENTRO da sala (~95°), dobradiças em x=±0.8. Vistas de N0, as faces internas com maçaneta enquadram as laterais da imagem. initial."
+    "openInwardDeg": 105,
+    "$comment": "Folhas abrem para DENTRO da sala (~100°), dobradiças em x=±0.9. Vistas de N0, as faces internas com maçaneta enquadram as laterais da imagem. initial."
   },
 
-  "rug": { "center": [0.0, 0.0, 2.2], "size": [2.6, 1.3], "$comment": "Proporção ~2:1 do tapete do Met (402×199 cm)." },
+  "rug": { "center": [0.0, 0.0, 2.5], "size": [1.9, 0.95], "$comment": "Proporção 2:1 do tapete do Met 452828 (402×199 cm). Borda de trás em z=2.025: no N0 o tapete começa a ~89% da altura do quadro, com piso visível dos lados (referência ~90%)." },
 
   "chandelier": { "anchor": [0.0, 3.2, -0.6], "bottomY": 2.35, "candles": 6 },
 
-  "desk": { "position": [2.3, 0.0, -1.3], "rotationYDeg": -90, "lamp": { "offset": [0.0, 0.76, -0.35] } },
+  "desk": { "position": [2.3, 0.0, -1.3], "rotationYDeg": -90, "size": [1.3, 0.76, 0.8], "lamp": { "offset": [-0.35, 0.76, -0.2] } },
 
-  "picture": { "wall": "left", "center": [-2.73, 1.75, -0.3], "size": [0.7, 0.9] },
+  "picture": { "wall": "left", "center": [-2.73, 1.75, -0.3], "size": [0.9, 0.69] },
 
   "lighting": {
     "sun": {
@@ -94,7 +95,7 @@
 
   "nodes": {
     "N0": {
-      "position": [0.0, 1.6, 4.6], "yawDeg": 0, "pitchDeg": 0, "fovDeg": 46, "lensShiftY": 0.21,
+      "position": [0.0, 1.6, 5.35], "yawDeg": 0, "pitchDeg": 0, "fovDeg": 46, "lensShiftY": 0.23,
       "role": "entrada / frame de aprovação", "initial": true,
       "$comment": "Medido na referência: parede do fundo ocupa ~90% da largura, horizonte a ~29% do topo, verticais paralelas. A câmera fica no vestíbulo, atrás da porta."
     },

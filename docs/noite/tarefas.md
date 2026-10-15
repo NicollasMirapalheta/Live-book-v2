@@ -24,7 +24,7 @@ Início da execução (preencher no T0 com a saída de `date`): `Thu Oct 15 00:0
   - `scripts/blender.mjs` (wrapper portátil) e `blender/common.py` (lê `room.json`, conversão de eixos, fórmula do sol, log, detecção de GPU, args depois de `--`).
   - **Pronto quando:** `npm run blender:check` imprime versão do Blender e dispositivo de render (GPU ou CPU) e sai com código 0.
 
-- [ ] **T3 — Sala no Blender** (`build_room.py`)
+- [x] **T3 — Sala no Blender** (`build_room.py`) — evidência: `npm run blender:preview -- --node N0` → `shots/blender/N0.png` (500×542); `art-reviewer` critério 1 = 4/5 na 2ª revisão (condicionado à estante do T4); ajustes em `docs/decisoes.md`. Limitação: o tapete começa a ~84% da altura do quadro (ref. ~90%) — para ir além ele teria de atravessar a parede da porta
   - Casca, vestíbulo, piso em tábuas, pedra com displacement, lambri, vigas, janelas, exterior (só visível à câmera), porta dupla aberta, tapete, escrivaninha + lampião, quadro, lustre, câmeras `cam_N*` com `lensShiftY`.
   - **Pronto quando:** `npm run blender:preview -- --node N0` gera `shots/blender/N0.png` (proporção da referência), revisado pelo `art-reviewer` só no critério 1 (composição) com nota ≥ 4.
 

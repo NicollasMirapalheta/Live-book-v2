@@ -180,26 +180,26 @@
       "required": true,
       "source": "direct",
       "type": "image",
-      "id": "met-451375",
-      "url": "https://images.metmuseum.org/CRDImages/is/original/DP221219.jpg",
-      "filename": "met_451375_carpet.jpg",
+      "id": "met-452828",
+      "url": "https://images.metmuseum.org/CRDImages/is/original/DP344684.jpg",
+      "filename": "met_452828_carpet.jpg",
       "license": "CC0-1.0 (Met Open Access, isPublicDomain)",
-      "page": "https://www.metmuseum.org/art/collection/search/451375",
+      "page": "https://www.metmuseum.org/art/collection/search/452828",
       "use": "Desenho do tapete persa (albedo)",
-      "notes": "Seda, Irã, 1863: vermelho, marinho e creme como a referência. Recortar o fundo cinza do museu e a faixa branca à esquerda. Escolhido na revisão T1."
+      "notes": "Tapete do séc. XVIII, 402×199 cm (2:1). Recortar o fundo do museu, puxar o marinho. Voltou a ser o principal na revisão T3 (proporção)."
     },
     {
       "key": "rug_albedo_alt",
       "required": false,
       "source": "direct",
       "type": "image",
-      "id": "met-452828",
-      "url": "https://images.metmuseum.org/CRDImages/is/original/DP344684.jpg",
-      "filename": "met_452828_carpet.jpg",
+      "id": "met-451375",
+      "url": "https://images.metmuseum.org/CRDImages/is/original/DP221219.jpg",
+      "filename": "met_451375_carpet.jpg",
       "license": "CC0-1.0 (Met Open Access, isPublicDomain)",
-      "page": "https://www.metmuseum.org/art/collection/search/452828",
+      "page": "https://www.metmuseum.org/art/collection/search/451375",
       "use": "Alternativa do tapete",
-      "notes": "Tapete do séc. XVIII com campo pictórico (árvore e animais); pouco marinho. Era o principal."
+      "notes": "Seda, Irã, 1863 (~4:3). Melhor paleta, mas a proporção deixava o tapete grande demais no N0."
     },
     {
       "key": "rug_pile",

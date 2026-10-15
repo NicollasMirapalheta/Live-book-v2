@@ -57,7 +57,7 @@ function runScript(script) {
         log.write(chunk)
         // Only forward our own log lines and errors, not Blender's per-sample spam.
         for (const line of chunk.toString().split(/\r?\n/)) {
-          if (/^\[lb\]|Error|Traceback|error:/i.test(line)) out.write(line + '\n')
+          if (/^\[lb\]|Error|Traceback|error:/i.test(line) && !/HIPEW/.test(line)) out.write(line + '\n')
         }
       })
     forward(child.stdout, process.stdout)

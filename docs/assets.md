@@ -15,7 +15,7 @@ Download: `npm run assets:fetch` (= `node scripts/fetch-assets.mjs`). Idempotent
 | Teto | `white_stucco` | [Poly Haven](https://polyhaven.com/a/white_stucco) | — |
 | Vigas | `rough_wood` | [Poly Haven](https://polyhaven.com/a/rough_wood) | Tende ao cinza: aquecer e escurecer |
 | Cortinas | `rough_linen` (alt. `terlenka`) | [Poly Haven](https://polyhaven.com/a/rough_linen) | **Cor azul**: tingir para linho `#DCCDB0` |
-| Tapete (desenho) | Tapete persa de seda, Irã 1863, Met 451375 (alt. Met 452828) | [The Met Open Access](https://www.metmuseum.org/art/collection/search/451375) | Domínio público: recortar o fundo cinza e a faixa branca, ajustar cores |
+| Tapete (desenho) | Tapete persa do séc. XVIII, Met 452828 (alt. Met 451375) | [The Met Open Access](https://www.metmuseum.org/art/collection/search/452828) | Domínio público: recortar o fundo, puxar o marinho; proporção 2:1 (revisão T3) |
 | Tapete (relevo) | `dirty_carpet` (só normal + ARM) | [Poly Haven](https://polyhaven.com/a/dirty_carpet) | — |
 | Capa dos livros | `leather_red_02` (alt. `brown_leather`); tecido reaproveita `rough_linen` | [Poly Haven](https://polyhaven.com/a/leather_red_02) | Tingir preservando a luminância |
 | Lustre | `Chandelier_03` (alt. `Chandelier_02`) | [Poly Haven](https://polyhaven.com/a/Chandelier_03) | Cristais com opacity map; adicionar chamas emissivas |

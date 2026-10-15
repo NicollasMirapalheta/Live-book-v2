@@ -22,7 +22,8 @@
     "blender:export": "node --env-file-if-exists=.env.local scripts/blender.mjs export",
     "optimize": "node --env-file-if-exists=.env.local --import tsx scripts/optimize.ts",
     "pipeline": "node --env-file-if-exists=.env.local --import tsx scripts/pipeline.ts",
-    "blender:assets": "node --env-file-if-exists=.env.local scripts/blender.mjs assets"
+    "blender:assets": "node --env-file-if-exists=.env.local scripts/blender.mjs assets",
+    "textures": "node --import tsx scripts/prepare-textures.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

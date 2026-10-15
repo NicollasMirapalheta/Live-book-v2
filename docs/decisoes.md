@@ -91,3 +91,47 @@ Formato de cada entrada:
 - Alternativa descartada: manter os assets originais e corrigir só por UV/cor (largura das tábuas e cor da ardósia não se resolvem bem assim).
 - Como reverter: `assets/manifest.json` (trocar `id`/`page` de volta) e `npm run assets:fetch`.
 - Precisa do usuário? não. Observação do revisor: na referência, o teto entre as vigas parece de madeira, não reboco — mantido o reboco claro da spec; listado no relatório.
+
+## 2026-10-15 — Tapete 2,4 × 1,8 m (proporção do Met 451375)
+- Contexto: o tapete escolhido na revisão T1 (Met 451375, com vermelho/marinho/creme) tem proporção ~4:3, não 2:1 como o 452828. Esticar distorceria o desenho.
+- Escolha: `config/room.json` → `rug.size = [2.4, 1.8]`, `rug.center z = 2.0` (de z=1.1 a 2.9, sem encostar na parede da porta em z=3.0). Textura `blender/out/textures/rug_color.jpg` recortada do fundo do museu e girada 90°.
+- Alternativa descartada: Met 452828 (2:1, mas campo pictórico com pouco marinho) ou recortar o 451375 para 2:1 (perde a borda).
+- Como reverter: voltar `rug` em `room.json` e trocar as chaves no `assets/manifest.json`.
+- Precisa do usuário? não.
+
+## 2026-10-15 — N0 recua para z=5.2 (porta enquadrando a imagem)
+- Contexto: com a câmera em z=4.6 e o frame retrato (FOV vertical 46°), a meia-largura visível no plano da porta (z=3.0) é ~0,63 m, menor que a abertura (±0,8 m): as folhas abertas ficariam fora do quadro, e o critério 1 da aprovação (porta enquadrando) falharia.
+- Escolha: `nodes.N0.position.z = 5.2` (ainda dentro do vestíbulo, que vai até 5.5). As folhas passam a ocupar ~6% da largura em cada lateral, como na referência; a parede do fundo cai para ~86% da largura (antes ~92%).
+- Alternativa descartada: aumentar o FOV (diminui a parede do fundo e distorce) ou abrir menos as folhas (elas cobririam a estante).
+- Como reverter: `config/room.json` → `nodes.N0.position`.
+- Precisa do usuário? não.
+
+## 2026-10-15 — Lampião no canto do fundo da escrivaninha; quadro em paisagem
+- Contexto: com a escrivaninha modelada (0,8 m de profundidade), o `lamp.offset` antigo `[0, 0.76, -0.35]` deixava a base do lampião (raio 0,11 m) atravessando a parede. O quadro CC0 (`fancy_picture_frame_01`) é paisagem (0,60 × 0,46 m), não retrato como em `picture.size`.
+- Escolha: `desk.lamp.offset = [-0.35, 0.76, -0.2]` (canto da escrivaninha voltado para a parede do fundo, como na referência); `picture.size = [0.9, 0.69]` (asset ×1,5, sugestão do `art-reviewer`).
+- Como reverter: `config/room.json` → `desk.lamp.offset`, `picture.size`.
+- Precisa do usuário? não.
+
+## 2026-10-15 — Folhas da porta abertas a 105°
+- Contexto: na primeira prévia do Blender (N0 em z=5.2), as folhas abertas a 95° ocupavam ~13% da largura de cada lado; na referência, ~6%.
+- Escolha: `door.openInwardDeg = 105` (a folha fica quase de perfil, como na referência).
+- Como reverter: `config/room.json` → `door.openInwardDeg`.
+- Precisa do usuário? não.
+
+## 2026-10-15 — Ajustes de composição da revisão T3 (art-reviewer, nota 3/5)
+- Contexto: na prévia do Blender, o tapete ocupava 25% do quadro (ref. ~10%), as folhas cobriam as quinas da sala, uma viga escondia o topo da parede do fundo e as janelas ficavam altas, com folga sobre o lambri.
+- Escolha (`config/room.json`):
+  - Tapete de volta ao Met 452828 (2:1), `rug.size = [2.2, 1.1]`, `rug.center z = 2.4` (borda de trás em z=1.85, ~14% do quadro). Um tapete maior com a borda nessa posição atravessaria a parede da porta.
+  - `door.openingWidth = 1.8` e `door.openInwardDeg = 100`: folhas com ~6% da largura de cada lado.
+  - `ceiling.beams.zPositions = [-1.5, 0.3, 2.1]`: a viga em z=-1.8 escondia o topo da pedra. Mãos-francesas nas quinas superiores da parede do fundo (como na referência).
+  - Janelas: `sillY = 0.8` (peitoril assentado no lambri) e `height = 1.9`.
+  - `bookcase.width = 2.0` (na referência a estante ocupa ~33% da largura do quadro).
+- Alternativa descartada: mexer em FOV ou posição da câmera (horizonte, escala da parede e janelas já batem com a referência).
+- Como reverter: valores anteriores no histórico do git (`git log -p config/room.json`).
+- Precisa do usuário? não.
+
+## 2026-10-15 — Segunda revisão T3 (nota 4/5): N0 em z=5.35, lens shift 0.23, janelas com bandeira
+- Contexto: faltava ver uma fatia das paredes laterais, a faixa de teto no topo ocupava ~6% do quadro, o tapete encostava nas folhas e a grade das janelas não seguia o desenho da referência (duas folhas + bandeira).
+- Escolha: `nodes.N0.position.z = 5.35` e `door.openInwardDeg = 105` (folhas ~5% de cada lado, parede lateral ~3%); `nodes.N0.lensShiftY = 0.23` (faixa do teto ~4%, horizonte a ~27% do topo, ref. 28%); `rug.size = [1.9, 0.95]`, `rug.center z = 2.5`; `windows[].panes = { cols: 4, rows: 6, transomFromTop: 0.3 }` — bandeira com travessa a 30% do topo, duas folhas embaixo com montante central mais largo.
+- Como reverter: `config/room.json` (histórico no git).
+- Precisa do usuário? não.
