@@ -16,6 +16,7 @@ const LOGS = join(ROOT, 'logs')
 // step -> python scripts run in order (each in its own Blender process)
 const STEPS = {
   check: ['check.py'],
+  assets: ['render_assets.py'],
   build: ['build_room.py', 'build_bookcase.py', 'build_props.py', 'sim_curtains.py'],
   preview: ['preview.py'],
   bake: ['bake.py'],

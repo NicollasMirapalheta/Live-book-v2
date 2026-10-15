@@ -79,3 +79,15 @@ Formato de cada entrada:
 - Alternativa descartada: KTX2 (exige o programa `ktx`).
 - Como reverter: instalar o KTX-Software 4.4+ e rodar `npm run optimize` de novo; o script detecta o `ktx` sozinho.
 - Precisa do usuário? sim (instalar o KTX-Software quando quiser texturas KTX2).
+
+## 2026-10-15 — Trocas de assets na revisão da folha de contato (T1)
+- Contexto: o `art-reviewer` avaliou `shots/latest/assets_contact.png`. Bloqueantes: tábuas do piso com ~8 cm (spec pede 14–20 cm), pedra de ardósia escura (direção pede pedra clara bege-acinzentada), tapete com pouco marinho, escrivaninha placeholder quase preta.
+- Escolha:
+  - Piso → `wood_floor` (Poly Haven, tábuas largas envernizadas). O antigo `old_wooden_floor_02` virou `floor_wood_alt`.
+  - Pedra → `white_sandstone_bricks` (arenito claro em fiadas irregulares). `sandstone_blocks_05` segue como alternativa.
+  - Tapete → Met 451375 (vermelho/marinho/creme), recortando o fundo cinza do museu.
+  - Escrivaninha → modelada no script (já previsto na spec); `ClassicConsole_01` não será usado.
+  - Ajustes de material previstos: estante/lambri −25% de saturação; vigas tingidas para #4A2A1C–#6B3E2A; teto tingido para ~#D6C9AE (nunca branco puro); linho só normal/rugosidade + cor #DCCDB0; vaso de latão ×0,42; só os castiçais pequenos na estante; quadro ×1,5; chaminé do lampião em vidro; vaso da planta em terracota; lambri com uma única fileira de almofadas.
+- Alternativa descartada: manter os assets originais e corrigir só por UV/cor (largura das tábuas e cor da ardósia não se resolvem bem assim).
+- Como reverter: `assets/manifest.json` (trocar `id`/`page` de volta) e `npm run assets:fetch`.
+- Precisa do usuário? não. Observação do revisor: na referência, o teto entre as vigas parece de madeira, não reboco — mantido o reboco claro da spec; listado no relatório.

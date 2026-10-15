@@ -8,14 +8,14 @@ Download: `npm run assets:fetch` (= `node scripts/fetch-assets.mjs`). Idempotent
 
 | Uso | Asset | Fonte | Risco / ajuste |
 |-----|-------|-------|----------------|
-| Piso | `old_wooden_floor_02` (alt. `wooden_floor_02`) | [Poly Haven](https://polyhaven.com/a/old_wooden_floor_02) | Desgaste certo. Se as tábuas forem estreitas, cortar por tábua no UV |
-| Pedra da parede | `castle_wall_slates` (alt. `sandstone_blocks_05`) | [Poly Haven](https://polyhaven.com/a/castle_wall_slates) | Juntas fundas: reduzir displacement |
+| Piso | `wood_floor` (alt. `old_wooden_floor_02`) | [Poly Haven](https://polyhaven.com/a/wood_floor) | Tábuas largas envernizadas; trocado na revisão T1 (o anterior tinha tábuas de ~8 cm) |
+| Pedra da parede | `white_sandstone_bricks` (alt. `sandstone_blocks_05`) | [Poly Haven](https://polyhaven.com/a/white_sandstone_bricks) | Arenito claro irregular; trocado na revisão T1 (o anterior era ardósia escura) |
 | Lambri / porta | `wooden_panels` | [Poly Haven](https://polyhaven.com/a/wooden_panels) | Muito próximo do pedido |
 | Estante, caixilhos, porta, mesa | `dark_wood` | [Poly Haven](https://polyhaven.com/a/dark_wood) | Mogno acetinado, bate com a paleta |
 | Teto | `white_stucco` | [Poly Haven](https://polyhaven.com/a/white_stucco) | — |
 | Vigas | `rough_wood` | [Poly Haven](https://polyhaven.com/a/rough_wood) | Tende ao cinza: aquecer e escurecer |
 | Cortinas | `rough_linen` (alt. `terlenka`) | [Poly Haven](https://polyhaven.com/a/rough_linen) | **Cor azul**: tingir para linho `#DCCDB0` |
-| Tapete (desenho) | Tapete persa do séc. XVIII, Met 452828 (alt. Met 451375) | [The Met Open Access](https://www.metmuseum.org/art/collection/search/452828) | Foto de domínio público: recortar, endireitar, ajustar cores |
+| Tapete (desenho) | Tapete persa de seda, Irã 1863, Met 451375 (alt. Met 452828) | [The Met Open Access](https://www.metmuseum.org/art/collection/search/451375) | Domínio público: recortar o fundo cinza e a faixa branca, ajustar cores |
 | Tapete (relevo) | `dirty_carpet` (só normal + ARM) | [Poly Haven](https://polyhaven.com/a/dirty_carpet) | — |
 | Capa dos livros | `leather_red_02` (alt. `brown_leather`); tecido reaproveita `rough_linen` | [Poly Haven](https://polyhaven.com/a/leather_red_02) | Tingir preservando a luminância |
 | Lustre | `Chandelier_03` (alt. `Chandelier_02`) | [Poly Haven](https://polyhaven.com/a/Chandelier_03) | Cristais com opacity map; adicionar chamas emissivas |

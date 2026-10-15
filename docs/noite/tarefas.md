@@ -15,12 +15,12 @@ Início da execução (preencher no T0 com a saída de `date`): `Thu Oct 15 00:0
   - Conferir `ktx --version` (KTX-Software 4.4+). Se faltar, registrar e usar o fallback do §5 da spec.
   - **Pronto quando:** `npm run check` passa e `npm run shot -- --node N0` gera um PNG; GPU do screenshot registrada (não SwiftShader, ou contorno documentado).
 
-- [ ] **T1 — Assets**
+- [x] **T1 — Assets** — evidência: `assets/source/_report.json` 27/27 ok, 0 falhas obrigatórias; `shots/latest/assets_contact.png` revisada pelo `art-reviewer`; trocas (piso `wood_floor`, pedra `white_sandstone_bricks`, tapete Met 451375) em `docs/decisoes.md`
   - `npm run assets:fetch` baixa tudo de `assets/manifest.json` para `assets/source/`.
   - Montar uma folha de contato (`shots/latest/assets_contact.png`) com as texturas principais e os modelos, e pedir ao `art-reviewer` para checar cor e escala contra a paleta (largura das tábuas, cor da pedra). Se um asset não servir, trocar pela alternativa do manifest e registrar em `docs/decisoes.md`.
   - **Pronto quando:** `assets/source/_report.json` sem falhas obrigatórias; folha de contato revisada; trocas registradas.
 
-- [ ] **T2 — Blender operacional**
+- [x] **T2 — Blender operacional** — evidência: `npm run blender:check` → Blender 5.2.2 LTS, GPU OPTIX RTX 4060, código 0
   - `scripts/blender.mjs` (wrapper portátil) e `blender/common.py` (lê `room.json`, conversão de eixos, fórmula do sol, log, detecção de GPU, args depois de `--`).
   - **Pronto quando:** `npm run blender:check` imprime versão do Blender e dispositivo de render (GPU ou CPU) e sai com código 0.
 

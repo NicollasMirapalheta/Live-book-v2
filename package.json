@@ -21,7 +21,8 @@
     "blender:denoise": "node --env-file-if-exists=.env.local scripts/blender.mjs denoise",
     "blender:export": "node --env-file-if-exists=.env.local scripts/blender.mjs export",
     "optimize": "node --env-file-if-exists=.env.local --import tsx scripts/optimize.ts",
-    "pipeline": "node --env-file-if-exists=.env.local --import tsx scripts/pipeline.ts"
+    "pipeline": "node --env-file-if-exists=.env.local --import tsx scripts/pipeline.ts",
+    "blender:assets": "node --env-file-if-exists=.env.local scripts/blender.mjs assets"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",
