@@ -41,6 +41,14 @@ Screenshots: `npm run shot` (sala) e `npm run shot -- --dev book` (livro).
 - `assets_contact.png`: folha de contato dos assets
 - `blender_N0.png`, `blender_N2.png`: prévias do Cycles
 
+## Fase 3 — livros na estante e seleção (depois da aprovação)
+
+- Os 6 livros de teste ficam de pé na prateleira de cima, centralizados entre o par de apoios de latão, com o último livro inclinado encostado no apoio e sombras de contato. Os outros objetos se reorganizam pelo `shelfLayout.ts`. Pares de apoios sem livros ficam escondidos.
+- Seleção no N2: passar o mouse puxa o livro 12 mm. Clique ou `←/→` + `Enter` faz o livro deslizar para fora e girar 28° mostrando a capa e a polaroid, e abre o painel de descrição com **Abrir** e **Voltar**. `Esc` ou clique fora fecha. A navegação fica travada durante a seleção. **Abrir** só registra a intenção: o voo e a abertura são da Fase 4.
+- Spec: `docs/specs/fase-3-selecao.md`. Testes: 16 unitários e 8 e2e (3 de seleção). Draw calls: N2 102, selecionado 107, N0 115.
+- Shots: `shots/latest/N2.png` e `shots/latest/N2_selected.png`. `art-reviewer`: 3 · 3 · 3 · 2 na 2ª revisão; a pose da seleção foi corrigida depois disso (base apoiada, sem flutuar).
+- Pendências: com só 6 livros a fileira fica pequena vista do N1; lombadas mais legíveis de longe; a capa do livro selecionado sai um pouco lavada pela luz do lustre.
+
 ## ✅ Fase 0 aprovada pelo usuário (S10, bake final)
 
 Depois da sua escolha de "seguir o revisor" (S9–S10: madeira menos saturada e mais âmbar, céu âmbar, N0 0,4 m à frente, lustre mais baixo, anti-magenta), o `art-reviewer` deu **4 · 4 · 4 · 4 · 4** com o veredito **"pronto para o usuário"**. **Aprovada pelo usuário em 15/10/2026.**

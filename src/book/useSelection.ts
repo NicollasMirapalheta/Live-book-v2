@@ -82,6 +82,8 @@ declare global {
       readonly order: string[]
       select: (id: string) => void
       clear: () => void
+      /** screen position (CSS px) of a book on the shelf, for pointer tests */
+      screenPos?: (id: string) => { x: number; y: number } | null
     }
   }
 }

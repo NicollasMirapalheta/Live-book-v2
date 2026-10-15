@@ -1,6 +1,6 @@
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { use, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Color, type Group, type Mesh, type MeshStandardMaterial } from 'three'
+import { Box3, Color, Vector3, type Group, type Mesh, type MeshStandardMaterial } from 'three'
 import { params } from '../app/params'
 import { invalidateShadows } from '../scene/shadows'
 import { Book } from './Book'
@@ -135,6 +135,7 @@ function RowShadows({ shelf, x0, x1 }: { shelf: Shelf; x0: number; x1: number })
 /** The books on the bookcase, placed by shelfLayout (spec Fase 3). */
 export function BookShelf() {
   const data = use(loadBookcase())
+  const scene = useThree((s) => s.scene)
   const books = shelfBooks()
   const layout = shelfLayoutFor(data, books)
   const shelves = useMemo(() => new Map(data.shelves.map((s) => [s.index, s])), [data])
@@ -151,6 +152,20 @@ export function BookShelf() {
   }, [layout, data, setOrder])
 
   useLayoutEffect(() => invalidateShadows(), [layout])
+
+  const camera = useThree((s) => s.camera)
+  const gl = useThree((s) => s.gl)
+  useEffect(() => {
+    if (!window.__SEL__) return
+    window.__SEL__.screenPos = (id) => {
+      const o = scene.getObjectByName(`shelf_book_${id}`)
+      if (!o) return null
+      const box = new Box3().setFromObject(o)
+      const p = box.getCenter(new Vector3()).project(camera)
+      const r = gl.domElement.getBoundingClientRect()
+      return { x: r.left + ((p.x + 1) / 2) * r.width, y: r.top + ((1 - p.y) / 2) * r.height }
+    }
+  }, [scene, camera, gl])
 
   const rows = (() => {
     const out: { shelf: Shelf; x0: number; x1: number }[] = []

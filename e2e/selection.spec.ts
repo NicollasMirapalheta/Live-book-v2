@@ -9,6 +9,7 @@ declare global {
       readonly focused: string | null
       readonly openRequested: string | null
       readonly order: string[]
+      screenPos?: (id: string) => { x: number; y: number } | null
     }
   }
 }
@@ -55,15 +56,12 @@ test('teclado: ← → percorre os livros, Enter abre a descrição, Esc volta',
 
 test('clicar num livro abre a seleção; clicar fora fecha', async ({ page }) => {
   await atBookcase(page)
-  // without debug hooks, click where the books stand: top shelf, right side (see shots/latest/N2.png)
+  const id = await page.evaluate(() => window.__SEL__!.order[2])
+  const pos = (await page.evaluate((bookId) => window.__SEL__!.screenPos!(bookId), id))!
+  await page.mouse.click(pos.x, pos.y)
+  const selected = await page.evaluate(() => window.__SEL__!.selected)
   const box = (await page.locator('canvas').boundingBox())!
-  let selected: string | null = null
-  for (const fx of [0.69, 0.7, 0.71, 0.72, 0.68]) {
-    await page.mouse.click(box.x + box.width * fx, box.y + box.height * 0.2)
-    selected = await page.evaluate(() => window.__SEL__!.selected)
-    if (selected) break
-  }
-  expect(selected).not.toBeNull()
+  expect(selected).toBe(id)
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.mouse.click(box.x + box.width * 0.1, box.y + box.height * 0.5)
   await expect(page.getByRole('dialog')).toHaveCount(0)
