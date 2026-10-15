@@ -23,3 +23,10 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# saídas do pipeline (regeráveis com npm run pipeline)
+public/models/
+public/lightmaps/
+public/env/
+public/data/sizes.json
+shots/debug-*/

@@ -31,7 +31,7 @@ Início da execução (preencher no T0 com a saída de `date`): `Thu Oct 15 00:0
 - [x] **T4 — Estante, props e cortinas** — evidência: `public/data/bookcase.json` (4 prateleiras, y 0.83→1.887, vão 0.322 m, bate com `room.json`); apoios de latão modelados em `build_props.py`; cortinas com simulação de tecido e colisão (estante, paredes, caixilho) sem atravessar; prévias `shots/blender/N0.png` e `N2.png` (`build_bookcase.py`, `build_props.py`, `sim_curtains.py`)
   - **Pronto quando:** `public/data/bookcase.json` válido (4 níveis, coerente com `room.json`); apoios de livro de latão modelados; cortinas sem atravessar a estante; prévia `npm run blender:preview -- --node N2` salva.
 
-- [ ] **T5 — Bake, denoise, export e otimização**
+- [x] **T5 — Bake, denoise, export e otimização** — evidência: `npm run pipeline -- --quality draft` ponta a ponta em ~2,6 min (RTX 4060/OptiX); `public/models/room.glb` (10,1 MB), `props.glb` (3,2 MB), `public/lightmaps/manifest.json` + 3 atlas WebP RGBM (2,3 MB), `public/env/room_N1.hdr` (1,3 MB) + `sky.jpg`; `gltf-transform inspect` mostra `TEXCOORD_1` em todas as malhas assadas; denoise via compositor 5.x ok; tamanhos em `public/data/sizes.json`
   - **Pronto quando:** `npm run pipeline -- --quality draft` roda de ponta a ponta sem erro; `public/models/room.glb`, `public/lightmaps/manifest.json` e `public/env/room_N1.*` existem; `gltf-transform inspect` mostra `TEXCOORD_1` nas malhas com lightmap; tamanhos registrados.
 
 - [ ] **T6 — Cena no navegador**

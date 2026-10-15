@@ -135,3 +135,15 @@ Formato de cada entrada:
 - Escolha: `nodes.N0.position.z = 5.35` e `door.openInwardDeg = 105` (folhas ~5% de cada lado, parede lateral ~3%); `nodes.N0.lensShiftY = 0.23` (faixa do teto ~4%, horizonte a ~27% do topo, ref. 28%); `rug.size = [1.9, 0.95]`, `rug.center z = 2.5`; `windows[].panes = { cols: 4, rows: 6, transomFromTop: 0.3 }` — bandeira com travessa a 30% do topo, duas folhas embaixo com montante central mais largo.
 - Como reverter: `config/room.json` (histórico no git).
 - Precisa do usuário? não.
+
+## 2026-10-15 — Saídas do pipeline fora do git
+- Contexto: `public/models/*.glb`, lightmaps e env somam ~15 MB e mudam a cada iteração de look dev; versioná-los incha o repositório.
+- Escolha: ignorados no `.gitignore` (regeráveis com `npm run pipeline -- --quality final`). `public/data/bookcase.json` continua versionado (pequeno, lido pela Fase 2/3).
+- Como reverter: remover as linhas do `.gitignore` e dar `git add`.
+- Precisa do usuário? não.
+
+## 2026-10-15 — UV2 por objeto + empacotamento próprio; lightmaps RGBM em WebP sem perdas
+- Contexto: `smart_project`/`pack_islands` em todo o atlas gerava milhares de ilhas (tábuas, pedra decimada, lustre) e ocupava ~15% do atlas.
+- Escolha: cada objeto é desembrulhado sozinho (planar em metros para piso, teto, tapete e pedra; grade do tecido nas cortinas; `lightmap_pack` no resto) e os retângulos dos objetos são empacotados em prateleiras com densidade de texel única (busca binária). Pesos menores para vestíbulo e corpos das paredes. Resultado draft: shell 55 px/m, estante 61 px/m, props 127 px/m (final: o dobro). Lightmaps em RGBM (alpha = multiplicador) gravados como WebP lossless e carregados com `ImageBitmap` sem pré-multiplicação.
+- Como reverter: `blender/bake.py` → `unwrap()`.
+- Precisa do usuário? não.
