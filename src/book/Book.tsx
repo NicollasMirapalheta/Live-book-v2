@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Vector2, type Texture } from 'three'
 import {
   clothWeaveHeight,
+  contactShadowTexture,
   frontFoilMask,
   maskTexture,
   normalFromMask,
@@ -20,9 +21,11 @@ import {
   HINGE_OFFSET,
   pageBlockGeometry,
   polaroidGeometry,
+  polaroidLayout,
   spineFoilGeometry,
 } from './geometry'
 import {
+  contactShadowMaterial,
   coverMaterial,
   endpaperMaterial,
   foilMaterial,
@@ -85,6 +88,7 @@ export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0] }: BookP
       spineFoil: spineFoilGeometry(d),
       frontFoil: frontFoilGeometry(d),
       polaroid: polaroidGeometry(d),
+      polaroidSize: [polaroidLayout(d).cardW, polaroidLayout(d).cardH] as [number, number],
     }),
     [d, hasPolaroid],
   )
@@ -115,7 +119,8 @@ export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0] }: BookP
       pageSide: pageSideMaterial(paper),
       spineFoil: foilMaterial(maskTexture(spineMask), normalFromMask(spineMask)),
       frontFoil: foilMaterial(maskTexture(frontMask), normalFromMask(frontMask)),
-      card: polaroidCardMaterial(),
+      card: polaroidCardMaterial(paper),
+      shadow: contactShadowMaterial(contactShadowTexture()),
     }
   }, [geo.cover, d, book.title, book.coverMaterial, book.color, lum, normal, arm])
 
@@ -130,7 +135,12 @@ export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0] }: BookP
 
   useEffect(
     () => () => {
-      Object.values(geo).forEach((g) => ('dispose' in g ? g.dispose() : (g.card.dispose(), g.photo.dispose())))
+      geo.cover.dispose()
+      geo.pages.dispose()
+      geo.spineFoil.dispose()
+      geo.frontFoil.dispose()
+      geo.polaroid.card.dispose()
+      geo.polaroid.photo.dispose()
       Object.values(mats).forEach((m) => m.dispose())
     },
     [geo, mats],
@@ -141,12 +151,16 @@ export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0] }: BookP
       {/* geometry.ts builds Z from the spine to the fore-edge; mirrored here so that, facing the front cover,
           the spine is on the left (western binding) */}
       <group scale={[1, 1, -1]}>
-      {/* cover: groups 0 outer, 1 board edges, 2 endpapers */}
-      <mesh name="cover" geometry={geo.cover} material={[mats.cover, mats.cover, mats.endpaper]} castShadow receiveShadow />
+      {/* cover: groups 0 outer, 1 board edges, 2 inner face. The inner face shows the cover's turn-ins at the
+          squares; the endpaper (mats.endpaper) is only visible once the book opens (Fase 4). */}
+      <mesh name="cover" geometry={geo.cover} material={[mats.cover, mats.cover, mats.cover]} castShadow receiveShadow />
       <mesh name="pageBlock" geometry={geo.pages} material={[mats.pageEdge, mats.pageSide]} castShadow receiveShadow />
       <mesh name="spineFoil" geometry={geo.spineFoil} material={mats.spineFoil} />
       <mesh name="frontFoil" geometry={geo.frontFoil} material={mats.frontFoil} />
       <group name="polaroid" position={geo.polaroid.position} rotation={[tilt, 0, 0]}>
+        <mesh rotation={[0, Math.PI / 2, 0]} position={[0.00003, 0, 0]} material={mats.shadow} renderOrder={1}>
+          <planeGeometry args={[geo.polaroidSize[0] * 1.12, geo.polaroidSize[1] * 1.1]} />
+        </mesh>
         <mesh geometry={geo.polaroid.card} material={mats.card} castShadow receiveShadow />
         {photoMat && <mesh geometry={geo.polaroid.photo} material={photoMat} />}
       </group>

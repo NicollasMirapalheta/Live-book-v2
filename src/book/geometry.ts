@@ -329,13 +329,27 @@ export function coverGeometry(d: BookDimensions, opts: CoverGeometryOptions = {}
     extrudeStrip(b, inner, innerN, 0, H)
   })
   group(b, COVER_GROUPS.edges, () => {
-    // board edges at the fore-edge (end caps of the C profile) and top/bottom faces
-    const closed: ProfilePoint[] = [
-      ...outer.map((q, i) => ({ p: q.p.clone().sub(outerN[i].clone().multiplyScalar(e)), panel: q.panel })),
-      ...inner,
-    ]
-    cap(b, closed, 0, false, 1)
-    cap(b, closed, H, true, 1)
+    // head and tail of the boards: two rectangles (boards) + a ring of quads (rounded spine).
+    // (a single C-shaped polygon triangulates badly and left the endpaper visible through the edge)
+    const ring0 = spineArc(d, -e)
+    const ring1 = spineArc(d, -BOARD)
+    for (const [y, up] of [[0, false], [H, true]] as const) {
+      const ny = up ? 1 : -1
+      const quad = (pts: [number, number][]) => {
+        const ids = pts.map(([x, z]) => vertex(b, x, y, z, 0, ny, 0, z, x, 1))
+        b.idx.push(ids[0], ids[1], ids[2], ids[0], ids[2], ids[3])
+      }
+      quad([[-T + e, 0], [-T + BOARD, 0], [-T + BOARD, zEnd - e], [-T + e, zEnd - e]])
+      quad([[T - BOARD, 0], [T - e, 0], [T - e, zEnd - e], [T - BOARD, zEnd - e]])
+      for (let i = 0; i < ring0.length - 1; i++) {
+        quad([
+          [ring0[i].x, ring0[i].y],
+          [ring0[i + 1].x, ring0[i + 1].y],
+          [ring1[i + 1].x, ring1[i + 1].y],
+          [ring1[i].x, ring1[i].y],
+        ])
+      }
+    }
     // fore-edge ends of the boards
     for (const [o, ii, sign] of [[outer[outer.length - 1], inner[0], 1], [outer[0], inner[inner.length - 1], -1]] as const) {
       const v0 = vertex(b, o.p.x, 0, o.p.y, 0, 0, 1, 0, 0, o.panel)

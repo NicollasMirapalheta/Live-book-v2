@@ -152,6 +152,17 @@ export function clothWeaveHeight(tileM: number, seed = 5): HTMLCanvasElement {
   return c
 }
 
+/** Soft rectangular shadow (alpha): darkest under the card, fading 4% beyond its edges. */
+export function contactShadowTexture(): Texture {
+  const N = 256
+  const { c, ctx } = canvas(N, N)
+  ctx.clearRect(0, 0, N, N)
+  ctx.filter = 'blur(10px)'
+  ctx.fillStyle = '#fff'
+  ctx.fillRect(N * 0.1, N * 0.1, N * 0.8, N * 0.8)
+  return texture(c, false)
+}
+
 export function maskTexture(mask: HTMLCanvasElement): Texture {
   return texture(mask, false)
 }
@@ -219,11 +230,19 @@ export function wearTexture(profileLengthM: number, heightM: number, spineFromM:
     ctx.fillStyle = `rgba(255,255,255,${a})`
     ctx.fillRect(x, y, bw, bh)
   }
-  const edge = 0.004 * pxPerM
-  band(0, 0, w, edge, 0.55)
-  band(0, h - edge, w, edge, 0.55)
-  band(0, 0, edge * 0.8, h, 0.45)
-  band(w - edge * 0.8, 0, edge * 0.8, h, 0.45)
+  const edge = 0.005 * pxPerM
+  band(0, 0, w, edge, 0.75)
+  band(0, h - edge, w, edge, 0.75)
+  band(0, 0, edge * 0.8, h, 0.6)
+  band(w - edge * 0.8, 0, edge * 0.8, h, 0.6)
+  // rubbed corners (fore-edge top and bottom of both boards): soft blobs
+  for (const [x, y] of [[0, 0], [0, h], [w, 0], [w, h]]) {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, 0.018 * pxPerM)
+    g.addColorStop(0, 'rgba(255,255,255,0.95)')
+    g.addColorStop(1, 'rgba(255,255,255,0)')
+    ctx.fillStyle = g
+    ctx.fillRect(x - 0.02 * pxPerM, y - 0.02 * pxPerM, 0.04 * pxPerM, 0.04 * pxPerM)
+  }
   // spine rubbing
   const s0 = spineFromM * pxPerM
   const s1 = spineToM * pxPerM

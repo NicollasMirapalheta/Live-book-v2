@@ -52,3 +52,7 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 - Divergências restantes (viraram próximos passos no relatório): dominante vermelho-laranja; vestíbulo escuro e profundo no N0 16:9; fim de tarde pouco legível (céu cinza, feixes fracos no N0); faixa fria no fundo do piso; props/têxteis genéricos (cúpulas do lustre, abraçadeiras baixas, quadro e lampião fora do quadro do N0).
 - Defeitos técnicos corrigidos depois desta revisão (re-bake final): costura de luz nas quinas do vestíbulo; moiré da trama do livro de tecido.
 - Limite de iterações: 6 drafts + final (runbook: até 8). Parei aqui porque os itens restantes de maior impacto (temperatura geral da luz, elevação do sol, posição do N0) contradizem decisões anteriores do próprio revisor ou da direção de arte e precisam da sua escolha — ver "Decisões que precisam de você".
+
+### S8 + L4 — 2026-10-15 (continuação pedida pelo usuário)
+- Sala: recomendações 1–2 do relatório aplicadas (céu do bake mais frio/forte, sol 22°, força 14), pedra #A8A08E (sat 0,4), madeiras sat 0,32, abraçadeiras a 1,4 m, velas do lustre creme, feixes mais fortes, latão dos apoios com menos reflexo do céu.
+- Livro: polaroid com cartão creme texturizado, foto com verniz brilhante (clearcoat) e sombra de contato no rebaixo; dourado menos acobreado; desgaste mais forte nas quinas; face interna das placas com o material da capa (a "dobra" do couro) — o degrau creme apontado pelo revisor era a guarda de papel aparecendo na seixa.

@@ -1,5 +1,6 @@
 import {
   Color,
+  MeshBasicMaterial,
   DoubleSide,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
@@ -106,7 +107,8 @@ export function pageSideMaterial(paper: Texture) {
 /** Gold tooling: metal where the mask is set, slightly debossed via the normal map from the mask. */
 export function foilMaterial(mask: Texture, normal: Texture) {
   return new MeshStandardMaterial({
-    color: new Color(GOLD).lerp(new Color('#B8A16A'), 0.3),
+    // less red than #C9A35A: under the warm key light and AgX the pure palette value reads as copper
+    color: new Color(GOLD).lerp(new Color('#B9A867'), 0.55),
     metalness: 1,
     roughness: 0.34,
     alphaMap: mask,
@@ -118,10 +120,26 @@ export function foilMaterial(mask: Texture, normal: Texture) {
   })
 }
 
-export function polaroidCardMaterial() {
-  return new MeshStandardMaterial({ color: new Color('#EEE7D6'), roughness: 0.78, metalness: 0, side: DoubleSide })
+export function polaroidCardMaterial(paper?: Texture) {
+  // aged instant-film card: cream, never pure white, with the paper fibre texture
+  return new MeshStandardMaterial({ color: new Color('#E4D9C2'), map: paper ?? null, roughness: 0.8, metalness: 0, side: DoubleSide })
+}
+
+/** Soft contact shadow under the polaroid, inside the recess (multiplied over the cover). */
+export function contactShadowMaterial(shadow: Texture) {
+  return new MeshBasicMaterial({ color: new Color('#000000'), alphaMap: shadow, transparent: true, opacity: 0.55, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 })
 }
 
 export function polaroidPhotoMaterial(photo: Texture) {
-  return new MeshPhysicalMaterial({ map: photo, roughness: 0.22, clearcoat: 0.6, clearcoatRoughness: 0.2, polygonOffset: true, polygonOffsetFactor: -1, side: DoubleSide })
+  // glossy photographic surface: sharp reflections of the room on top of a slightly matte emulsion
+  return new MeshPhysicalMaterial({
+    map: photo,
+    roughness: 0.3,
+    clearcoat: 1,
+    clearcoatRoughness: 0.08,
+    envMapIntensity: 1.3,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    side: DoubleSide,
+  })
 }
