@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "intensity": 1,
+  "atlases": {
+    "atlas_shell": {
+      "file": "atlas_shell.webp",
+      "encoding": "rgbm",
+      "range": 7,
+      "size": 1024,
+      "mode": "lightmap",
+      "denoised": true
+    },
+    "atlas_bookcase": {
+      "file": "atlas_bookcase.webp",
+      "encoding": "rgbm",
+      "range": 4,
+      "size": 512,
+      "mode": "lightmap",
+      "denoised": true
+    },
+    "atlas_props": {
+      "file": "atlas_props.webp",
+      "encoding": "rgbm",
+      "range": 24,
+      "size": 1024,
+      "mode": "combined",
+      "denoised": true
+    }
+  },
+  "objects": {
+    "wall_back": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "wall_front": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "wall_left": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "wall_right": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "wall_back_stone": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "wall_front_stone": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "wall_left_stone": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "wall_right_stone": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "floor": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "ceiling": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "beam_0": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "beam_1": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "beam_2": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "brace_left": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "brace_right": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "wainscot_back": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "wainscot_left": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "wainscot_right": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "wainscot_front": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "door_frame": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "door_leaf_left": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "door_leaf_right": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "vestibule_shell": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "vestibule_wainscot": {
+      "atlas": "atlas_shell",
+      "mode": "lightmap"
+    },
+    "bookcase": {
+      "atlas": "atlas_bookcase",
+      "mode": "lightmap"
+    },
+    "bookcase_knobs": {
+      "atlas": "atlas_bookcase",
+      "mode": "lightmap"
+    },
+    "window_left_frame": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "window_right_frame": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "rug": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "rug_fringe": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "desk": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "desk_lamp": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "picture_frame": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "picture_frame_canvas": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "chandelier": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "curtain_rod_left": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "curtain_rod_right": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "curtain_left_a": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "curtain_left_b": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "curtain_right_a": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "curtain_right_b": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "tieback_left_a": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "tieback_left_b": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "tieback_right_a": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    },
+    "tieback_right_b": {
+      "atlas": "atlas_props",
+      "mode": "combined"
+    }
+  }
+}

@@ -83,6 +83,9 @@ def build_wall_body(name, axis, plane, outward, u0, u1, openings, y0=-0.05, y1=H
     """Solid wall pieces with thickness T growing outward. The inner face is omitted (the stone skin covers it)."""
     mb = MeshBuilder(name)
     inner_skip = {("z", -1): "+z", ("z", 1): "-z", ("x", -1): "+x", ("x", 1): "-x"}[(axis, outward)]
+    outer_skip = {"+z": "-z", "-z": "+z", "+x": "-x", "-x": "+x"}[inner_skip]
+    # the front wall's outer face is seen from the vestibule; the others never are
+    skips = (inner_skip,) if name == "wall_front" else (inner_skip, outer_skip)
     for a, c, holes in wall_segments(u0, u1, openings):
         spans = []
         cursor = y0
@@ -100,7 +103,7 @@ def build_wall_body(name, axis, plane, outward, u0, u1, openings, y0=-0.05, y1=H
                 x0, x1 = (plane, plane + outward * T) if outward > 0 else (plane + outward * T, plane)
                 mn, mx = (x0, s0, a), (x1, s1, c)
             # reveal faces of openings keep the stone texture; the inner face is the skin
-            mb.box(mn, mx, tile=2.0, grain="x" if axis == "z" else "z", material="stone", skip=(inner_skip,))
+            mb.box(mn, mx, tile=2.0, grain="x" if axis == "z" else "z", material="stone", skip=skips)
     return mb.finish("room", M)
 
 
@@ -266,7 +269,8 @@ log("floor")
 # ---------------------------------------------------------------------------
 
 mb = MeshBuilder("ceiling")
-mb.box((XL - T, H, ZB - T), (XR + T, H + 0.15, ZF + T), tile=2.0, grain="x", material="plaster")
+mb.box((XL - T, H, ZB - T), (XR + T, H + 0.15, ZF + T), tile=2.0, grain="x", material="plaster",
+       skip=("+y", "-x", "+x", "-z", "+z"))  # only the underside is ever seen
 mb.finish("room", M)
 
 beams = cfg["ceiling"]["beams"]
@@ -298,13 +302,17 @@ def wainscot_run(mb, axis, plane, sign, u0, u1, panel_w=WS["panelWidth"]):
     bb = WS["baseboardHeight"]
     rail = WS["railHeight"]
 
+    # the face against the wall and the underside on the floor are never seen
+    wall_face = ("-" if sign > 0 else "+") + axis
+
     def box(ua, ub, y0, y1, d0, d1, grain_u=True):
         a, c = plane + sign * d0, plane + sign * d1
         lo, hi = min(a, c), max(a, c)
+        skip = (wall_face, "-y") if d0 == 0.0 else ()
         if axis == "z":
-            mb.box((ua, y0, lo), (ub, y1, hi), tile=1.0, grain="x" if grain_u else "y", material="wainscot")
+            mb.box((ua, y0, lo), (ub, y1, hi), tile=1.0, grain="x" if grain_u else "y", material="wainscot", skip=skip)
         else:
-            mb.box((lo, y0, ua), (hi, y1, ub), tile=1.0, grain="z" if grain_u else "y", material="wainscot")
+            mb.box((lo, y0, ua), (hi, y1, ub), tile=1.0, grain="z" if grain_u else "y", material="wainscot", skip=skip)
 
     length = u1 - u0
     n = max(1, round(length / panel_w))

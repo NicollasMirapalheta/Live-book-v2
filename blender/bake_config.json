@@ -1,0 +1,21 @@
+{
+  "$comment": "Bake por objeto (spec Fase 0 §4). 'lightmap' = irradiância difusa (direta + indireta, sem cor) em UV2; o app usa PBR + lightMap. 'combined' = luz × cor em UV2; o app usa MeshBasicMaterial com a textura assada. Padrões em fnmatch sobre o nome do objeto. size = resolução final; draft usa a metade.",
+  "atlases": {
+    "atlas_shell": {
+      "size": 2048,
+      "mode": "lightmap",
+      "objects": ["floor", "wall_*", "ceiling", "beam_*", "brace_*", "wainscot_*", "door_frame", "door_leaf_*", "vestibule_*"]
+    },
+    "atlas_bookcase": {
+      "size": 1024,
+      "mode": "lightmap",
+      "objects": ["bookcase", "bookcase_knobs"]
+    },
+    "atlas_props": {
+      "size": 2048,
+      "mode": "combined",
+      "objects": ["curtain_left_*", "curtain_right_*", "curtain_rod_*", "tieback_*", "rug", "rug_fringe", "window_*_frame", "desk", "picture_frame*", "desk_lamp", "chandelier"]
+    }
+  },
+  "env": { "node": "N1", "width": 2048, "height": 1024 }
+}

@@ -4,7 +4,7 @@
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import sharp from 'sharp'
+import sharp, { type Sharp } from 'sharp'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const SRC = join(ROOT, 'assets', 'source')
@@ -43,7 +43,7 @@ interface ColorJob {
 }
 
 /** Shifts the image mean toward a target color while keeping its local variation. */
-async function colorMatch(input: sharp.Sharp, job: ColorJob): Promise<sharp.Sharp> {
+async function colorMatch(input: Sharp, job: ColorJob): Promise<Sharp> {
   let img = input
   if (job.grayscale) img = img.grayscale().toColourspace('srgb')
   if (job.saturation !== undefined) img = img.modulate({ saturation: job.saturation })
@@ -62,7 +62,7 @@ async function colorMatch(input: sharp.Sharp, job: ColorJob): Promise<sharp.Shar
 
 const written: Record<string, string> = {}
 
-async function save(img: sharp.Sharp, name: string, kind: 'jpg' | 'png' = 'jpg') {
+async function save(img: Sharp, name: string, kind: 'jpg' | 'png' = 'jpg') {
   const file = join(OUT, `${name}.${kind}`)
   const out = img.resize(SIZE, SIZE, { fit: 'fill' })
   await (kind === 'jpg' ? out.jpeg({ quality: 92, mozjpeg: true }) : out.png()).toFile(file)
@@ -70,7 +70,7 @@ async function save(img: sharp.Sharp, name: string, kind: 'jpg' | 'png' = 'jpg')
 }
 
 /** ARM with the roughness (G) channel re-centered on a target mean and its variation scaled. */
-async function arm(file: string, roughness?: number, spread = 0.6): Promise<sharp.Sharp> {
+async function arm(file: string, roughness?: number, spread = 0.6): Promise<Sharp> {
   if (roughness === undefined) return sharp(file)
   const g = (await sharp(file).stats()).channels[1].mean
   return sharp(file).linear([1, spread, 1], [0, roughness * 255 - g * spread, 0])

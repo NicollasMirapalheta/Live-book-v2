@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-15T03:10:54.253Z",
+  "at": "2026-10-15T04:09:22.131Z",
   "quality": "high",
   "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)",
   "browserMode": "headless + ANGLE default",
@@ -7,28 +7,56 @@
   "shots": {
     "N0": {
       "stats": {
-        "calls": 6,
-        "triangles": 22,
-        "textures": 1,
+        "calls": 86,
+        "triangles": 466713,
+        "textures": 83,
         "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)"
       },
       "luminance": {
-        "min": 0.005127717275172472,
-        "p0_5": 0.005928512196987867
+        "min": 0,
+        "p0_5": 0
       },
       "tooDark": true,
       "consoleErrors": []
     },
     "N0_approval": {
       "stats": {
-        "calls": 6,
-        "triangles": 22,
-        "textures": 1,
+        "calls": 86,
+        "triangles": 466713,
+        "textures": 83,
         "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)"
       },
       "luminance": {
-        "min": 0.005127717275172472,
-        "p0_5": 0.005692516453564167
+        "min": 0,
+        "p0_5": 0
+      },
+      "tooDark": true,
+      "consoleErrors": []
+    },
+    "N1": {
+      "stats": {
+        "calls": 82,
+        "triangles": 458351,
+        "textures": 83,
+        "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+      },
+      "luminance": {
+        "min": 0,
+        "p0_5": 0.00006452983507188037
+      },
+      "tooDark": true,
+      "consoleErrors": []
+    },
+    "N2": {
+      "stats": {
+        "calls": 74,
+        "triangles": 433139,
+        "textures": 83,
+        "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+      },
+      "luminance": {
+        "min": 0,
+        "p0_5": 0.00006452983507188037
       },
       "tooDark": true,
       "consoleErrors": []

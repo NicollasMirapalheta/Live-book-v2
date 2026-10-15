@@ -23,6 +23,8 @@ const yaw = arg('yaw')
 const pitch = arg('pitch')
 const dev = arg('dev')
 const noBuild = argv.includes('--no-build')
+/** extra URL parameters: --query debug=lightmap */
+const extraQuery = arg('query')
 const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
 const outDir = resolve(ROOT, arg('out') ?? join('shots', stamp))
 const latestDir = join(ROOT, 'shots', 'latest')
@@ -56,13 +58,14 @@ async function serverUp(): Promise<boolean> {
 }
 
 async function startServer(): Promise<ChildProcess | undefined> {
+  // vite preview serves dist/ from disk, so a running server picks up a fresh build
+  if (!noBuild) {
+    console.log('[shot] vite build…')
+    if ((await run('npx', ['vite', 'build', '--logLevel', 'error'])) !== 0) throw new Error('vite build falhou')
+  }
   if (await serverUp()) {
     console.log(`[shot] usando servidor já rodando em ${BASE}`)
     return undefined
-  }
-  if (!noBuild) {
-    console.log('[shot] vite build…')
-    if ((await run('npx', ['vite', 'build', '--logLevel', 'warn'])) !== 0) throw new Error('vite build falhou')
   }
   const child = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
     cwd: ROOT,
@@ -184,6 +187,7 @@ async function compare(browser: Browser, approvalFile: string, file: string) {
 
 function query(extra: Record<string, string | undefined>) {
   const q = new URLSearchParams({ shot: '1', quality })
+  if (extraQuery) for (const [k, v] of new URLSearchParams(extraQuery)) q.set(k, v)
   for (const [k, v] of Object.entries(extra)) if (v !== undefined) q.set(k, v)
   return `${BASE}?${q}`
 }

@@ -237,8 +237,7 @@ for obj, _, _ in curtains:
     obj.select_set(True)
     bpy.ops.object.modifier_apply(modifier="cloth")
     obj.vertex_groups.clear()
-    sol = obj.modifiers.new("thickness", "SOLIDIFY")
-    sol.thickness = 0.002
+    # single-sided sheet (drawn double-sided in the app); a solidify would overlap in the lightmap UV
 scene.frame_set(1)
 
 for o in colliders:

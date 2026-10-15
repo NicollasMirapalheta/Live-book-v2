@@ -20,6 +20,8 @@ export const params = {
   dev: search.get('dev') ?? undefined,
   /** approval frame: N0 rendered at the reference aspect */
   approval: search.get('approval') === '1',
+  /** look-dev views: 'lightmap' shows only the decoded lightmaps (white albedo) */
+  debug: search.get('debug') ?? undefined,
   /** book screenshot preset (0..2) for ?dev=book&shot=1 */
   preset: num('preset'),
 }
