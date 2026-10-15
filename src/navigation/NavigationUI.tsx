@@ -22,9 +22,11 @@ function Arrow({ dir }: { dir: 'up' | 'down' }) {
 export function NavigationUI() {
   const currentNode = useNavigation((s) => s.currentNode)
   const busy = useNavigation((s) => s.isTransitioning)
+  const locked = useNavigation((s) => s.locked)
   const fade = useNavigation((s) => s.fade)
   const step = useNavigation((s) => s.step)
   if (params.shot) return null
+  if (locked) return fade > 0 ? <div className="nav-fade" style={{ opacity: fade }} /> : null
 
   const canBack = !!stepTarget(currentNode, -1)
   const canForward = !!stepTarget(currentNode, 1)

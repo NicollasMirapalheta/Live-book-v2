@@ -1,0 +1,103 @@
+.sel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+}
+
+.sel-panel {
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  width: min(360px, calc(100vw - 32px));
+  z-index: 12;
+  padding: 22px 24px 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(232, 200, 143, 0.28);
+  background: rgba(28, 18, 12, 0.78);
+  color: #f3e6cf;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  animation: sel-in 0.35s ease-out;
+}
+
+@media (max-width: 640px) {
+  .sel-panel {
+    right: 16px;
+    left: 16px;
+    bottom: 16px;
+    width: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sel-panel {
+    animation: none;
+  }
+}
+
+@keyframes sel-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.sel-kicker {
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #c9a35a;
+}
+
+.sel-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.sel-subtitle {
+  margin: 4px 0 0;
+  font-style: italic;
+  color: #d8c6a6;
+}
+
+.sel-description {
+  margin: 14px 0 0;
+  line-height: 1.5;
+  color: #e9dcc4;
+}
+
+.sel-note {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #c9a35a;
+}
+
+.sel-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.sel-btn {
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 200, 143, 0.45);
+  background: transparent;
+  color: #f3e6cf;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sel-btn-primary {
+  background: #9c7a45;
+  border-color: #c9a35a;
+  color: #1b120c;
+}
+
+.sel-btn:focus-visible {
+  outline: 2px solid #e8c88f;
+  outline-offset: 3px;
+}

@@ -120,8 +120,8 @@ async function optimizeModel(name: string, ktx: boolean, maxRes = 2048) {
     await doc.transform(
       // materials are not deduplicated: the tagged clones (name@atlas:mode) must survive
       dedup({ propertyTypes: [PropertyType.ACCESSOR, PropertyType.MESH, PropertyType.TEXTURE] }),
-      flatten(),
-      joinMeshes({ keepNamed: false }),
+      // the static room is merged per material; props keep their named hierarchy (the app moves them)
+      ...(name === 'room' ? [flatten(), joinMeshes({ keepNamed: false })] : []),
       prune({ keepAttributes: true, keepIndices: false }),
       weld(),
       textureCompress({ encoder: sharp, targetFormat: ktx ? undefined : 'webp', resize: [res, res], quality: 72 }),

@@ -1,12 +1,20 @@
 import { useGLTF } from '@react-three/drei'
-import { useLayoutEffect } from 'react'
+import { use, useLayoutEffect } from 'react'
 import type { Mesh, MeshStandardMaterial } from 'three'
+import { loadBookcase, shelfBooks, shelfLayoutFor } from '../book/shelfData'
 import { useQuality } from '../state/quality'
+import { invalidateShadows } from './shadows'
 
-/** Shelf props (public/models/props.glb): real-time PBR with the room env, sun and chandelier, shadows. */
+/**
+ * Shelf props (public/models/props.glb): real-time PBR with the room env, sun and chandelier, shadows.
+ * Positions follow the shelf layout: the bookend pairs hug the rows of books and a prop that does not fit
+ * moves to the next shelf (src/book/shelfLayout.ts). Props are named prop_<kind>_<i> in slot order.
+ */
 export function ShelfProps() {
   const quality = useQuality((s) => s.quality)
   const { scene } = useGLTF(quality === 'low' ? '/models/props.low.glb' : '/models/props.glb')
+  const data = use(loadBookcase())
+
   useLayoutEffect(() => {
     scene.traverse((o) => {
       const m = o as Mesh
@@ -25,5 +33,28 @@ export function ShelfProps() {
       }
     })
   }, [scene, quality])
+
+  useLayoutEffect(() => {
+    const layout = shelfLayoutFor(data, shelfBooks())
+    const shelves = new Map(data.shelves.map((s) => [s.index, s]))
+    const counts: Record<string, number> = {}
+    for (const p of layout.props) {
+      const i = (counts[p.kind] = (counts[p.kind] ?? -1) + 1)
+      const node = scene.getObjectByName(`prop_${p.kind}_${i}`)
+      const shelf = shelves.get(p.shelf)
+      if (!node || !shelf) continue
+      if (p.kind === 'bookend_pair') {
+        const end = p.endX ?? p.x
+        const center = (p.x + end) / 2
+        node.position.set(center, shelf.y, node.position.z)
+        node.getObjectByName(`prop_${p.kind}_${i}_l`)?.position.setX(p.x - center)
+        node.getObjectByName(`prop_${p.kind}_${i}_r`)?.position.setX(end - center)
+      } else {
+        node.position.set(p.x, shelf.y, (shelf.zFront + shelf.zBack) / 2)
+      }
+    }
+    invalidateShadows()
+  }, [scene, data])
+
   return <primitive object={scene} />
 }

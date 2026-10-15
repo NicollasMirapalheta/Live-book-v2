@@ -145,6 +145,8 @@ async function capture(browser: Browser, url: string, width: number, height: num
   page.on('pageerror', (e) => consoleErrors.push(String(e)))
   await page.goto(url)
   await page.waitForFunction(() => window.__SCENE_READY__ === true, undefined, { timeout: 180_000 })
+  // a selection animates the book out of the shelf: let it settle before measuring and capturing
+  if (url.includes('select=')) await page.waitForTimeout(2500)
   const stats = await page.evaluate(() => window.__SCENE_STATS__)
   mkdirSync(dirname(file), { recursive: true })
   await page.screenshot({ path: file })

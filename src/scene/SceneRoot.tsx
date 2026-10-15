@@ -4,6 +4,8 @@ import { NoToneMapping } from 'three'
 import { params } from '../app/params'
 import { CameraRig } from '../navigation/CameraRig'
 import { LookControls } from '../navigation/LookControls'
+import { BookShelf } from '../book/BookShelf'
+import { SelectionPanel } from '../book/SelectionPanel'
 import { NavigationUI } from '../navigation/NavigationUI'
 import { NodeMarkers } from '../navigation/NodeMarkers'
 import { useQuality } from '../state/quality'
@@ -35,6 +37,7 @@ export function SceneRoot() {
         <Suspense fallback={null}>
           <Room />
           {!params.off.has('props') && <ShelfProps />}
+          {!params.off.has('books') && <BookShelf />}
           {!params.off.has('sky') && <Sky />}
           {!params.off.has('lights') && <DynamicLights />}
           {!params.off.has('beams') && <LightBeams />}
@@ -44,6 +47,7 @@ export function SceneRoot() {
         </Suspense>
       </Canvas>
       <NavigationUI />
+      <SelectionPanel />
     </>
   )
 }

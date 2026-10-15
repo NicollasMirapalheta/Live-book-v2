@@ -40,6 +40,8 @@ export interface BookProps {
   book: BookData & { photoSeed?: number }
   position?: [number, number, number]
   rotation?: [number, number, number]
+  /** 'shelf': only what shows on a shelf (spine, edges); the front tooling and the polaroid are skipped (draw calls) */
+  detail?: 'full' | 'shelf'
 }
 
 const TEX = '/textures/book'
@@ -74,7 +76,7 @@ function usePhoto(book: BookProps['book']): Texture | null {
  * Local frame: X thickness (front cover +X), Y height (bottom at 0), spine at z ≈ 0 (bulging to +Z),
  * fore-edge toward −Z.
  */
-export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0] }: BookProps) {
+export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0], detail = 'full' }: BookProps) {
   const d = useMemo(() => bookDimensions(book.pageCount, book.trim), [book.pageCount, book.trim])
   const prefix = book.coverMaterial === 'leather' ? 'leather' : 'cloth'
   const [lum, normal, arm] = useTexture([`${TEX}/${prefix}_lum.jpg`, `${TEX}/${prefix}_normal.jpg`, `${TEX}/${prefix}_arm.jpg`])
@@ -153,11 +155,11 @@ export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0] }: BookP
       <group scale={[1, 1, -1]}>
       {/* cover: groups 0 outer, 1 board edges, 2 inner face. The inner face shows the cover's turn-ins at the
           squares; the endpaper (mats.endpaper) is only visible once the book opens (Fase 4). */}
-      <mesh name="cover" geometry={geo.cover} material={[mats.cover, mats.cover, mats.cover]} castShadow receiveShadow />
+      <mesh name="cover" geometry={geo.cover} material={mats.cover} castShadow receiveShadow />
       <mesh name="pageBlock" geometry={geo.pages} material={[mats.pageEdge, mats.pageSide]} castShadow receiveShadow />
       <mesh name="spineFoil" geometry={geo.spineFoil} material={mats.spineFoil} />
-      <mesh name="frontFoil" geometry={geo.frontFoil} material={mats.frontFoil} />
-      <group name="polaroid" position={geo.polaroid.position} rotation={[tilt, 0, 0]}>
+      <mesh name="frontFoil" geometry={geo.frontFoil} material={mats.frontFoil} visible={detail === 'full'} />
+      <group name="polaroid" position={geo.polaroid.position} rotation={[tilt, 0, 0]} visible={detail === 'full'}>
         <mesh rotation={[0, Math.PI / 2, 0]} position={[0.00003, 0, 0]} material={mats.shadow} renderOrder={1}>
           <planeGeometry args={[geo.polaroidSize[0] * 1.12, geo.polaroidSize[1] * 1.1]} />
         </mesh>

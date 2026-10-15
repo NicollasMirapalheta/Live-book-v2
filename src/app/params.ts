@@ -24,6 +24,8 @@ export const params = {
   debug: search.get('debug') ?? undefined,
   /** look-dev bisection: comma list of parts to skip (beams, sky, effects, reflect, props, lights) */
   off: new Set((search.get('off') ?? '').split(',').filter(Boolean)),
+  /** opens the selection of this book id at N2 (screenshots) */
+  select: search.get('select') ?? undefined,
   /** book screenshot preset (0..2) for ?dev=book&shot=1 */
   preset: num('preset'),
 }

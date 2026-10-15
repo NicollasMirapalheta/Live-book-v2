@@ -25,6 +25,9 @@ interface NavigationState {
   lensShiftY: number
   /** 0..1 black overlay used for the reduced-motion transition */
   fade: number
+  /** a book is selected: no looking, zooming or moving (spec Fase 3) */
+  locked: boolean
+  setLocked: (locked: boolean) => void
   goTo: (id: NodeId) => Promise<void>
   step: (dir: 1 | -1) => Promise<void>
   look: (dYaw: number, dPitch: number) => void
@@ -54,10 +57,12 @@ export const useNavigation = create<NavigationState>((set, get) => ({
   fov: clamp(params.fov ?? start.fovDeg, FOV_MIN, FOV_MAX),
   lensShiftY: start.lensShiftY,
   fade: 0,
+  locked: false,
+  setLocked: (locked) => set({ locked }),
 
   goTo: async (id) => {
     const state = get()
-    if (state.isTransitioning || id === state.currentNode || !isNode(id)) return
+    if (state.isTransitioning || state.locked || id === state.currentNode || !isNode(id)) return
     const target = navNodes[id]
     const yawOff = Math.abs(angleDelta(state.yaw, target.yawDeg))
     const pitchOff = Math.abs(state.pitch - target.pitchDeg)
@@ -111,12 +116,12 @@ export const useNavigation = create<NavigationState>((set, get) => ({
   },
 
   look: (dYaw, dPitch) => {
-    if (get().isTransitioning) return
+    if (get().isTransitioning || get().locked) return
     set((s) => ({ yaw: s.yaw + dYaw, pitch: clamp(s.pitch + dPitch, -PITCH_LIMIT, PITCH_LIMIT) }))
   },
 
   zoom: (dFov) => {
-    if (get().isTransitioning) return
+    if (get().isTransitioning || get().locked) return
     set((s) => ({ fov: clamp(s.fov + dFov, FOV_MIN, FOV_MAX) }))
   },
 }))
