@@ -2,6 +2,7 @@
 // Each page is drawn on a canvas in the panel's typography: title page, running head, justified body text
 // and the page number, on cream paper with a soft gutter shadow on the binding side.
 import { CanvasTexture, SRGBColorSpace, type Texture } from 'three'
+import { PAGE, type BookLayout, type FontSpec, type Measure } from '../pdf/paginate'
 import { chapterAt } from './toc'
 
 /** page texture height (px): 1.5K on the high tier, 1K on the low tier (budget: ≤ 2K / 1K) */
@@ -78,6 +79,82 @@ export interface PageBook {
   title: string
   subtitle?: string
   pageCount: number
+  /** the PDF composed into pages (Fase 5); without it the provisional pages are drawn */
+  layout?: BookLayout
+  images?: Map<string, CanvasImageSource & { width: number; height: number }>
+}
+
+const fontCss = (f: FontSpec, H: number) => `${f.italic ? 'italic ' : ''}${f.bold ? 'bold ' : ''}${f.size * H}px ${SERIF}`
+
+/** Text measure for the composition, in page units (the canvas measures at a fixed reference size). */
+export function canvasMeasure(): Measure {
+  const ctx = document.createElement('canvas').getContext('2d')!
+  const REF = 1000
+  return (text, font) => {
+    ctx.font = fontCss(font, REF)
+    return ctx.measureText(text).width / REF
+  }
+}
+
+/** A composed page (pdf/paginate.ts): running head, lines, headings, images, folio. */
+function drawPlan(ctx: CanvasRenderingContext2D, book: PageBook, layout: BookLayout, page: number, W: number, H: number) {
+  const plan = layout.pages[page - 1]
+  if (!plan) return
+  const recto = page % 2 === 1
+  const left = W * (recto ? PAGE.inner : PAGE.outer)
+  const textW = W * (1 - PAGE.inner - PAGE.outer)
+  ctx.textBaseline = 'alphabetic'
+  if (plan.head) {
+    ctx.fillStyle = INK_HEAD
+    ctx.textAlign = 'center'
+    ctx.font = fontCss({ size: 0.021, italic: true }, H)
+    ctx.fillText(plan.head, left + textW / 2, H * PAGE.head, textW)
+  }
+  for (const it of plan.items) {
+    if (it.kind === 'line') {
+      ctx.fillStyle = INK
+      ctx.textAlign = 'left'
+      ctx.font = fontCss(it.font, H)
+      const x0 = left + it.x * H
+      if (!it.justify || it.words.length < 2) {
+        ctx.fillText(it.words.join(' '), x0, it.y * H)
+        continue
+      }
+      const widths = it.words.map((w) => ctx.measureText(w).width)
+      const gap = (it.width * H - widths.reduce((a, b) => a + b, 0)) / (it.words.length - 1)
+      let x = x0
+      it.words.forEach((w, i) => {
+        ctx.fillText(w, x, it.y * H)
+        x += widths[i] + gap
+      })
+    } else if (it.kind === 'text') {
+      ctx.fillStyle = it.font.size < 0.02 ? INK_SOFT : INK
+      ctx.textAlign = it.align
+      ctx.font = fontCss(it.font, H)
+      const text = it.text.startsWith('CAPÍTULO') ? it.text.split('').join(String.fromCharCode(8202)) : it.text
+      ctx.fillText(text, left + it.x * H, it.y * H, textW)
+    } else if (it.kind === 'image') {
+      const img = book.images?.get(it.id)
+      if (!img) continue
+      // printed on the page: a touch of the paper's warmth over the photo
+      ctx.drawImage(img, left + it.x * H, it.y * H, it.w * H, it.h * H)
+      ctx.fillStyle = 'rgba(221,208,180,0.12)'
+      ctx.fillRect(left + it.x * H, it.y * H, it.w * H, it.h * H)
+    } else {
+      ctx.strokeStyle = '#A5824B'
+      ctx.lineWidth = Math.max(1, H / 600)
+      ctx.beginPath()
+      ctx.moveTo(left + it.x0 * H, it.y * H)
+      ctx.lineTo(left + it.x1 * H, it.y * H)
+      ctx.stroke()
+    }
+  }
+  if (plan.folio) {
+    ctx.fillStyle = INK_SOFT
+    ctx.textAlign = 'center'
+    ctx.font = fontCss({ size: 0.02 }, H)
+    ctx.fillText(String(page), left + textW / 2, H * PAGE.folio)
+  }
 }
 
 /**
@@ -133,6 +210,7 @@ export function drawPage(book: PageBook, page: number, aspect: number, H: number
 // sizes are fractions of the page, never rounded: the same page lays out line for line at any resolution
 // (rounded font sizes reflowed the text between the riffle textures and the full-size ones)
 function drawContent(ctx: CanvasRenderingContext2D, book: PageBook, page: number, W: number, H: number) {
+  if (book.layout) return drawPlan(ctx, book, book.layout, page, W, H)
   const recto = page % 2 === 1
   const inner = W * 0.13
   const outer = W * 0.1

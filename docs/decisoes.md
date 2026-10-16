@@ -264,3 +264,23 @@ Formato de cada entrada:
 - Escolha: folhas no ar não contam em nenhuma pilha (a pilha direita perde a espessura delas, a dobradiça não se move). O desenho da página usa tamanhos fracionários (sem `Math.round`), então a textura do voo e a final têm as mesmas linhas; voo a 768 px; destino pré-desenhado em tamanho cheio.
 - Como reverter: `rightSheets` em `pages.ts`/`BookReader.tsx`; `RIFFLE_TEX_HEIGHT`.
 - Precisa do usuário? não.
+
+## 2026-10-16 — ✅ Fase 4 aprovada pelo usuário
+- Contexto: o usuário testou a seleção, a abertura, o folhear (clique, arrasto, teclado, roda), o sumário com folhear rápido e as correções das rodadas R4–R6.
+- Escolha: aprovada no chat; segue para a Fase 5 (PDF → páginas rediagramadas). Pendências visuais registradas em `docs/look-dev/iteracoes.md` (Fase 4).
+- Como reverter: n/a (marco).
+- Precisa do usuário? não.
+
+## 2026-10-16 — Fase 5: o PDF é recomposto, não fotografado
+- Contexto: CLAUDE.md pede "PDF rediagramado na identidade visual do projeto"; não havia spec da Fase 5 nem tipografia de página na direção de arte.
+- Escolha (spec `docs/specs/fase-5-pdf-paginas.md`):
+  - O conteúdo do PDF (títulos, parágrafos, imagens) é extraído com pdf.js e **recomposto** nas páginas do livro com a mesma tipografia das páginas provisórias (Georgia, justificado, capítulo em página ímpar, cabeço com o título do livro na par e do capítulo na ímpar). O número de páginas que define a espessura é o da composição.
+  - Cabeçalho e rodapé repetidos, números de página e hifenização de fim de linha são removidos na extração.
+  - O título do livro (do usuário) vale mais que o título do PDF.
+  - pdf.js só carrega quando um livro com PDF é selecionado (chunk separado); a composição roda enquanto o livro voa até a mão (0,4–0,6 s nos exemplos) e o "Abrir" espera por ela ("Preparando páginas…").
+  - Livros de teste: PDFs de exemplo gerados por nós (texto próprio); "Cartas de Verão" compõe em 48 páginas, "Diário de Campo" em 208 (era 220 no fixture; ajustado). Os outros 4 seguem com páginas provisórias.
+  - Testar com um PDF próprio: soltar o arquivo na janela com o livro na mão troca o conteúdo daquele livro até recarregar (persistência é da Fase 6).
+- Alternativa: rasterizar as páginas do PDF como texturas — fiel ao original, mas não parece livro e contradiz o CLAUDE.md.
+- Pendências conhecidas: PDF escaneado (só imagem, sem texto) vira um livro só de imagens; poesia perde as quebras de verso (vira parágrafo); tabelas e notas de rodapé não são tratadas; fonte do sistema (Georgia) pode compor um pouco diferente em outra máquina.
+- Como reverter: `pdfUrl` nos fixtures; `src/book/pdf/`.
+- Precisa do usuário? não.

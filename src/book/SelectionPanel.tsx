@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { params } from '../app/params'
 import { useNavigation } from '../navigation/useNavigation'
+import { useBookContent } from './pdf/content'
 import { bookToc, currentEntry } from './reader/toc'
 import { currentSpread, useReader } from './reader/useReader'
 import { shelfBooks } from './shelfData'
@@ -15,6 +16,34 @@ const WHEEL_GAP_MS = 350
  * While reading: ←/→ turn the pages, Esc closes the book. Registered in the capture phase so the look
  * controls don't also turn the camera.
  */
+/**
+ * Testing with your own PDF (Fase 5, until persistence in Fase 6): dropping a PDF on the window while a
+ * book is in the hand composes it into that book for this session.
+ */
+function usePdfDrop(bookId: string | null) {
+  useEffect(() => {
+    if (!bookId) return
+    const book = shelfBooks().find((b) => b.id === bookId)
+    if (!book) return
+    const isPdf = (f: File) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name)
+    const over = (e: DragEvent) => {
+      if (e.dataTransfer?.types.includes('Files')) e.preventDefault()
+    }
+    const drop = (e: DragEvent) => {
+      const file = [...(e.dataTransfer?.files ?? [])].find(isPdf)
+      if (!file) return
+      e.preventDefault()
+      useBookContent.getState().useFile(book, file)
+    }
+    window.addEventListener('dragover', over)
+    window.addEventListener('drop', drop)
+    return () => {
+      window.removeEventListener('dragover', over)
+      window.removeEventListener('drop', drop)
+    }
+  }, [bookId])
+}
+
 function useSelectionKeys() {
   useEffect(() => {
     let lastWheel = 0
@@ -71,6 +100,8 @@ export function SelectionPanel() {
   const requestOpen = useSelection((s) => s.requestOpen)
   const openRef = useRef<HTMLButtonElement>(null)
   const inHand = phase === 'hand'
+  const content = useBookContent((s) => (selected ? s.byId[selected] : undefined))
+  usePdfDrop(inHand ? selected : null)
 
   useEffect(() => {
     if (inHand) openRef.current?.focus()
@@ -95,16 +126,19 @@ export function SelectionPanel() {
       {/* clicking outside the book goes back (Canvas onPointerMissed); clicking the book opens it */}
       <aside className="sel-panel" role="dialog" aria-modal="false" aria-labelledby="sel-title">
         <p className="sel-kicker">
-          {SPINE_COLOR_LABELS[book.color]} · {book.coverMaterial === 'leather' ? 'couro' : 'tecido'} · {book.pageCount} páginas
+          {SPINE_COLOR_LABELS[book.color]} · {book.coverMaterial === 'leather' ? 'couro' : 'tecido'} · {content?.layout?.pageCount ?? book.pageCount} páginas
         </p>
         <h2 id="sel-title" className="sel-title">
           {book.title}
         </h2>
         {book.subtitle && <p className="sel-subtitle">{book.subtitle}</p>}
         <p className="sel-description">{book.description}</p>
+        {content?.status === 'error' && <p className="sel-hint sel-hint-error">Não consegui ler esse PDF.</p>}
+        {content?.source === 'file' && content.status === 'ready' && <p className="sel-hint">Mostrando o PDF que você soltou (até recarregar a página).</p>}
+        <p className="sel-hint">Solte um PDF na janela para ver este livro com o seu conteúdo.</p>
         <div className="sel-actions">
-          <button type="button" className="sel-btn sel-btn-primary" ref={openRef} onClick={requestOpen}>
-            Abrir
+          <button type="button" className="sel-btn sel-btn-primary" ref={openRef} onClick={requestOpen} disabled={content?.status === 'loading'}>
+            {content?.status === 'loading' ? 'Preparando páginas…' : 'Abrir'}
           </button>
           <button type="button" className="sel-btn" onClick={clear}>
             Voltar
@@ -124,7 +158,8 @@ const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion:
  */
 function ReaderToc({ bookId }: { bookId: string }) {
   const book = shelfBooks().find((b) => b.id === bookId)
-  const toc = useMemo(() => (book ? bookToc(book) : []), [book])
+  const layout = useBookContent((s) => s.byId[bookId]?.layout)
+  const toc = useMemo(() => layout?.toc ?? (book ? bookToc(book) : []), [book, layout])
   // highest page on the open spread; while riffling, the destination (the chapters flashing by are noise)
   const shownPage = useReader((s) => 2 * (s.riffle ? s.riffle.bounds[s.riffle.bounds.length - 1] : s.turned) + 1)
   const busy = useReader((s) => s.turn !== null || s.riffle !== null)

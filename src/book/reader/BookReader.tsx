@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import { DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Vector3, type BufferGeometry, type Group, type Material, type MeshPhysicalMaterial, type MeshStandardMaterial } from 'three'
 import { invalidateShadows } from '../../scene/shadows'
 import { useQuality } from '../../state/quality'
+import { useBookContent } from '../pdf/content'
 import { BOARD, HINGE_OFFSET, SQUARE, type BookDimensions } from '../geometry'
 import { setCoverOpen } from '../materials'
 import { useSelection } from '../useSelection'
@@ -93,11 +94,17 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     [W, H, d.coverWidth, d.coverHeight],
   )
   const quality = useQuality((st) => st.quality)
-  const textures = useMemo(() => new PageTextures(book, W / H, PAGE_TEX_HEIGHT[quality]), [book, W, H, quality])
+  // the composed PDF, when the book has one (Fase 5); otherwise the provisional pages
+  const content = useBookContent((s) => s.byId[book.id])
+  const pages = useMemo<PageBook>(
+    () => (content?.status === 'ready' && content.layout ? { ...book, pageCount: content.layout.pageCount, layout: content.layout, images: content.images } : book),
+    [book, content],
+  )
+  const textures = useMemo(() => new PageTextures(pages, W / H, PAGE_TEX_HEIGHT[quality]), [pages, W, H, quality])
   // while riffling, every page is seen for a few frames in motion: small textures, drawn fast
-  const quick = useMemo(() => new PageTextures(book, W / H, RIFFLE_TEX_HEIGHT, 32), [book, W, H])
+  const quick = useMemo(() => new PageTextures(pages, W / H, RIFFLE_TEX_HEIGHT, 32), [pages, W, H])
   const mats = useMemo(() => {
-    const blank = textures.get(book.pageCount + 1000)
+    const blank = textures.get(pages.pageCount + 1000)
     const right = pageMaterial(0)
     // the left page is read mirrored: its binding is at uv.x = 1
     const left = pageMaterial(1)
@@ -110,7 +117,7 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
       return m
     })
     return { right, left, sheets }
-  }, [textures, book.pageCount, W])
+  }, [textures, pages.pageCount, W])
 
   useEffect(
     () => () => {

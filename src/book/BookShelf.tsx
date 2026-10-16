@@ -6,6 +6,7 @@ import { params } from '../app/params'
 import { invalidateShadows } from '../scene/shadows'
 import { Book } from './Book'
 import { OPEN_ANGLE, type OpenState } from './reader/BookReader'
+import { useBookContent } from './pdf/content'
 import { useReader } from './reader/useReader'
 import { backShadowTexture, contactShadowTexture } from './canvasTextures'
 import type { FixtureBook } from './fixtures'
@@ -88,6 +89,10 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
   const camera = useThree((st) => st.camera)
   const hover = useSelection((st) => st.hover)
   const isSelected = useSelection((st) => st.selected === book.id)
+  // the PDF is composed while the book flies to the hand (Fase 5)
+  useEffect(() => {
+    if (isSelected) useBookContent.getState().ensure(book)
+  }, [isSelected, book])
   const isReadingThis = useSelection((st) => st.selected === book.id && isReading(st.phase))
   const select = useSelection((st) => st.select)
 
@@ -159,8 +164,9 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
         st.arrived()
         if (params.open) useSelection.getState().requestOpen()
       }
-    } else if (isSel && st.phase === 'opening') {
-      if (a.o === 0) useReader.getState().start(book.pageCount, params.page)
+    } else if (isSel && st.phase === 'opening' && useBookContent.getState().byId[book.id]?.status !== 'loading') {
+      // (while the PDF is still being composed the book waits in the hand)
+      if (a.o === 0) useReader.getState().start(useBookContent.getState().byId[book.id]?.layout?.pageCount ?? book.pageCount, params.page)
       // ?openAt=<0..1> freezes the opening part way (screenshots of the hinge)
       a.o = Math.min(params.openAt ?? 1, a.o + (dt * speed) / OPEN_S)
       if (a.o >= 1) {

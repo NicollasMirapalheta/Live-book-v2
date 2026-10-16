@@ -253,3 +253,15 @@
     animation: none;
   }
 }
+
+/* PDF drop hint and errors in the description panel (Fase 5) */
+.sel-hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #c9a35a;
+}
+
+.sel-hint-error {
+  color: #e8a07a;
+}

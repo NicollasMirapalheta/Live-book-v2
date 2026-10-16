@@ -37,3 +37,7 @@ Janelas, porta dupla de almofadas, estante, lambri (geometria), vigas, cortinas 
 - The Met Open Access: imagens marcadas como domínio público são CC0.
 
 Fontes: [Poly Haven API](https://polyhaven.com/our-api), [Termos da API](https://github.com/Poly-Haven/Public-API/blob/master/ToS.md), [Licença Poly Haven](https://polyhaven.com/license), [Licença ambientCG](https://docs.ambientcg.com/license/), [Met Open Access](https://www.metmuseum.org/press/news/2017/open-access).
+
+## PDFs de exemplo (Fase 5)
+
+`public/books/fx-bordo.pdf` e `public/books/fx-verde.pdf` são gerados por `npm run books:samples` (`scripts/make-sample-pdfs.ts`): texto escrito para o projeto, combinado com sorteio fixo, e desenhos SVG simples rasterizados com o `sharp`. Nenhum material de terceiros. Bibliotecas usadas (não são assets): `pdfjs-dist` 6.3.289 (Apache-2.0) para ler PDFs no navegador e `pdf-lib` 1.17.1 (MIT, só no script).

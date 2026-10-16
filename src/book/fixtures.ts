@@ -4,6 +4,8 @@ import type { BookData } from './types'
 export interface FixtureBook extends BookData {
   /** seed of a generated sample photo (canvasTextures.samplePhoto); none = empty polaroid */
   photoSeed?: number
+  /** sample PDF (npm run books:samples); its composition sets pageCount (an e2e checks they agree) */
+  pdfUrl?: string
 }
 
 const T0 = Date.UTC(2026, 9, 14)
@@ -20,6 +22,7 @@ export const FIXTURE_BOOKS: FixtureBook[] = [
     trim: 'medium',
     createdAt: T0,
     photoSeed: 1,
+    pdfUrl: '/books/fx-bordo.pdf',
   },
   {
     id: 'fx-verde',
@@ -27,10 +30,11 @@ export const FIXTURE_BOOKS: FixtureBook[] = [
     description: 'Anotações, mapas e plantas de três anos de caminhadas pelo litoral.',
     color: 'verdeGarrafa',
     coverMaterial: 'cloth',
-    pageCount: 220,
+    pageCount: 208,
     trim: 'medium',
     createdAt: T0 + 1,
     photoSeed: 4,
+    pdfUrl: '/books/fx-verde.pdf',
   },
   {
     id: 'fx-natural',
