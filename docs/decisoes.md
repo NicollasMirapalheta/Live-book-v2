@@ -285,3 +285,13 @@ Formato de cada entrada:
 - Pendências conhecidas: PDF escaneado (só imagem, sem texto) vira um livro só de imagens; poesia perde as quebras de verso (vira parágrafo); tabelas e notas de rodapé não são tratadas; fonte do sistema (Georgia) pode compor um pouco diferente em outra máquina.
 - Como reverter: `pdfUrl` nos fixtures; `src/book/pdf/`.
 - Precisa do usuário? não.
+
+## 2026-10-16 — PDF do usuário travava em "Preparando páginas…"
+- Contexto: o usuário soltou um PDF próprio (5 páginas, peça diagramada: capa, texto datilografado espaçado, parágrafos numerados, recorte de jornal em duas colunas) e ficou em "Preparando páginas…" para sempre; clicar no livro tentava abrir e travava.
+- Causa: imagens usadas em mais de uma página ficam no `commonObjs` do pdf.js (ids `g_…`); a extração esperava por elas em `page.objs`, onde nunca chegam.
+- Escolha:
+  - Imagens compartilhadas (timbres, logotipos) e imagens que cobrem a maior parte de uma página com texto (fundo, digitalização sob OCR) não entram no livro; nenhuma imagem é esperada por mais de 5 s; o PDF inteiro tem 2 min antes de virar erro (o livro abre com as páginas de exemplo).
+  - Barra de progresso no painel só quando a leitura passa de 0,6 s; enquanto prepara, clicar no livro não tenta abrir.
+  - Estrutura: linhas ordenadas da esquerda para a direita (número do parágrafo e "lead" em negrito voltam ao começo), espaços medidos contra o espaço entre letras (texto espaçado), colunas lidas uma de cada vez (cortes recursivos), capa detectada (pouco texto, título grande), capítulos = títulos que abrem página no PDF, "CAPÍTULO 3" do PDF vira o número do capítulo, Introdução/Prefácio/Conclusão/Anexo sem número.
+- Teste de regressão: `public/books/test-shared-image.pdf` (mesma imagem em 3 páginas) + e2e.
+- Precisa do usuário? não.

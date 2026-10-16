@@ -24,7 +24,14 @@ export interface BookContent {
   /** where it came from: the book's own PDF or a file dropped for this session */
   source: 'book' | 'file'
   error?: string
+  /** 0..1 while loading (reading the PDF is most of it) */
+  progress?: number
+  /** when loading started (ms, performance.now) — the panel only shows a progress bar for slow ones */
+  startedAt?: number
 }
+
+/** A PDF that takes longer than this is given up (an error instead of an endless "Preparando páginas…"). */
+const TIMEOUT_MS = 120_000
 
 interface ContentState {
   byId: Record<string, BookContent>
@@ -35,9 +42,9 @@ interface ContentState {
 }
 
 /** PDF → structure → pages, timed for the console (the budget is < 1 s for a 300-page book). */
-async function compose(book: ContentBook, data: ArrayBuffer, source: string): Promise<Pick<BookContent, 'layout' | 'images'>> {
+async function compose(book: ContentBook, data: ArrayBuffer, source: string, onProgress: (p: number) => void): Promise<Pick<BookContent, 'layout' | 'images'>> {
   const t0 = performance.now()
-  const { raw, images } = await extractPdf(data)
+  const { raw, images } = await extractPdf(data, (p) => onProgress(p * 0.95))
   const t1 = performance.now()
   const structure = buildStructure(raw)
   const { width, height } = TRIM_SIZES[book.trim]
@@ -54,17 +61,23 @@ async function compose(book: ContentBook, data: ArrayBuffer, source: string): Pr
 
 export const useBookContent = create<ContentState>((set, get) => {
   const load = (book: ContentBook, source: BookContent['source'], name: string, read: () => Promise<ArrayBuffer>) => {
-    set((s) => ({ byId: { ...s.byId, [book.id]: { status: 'loading', source } } }))
+    const startedAt = performance.now()
+    set((s) => ({ byId: { ...s.byId, [book.id]: { status: 'loading', source, progress: 0, startedAt } } }))
+    const current = () => get().byId[book.id]?.startedAt === startedAt
+    const progress = (p: number) => {
+      if (current()) set((s) => ({ byId: { ...s.byId, [book.id]: { ...s.byId[book.id], progress: p } } }))
+    }
+    const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('o PDF demorou demais para ler')), TIMEOUT_MS))
     read()
-      .then((data) => compose(book, data, name))
+      .then((data) => Promise.race([compose(book, data, name, progress), timeout]))
       .then((done) => {
         // a newer file may have replaced this one meanwhile
-        if (get().byId[book.id]?.source !== source) return
+        if (!current()) return
         set((s) => ({ byId: { ...s.byId, [book.id]: { status: 'ready', source, ...done } } }))
       })
       .catch((err: unknown) => {
         console.error('[pdf]', err)
-        set((s) => ({ byId: { ...s.byId, [book.id]: { status: 'error', source, error: String(err) } } }))
+        if (current()) set((s) => ({ byId: { ...s.byId, [book.id]: { status: 'error', source, error: err instanceof Error ? err.message : String(err) } } }))
       })
   }
   return {

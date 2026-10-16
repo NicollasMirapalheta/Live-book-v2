@@ -60,3 +60,20 @@ test('soltar um PDF com o livro na mão troca o conteúdo dele nesta sessão', a
   expect(await page.evaluate(() => window.__CONTENT__!.toc('fx-natural'))).toContain('Carta de janeiro')
   await expect(page.getByRole('dialog')).toContainText('PDF que você soltou')
 })
+
+test('PDF com a mesma imagem em várias páginas não fica preparando para sempre', async ({ page }) => {
+  await page.goto('/?e2e=1&node=N2')
+  await page.waitForFunction(() => window.__SCENE_READY__ === true && (window.__SEL__?.order.length ?? 0) > 0, undefined, { timeout: 90_000 })
+  await page.evaluate(() => window.__SEL__!.select('fx-tabaco'))
+  await page.waitForFunction(() => window.__SEL__!.phase === 'hand')
+  await page.evaluate(async () => {
+    const blob = await (await fetch('/books/test-shared-image.pdf')).blob()
+    const dt = new DataTransfer()
+    dt.items.add(new File([blob], 'logotipo.pdf', { type: 'application/pdf' }))
+    window.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, cancelable: true }))
+  })
+  await page.waitForFunction(() => window.__CONTENT__!.status('fx-tabaco') === 'ready', undefined, { timeout: 20_000 })
+  // and it opens
+  await page.getByRole('button', { name: 'Abrir' }).click()
+  await page.waitForFunction(() => window.__SEL__!.phase === 'open', undefined, { timeout: 10_000 })
+})

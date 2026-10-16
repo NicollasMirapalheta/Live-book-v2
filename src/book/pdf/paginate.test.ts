@@ -126,4 +126,20 @@ describe('composição em páginas', () => {
       ls.slice(0, -1).forEach((l) => expect(l.length).toBeGreaterThan(1))
     }
   })
+
+  it('número do capítulo vem do PDF; introdução não tem número', () => {
+    const blocks: Block[] = [
+      { type: 'heading', level: 1, text: 'Introdução', number: '' },
+      { type: 'paragraph', text: words(20) },
+      { type: 'heading', level: 1, text: 'Uso da palavra', number: '3' },
+      { type: 'paragraph', text: words(20) },
+    ]
+    const l = paginate({ blocks }, meta, ASPECT, measure)
+    const texts = (n: number) => l.pages[n - 1].items.filter((it) => it.kind === 'text').map((it) => (it.kind === 'text' ? it.text : ''))
+    const intro = l.toc.find((e) => e.title === 'Introdução')!
+    const ch3 = l.toc.find((e) => e.title === 'Uso da palavra')!
+    expect(texts(intro.page).some((t) => t.startsWith('CAPÍTULO'))).toBe(false)
+    expect(texts(ch3.page)).toContain('CAPÍTULO 3')
+    expect(ch3.chapter).toBe(3)
+  })
 })

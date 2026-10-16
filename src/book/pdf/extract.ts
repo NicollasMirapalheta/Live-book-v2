@@ -35,7 +35,7 @@ function toDrawable(img: ImageObject): HTMLCanvasElement | null {
   const ctx = c.getContext('2d')!
   if (img.bitmap) {
     ctx.drawImage(img.bitmap, 0, 0)
-    return c
+    return fit(c)
   }
   if (!img.data) return null
   const out = ctx.createImageData(img.width, img.height)
@@ -61,7 +61,21 @@ function toDrawable(img: ImageObject): HTMLCanvasElement | null {
       }
   }
   ctx.putImageData(out, 0, 0)
-  return c
+  return fit(c)
+}
+
+/** Images larger than a page texture needs are scaled down first (the pixel passes run on the main thread). */
+const MAX_SIDE = 1400
+function fit(c: HTMLCanvasElement): HTMLCanvasElement {
+  const k = MAX_SIDE / Math.max(c.width, c.height)
+  if (k >= 1) return c
+  const out = document.createElement('canvas')
+  out.width = Math.round(c.width * k)
+  out.height = Math.round(c.height * k)
+  const ctx = out.getContext('2d')!
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(c, 0, 0, out.width, out.height)
+  return out
 }
 
 /**
@@ -113,7 +127,24 @@ export function trimBackground(c: HTMLCanvasElement): { canvas: HTMLCanvasElemen
   return { canvas: out, x: x0 / W, y: y0 / H, w: out.width / W, h: out.height / H }
 }
 
-export async function extractPdf(data: ArrayBuffer): Promise<Extracted> {
+/** An image object from pdf.js, or null if it does not arrive in time (never wait forever on one image). */
+function imageObject(objs: { get: (id: string, cb: (o: ImageObject) => void) => unknown }, id: string, timeout = 5000): Promise<ImageObject | null> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(null), timeout)
+    try {
+      objs.get(id, (o) => {
+        clearTimeout(timer)
+        resolve(o)
+      })
+    } catch {
+      clearTimeout(timer)
+      resolve(null)
+    }
+  })
+}
+
+/** Reads the PDF page by page; `onProgress` gets 0..1 after each page. */
+export async function extractPdf(data: ArrayBuffer, onProgress?: (done: number) => void): Promise<Extracted> {
   const pdfjs = await import('pdfjs-dist')
   const worker = await import('pdfjs-dist/build/pdf.worker.min.mjs?url')
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default
@@ -157,6 +188,7 @@ export async function extractPdf(data: ArrayBuffer): Promise<Extracted> {
         const style = styleOf(it.fontName)
         items.push({ str: it.str, x: t[4], y: t[5], w: it.width, size: Math.hypot(t[2], t[3]) || Math.abs(t[3]), ...style })
       }
+      const pageChars = items.reduce((acc, it) => acc + it.str.length, 0)
       const pageImages: RawImage[] = []
       let ctm: Matrix = [1, 0, 0, 1, 0, 0]
       const stack: Matrix[] = []
@@ -168,20 +200,6 @@ export async function extractPdf(data: ArrayBuffer): Promise<Extracted> {
         else if (fn === OPS.transform) ctm = mul(ctm, args as Matrix)
         else if (fn === OPS.paintImageXObject) {
           const objId = args[0] as string
-          const ti = performance.now()
-          const obj = await new Promise<ImageObject | null>((resolve) => {
-            try {
-              page.objs.get(objId, (o: ImageObject) => resolve(o))
-            } catch {
-              resolve(null)
-            }
-          })
-          const raw = obj && toDrawable(obj)
-          if (!raw) continue
-          const trim = trimBackground(raw)
-          timing.images += performance.now() - ti
-          const id = `${n}:${objId}`
-          images.set(id, trim.canvas)
           // the image fills the unit square under the current transform
           const xs = [ctm[4], ctm[4] + ctm[0], ctm[4] + ctm[2], ctm[4] + ctm[0] + ctm[2]]
           const ys = [ctm[5], ctm[5] + ctm[1], ctm[5] + ctm[3], ctm[5] + ctm[1] + ctm[3]]
@@ -189,12 +207,27 @@ export async function extractPdf(data: ArrayBuffer): Promise<Extracted> {
           const y = Math.min(...ys)
           const w = Math.max(...xs) - x
           const h = Math.max(...ys) - y
+          // not content: an image shared between pages (letterhead, logo, watermark: pdf.js keeps those in
+          // commonObjs) or one covering most of a page that also has text (a background or the scan under an
+          // OCR text layer)
+          const shared = objId.startsWith('g_') || page.commonObjs.has(objId)
+          const background = (w * h) / (view.width * view.height) > 0.5 && pageChars > 80
+          if (shared || background) continue
+          const ti = performance.now()
+          const obj = await imageObject(page.objs, objId)
+          const raw = obj && toDrawable(obj)
+          if (!raw) continue
+          const trim = trimBackground(raw)
+          timing.images += performance.now() - ti
+          const id = `${n}:${objId}`
+          images.set(id, trim.canvas)
           // the crop, in PDF units (y up: the canvas top is the box top)
           pageImages.push({ id, x: x + w * trim.x, y: y + h * (1 - trim.y - trim.h), w: w * trim.w, h: h * trim.h })
         }
       }
       pages.push({ width: view.width, height: view.height, items, images: pageImages })
       page.cleanup()
+      onProgress?.(n / doc.numPages)
     }
     if (import.meta.env.DEV) console.info(`[pdf] leitura: operadores ${Math.round(timing.ops)} ms, texto ${Math.round(timing.text)} ms, imagens ${Math.round(timing.images)} ms`)
     const meta = await doc.getMetadata().catch(() => null)

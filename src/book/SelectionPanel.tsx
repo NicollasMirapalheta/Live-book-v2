@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { params } from '../app/params'
 import { useNavigation } from '../navigation/useNavigation'
 import { useBookContent } from './pdf/content'
@@ -43,6 +43,25 @@ function usePdfDrop(bookId: string | null) {
     }
   }, [bookId])
 }
+
+/** Progress of a PDF being read, shown only when it is slow enough to notice (fast ones just flip to "Abrir"). */
+function PreparingBar({ progress, startedAt }: { progress: number; startedAt: number }) {
+  const [shown, setShown] = useState(() => performance.now() - startedAt > SLOW_MS)
+  useEffect(() => {
+    if (shown) return
+    const t = setTimeout(() => setShown(true), Math.max(0, SLOW_MS - (performance.now() - startedAt)))
+    return () => clearTimeout(t)
+  }, [shown, startedAt])
+  if (!shown) return null
+  const pct = Math.round(progress * 100)
+  return (
+    <div className="sel-progress" role="progressbar" aria-label="Preparando páginas" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
+      <div className="sel-progress-fill" style={{ width: `${Math.max(4, pct)}%` }} />
+    </div>
+  )
+}
+
+const SLOW_MS = 600
 
 function useSelectionKeys() {
   useEffect(() => {
@@ -133,9 +152,10 @@ export function SelectionPanel() {
         </h2>
         {book.subtitle && <p className="sel-subtitle">{book.subtitle}</p>}
         <p className="sel-description">{book.description}</p>
-        {content?.status === 'error' && <p className="sel-hint sel-hint-error">Não consegui ler esse PDF.</p>}
+        {content?.status === 'error' && <p className="sel-hint sel-hint-error">Não consegui ler esse PDF ({content.error}). O livro abre com as páginas de exemplo.</p>}
         {content?.source === 'file' && content.status === 'ready' && <p className="sel-hint">Mostrando o PDF que você soltou (até recarregar a página).</p>}
         <p className="sel-hint">Solte um PDF na janela para ver este livro com o seu conteúdo.</p>
+        {content?.status === 'loading' && <PreparingBar progress={content.progress ?? 0} startedAt={content.startedAt ?? 0} />}
         <div className="sel-actions">
           <button type="button" className="sel-btn sel-btn-primary" ref={openRef} onClick={requestOpen} disabled={content?.status === 'loading'}>
             {content?.status === 'loading' ? 'Preparando páginas…' : 'Abrir'}

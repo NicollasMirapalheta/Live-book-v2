@@ -274,8 +274,11 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
           if (st.phase === 'hand') st.clear()
           return
         }
-        // the book in the hand: a click opens it, like "Abrir"
-        if (st.phase === 'hand') return st.requestOpen()
+        // the book in the hand: a click opens it, like "Abrir" (not while its PDF is still being prepared)
+        if (st.phase === 'hand') {
+          if (useBookContent.getState().byId[book.id]?.status !== 'loading') st.requestOpen()
+          return
+        }
         // the open book: the cover (its rim, or the endpaper when nothing lies on it) closes it
         if (st.phase === 'open' && e.object.userData.closesBook) st.close()
       }}

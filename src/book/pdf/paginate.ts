@@ -260,19 +260,23 @@ export function paginate(doc: DocStructure, meta: BookMeta, aspect: number, meas
   }
   const linesLeft = () => (cur ? Math.max(0, Math.floor((PAGE.bottom - y) / lineH) + 1) : 0)
 
-  const heading1 = (text: string) => {
-    chapterNo++
+  const heading1 = (text: string, number?: string) => {
+    // the PDF's own chapter number when it has one (digits reset the count, roman numerals are shown as
+    // they are); front and back matter ('') has none
+    if (number && /^\d+$/.test(number)) chapterNo = Number(number)
+    else if (number !== '') chapterNo++
+    const label = number === '' ? '' : `CAPÍTULO ${number ?? chapterNo}`
     chapter = text
     // chapters open on a recto (odd page); the page before ends where its text ends
     if (pages.length % 2 === 1) pages.push({ page: pages.length + 1, items: [], folio: false })
     open(true)
     const p = cur!
     p.items.push(
-      { kind: 'text', x: textW / 2, y: PAGE.chapterLabel, text: `CAPÍTULO ${chapterNo}`, font: { size: 0.017 }, align: 'center' },
+      ...(label ? [{ kind: 'text' as const, x: textW / 2, y: PAGE.chapterLabel, text: label, font: { size: 0.017 }, align: 'center' as const }] : []),
       { kind: 'text', x: textW / 2, y: PAGE.chapterTitle, text, font: { size: 0.036 }, align: 'center' },
       { kind: 'rule', x0: textW / 2 - W * 0.05, x1: textW / 2 + W * 0.05, y: PAGE.chapterRule },
     )
-    toc.push({ title: text, page: p.page, chapter: chapterNo })
+    toc.push({ title: text, page: p.page, ...(label ? { chapter: chapterNo } : {}) })
     afterHeading = true
   }
 
@@ -359,7 +363,7 @@ export function paginate(doc: DocStructure, meta: BookMeta, aspect: number, meas
   }
 
   for (const b of doc.blocks as Block[]) {
-    if (b.type === 'heading' && b.level === 1) heading1(b.text)
+    if (b.type === 'heading' && b.level === 1) heading1(b.text, b.number)
     else if (b.type === 'heading') heading2(b.text)
     else if (b.type === 'paragraph') paragraph(b.text)
     else image(b.id, b.aspect)

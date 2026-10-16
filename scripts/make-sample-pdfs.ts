@@ -319,3 +319,19 @@ mkdirSync(OUT, { recursive: true })
     chapters,
   })
 }
+
+// Regression fixture (e2e): the same image on every page. pdf.js stores images used on several pages in
+// commonObjs ("g_…" ids); reading those from page.objs waited forever ("Preparando páginas…" with a user's PDF).
+{
+  const pdf = await PDFDocument.create()
+  const times = await pdf.embedFont(StandardFonts.TimesRoman)
+  const logo = await pdf.embedPng(await drawing('leaf', 7))
+  for (let n = 0; n < 3; n++) {
+    const page = pdf.addPage([A4.w, A4.h])
+    page.drawImage(logo, { x: A4.w - 140, y: A4.h - 110, width: 90, height: 60 })
+    let y = A4.h - 160
+    for (let i = 0; i < 20; i++, y -= LEAD) page.drawText(`Linha ${i + 1} da página ${n + 1} de um documento com logotipo repetido.`, { x: M.left, y, size: BODY, font: times })
+  }
+  writeFileSync(`${OUT}/test-shared-image.pdf`, await pdf.save())
+  console.log('[samples] test-shared-image.pdf: 3 páginas com a mesma imagem')
+}

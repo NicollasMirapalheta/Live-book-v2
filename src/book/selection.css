@@ -265,3 +265,18 @@
 .sel-hint-error {
   color: #e8a07a;
 }
+
+/* progress of a slow PDF (Fase 5) */
+.sel-progress {
+  height: 4px;
+  margin-top: 14px;
+  border-radius: 2px;
+  background: rgba(232, 200, 143, 0.18);
+  overflow: hidden;
+}
+
+.sel-progress-fill {
+  height: 100%;
+  background: #c9a35a;
+  transition: width 0.3s ease-out;
+}

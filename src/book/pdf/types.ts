@@ -36,7 +36,8 @@ export interface RawDoc {
 }
 
 export type Block =
-  | { type: 'heading'; level: 1 | 2; text: string }
+  /** level 1 = chapter; `number` from the PDF ("CAPÍTULO 3"), '' for an unnumbered chapter, absent = count */
+  | { type: 'heading'; level: 1 | 2; text: string; number?: string }
   | { type: 'paragraph'; text: string }
   | { type: 'image'; id: string; aspect: number }
 
