@@ -71,12 +71,31 @@ export function coverMaterial(
       mat.normalScale.set(0.6, 0.6)
     }
   }
+  const open: CoverOpenUniforms = { uOpenAngle: { value: 0 }, uOpenPivot: { value: new Vector2() }, uSpineShift: { value: 0 } }
+  mat.userData.open = open
   mat.onBeforeCompile = (shader: WebGLProgramParametersWithUniforms) => {
     shader.uniforms.wearMap = { value: wear }
     shader.uniforms.wearScale = { value: wearScale }
+    Object.assign(shader.uniforms, open)
+    // Fase 4: the front board (aPanel = 2) turns around the hinge, a vertical axis through uOpenPivot (x, z)
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec2 lbUv;')
+      .replace(
+        '#include <common>',
+        `#include <common>
+varying vec2 lbUv;
+attribute float aPanel;
+uniform float uOpenAngle;
+uniform vec2 uOpenPivot;
+uniform float uSpineShift;
+vec2 lbRotY( vec2 xz, float a ) { float c = cos( a ), s = sin( a ); return vec2( xz.x * c + xz.y * s, -xz.x * s + xz.y * c ); }`,
+      )
       .replace('#include <uv_vertex>', '#include <uv_vertex>\n\tlbUv = uv;')
+      .replace('#include <beginnormal_vertex>', '#include <beginnormal_vertex>\n\tif ( aPanel > 1.5 ) objectNormal.xz = lbRotY( objectNormal.xz, uOpenAngle );')
+      .replace(
+        '#include <begin_vertex>',
+        // …and the spine (aPanel = 1) sinks behind the gutter, as the spine of an open book does
+        '#include <begin_vertex>\n\tif ( aPanel > 1.5 ) transformed.xz = uOpenPivot + lbRotY( transformed.xz - uOpenPivot, uOpenAngle );\n\telse if ( aPanel > 0.5 ) transformed.x -= uSpineShift;',
+      )
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', '#include <common>\nuniform sampler2D wearMap;\nuniform vec2 wearScale;\nvarying vec2 lbUv;\nfloat lbWear;')
       .replace(
@@ -90,6 +109,24 @@ export function coverMaterial(
   }
   mat.customProgramCacheKey = () => `lb-cover-${kind}`
   return mat
+}
+
+export interface CoverOpenUniforms {
+  uOpenAngle: { value: number }
+  uOpenPivot: { value: Vector2 }
+  uSpineShift: { value: number }
+}
+
+/**
+ * Opens the front board of a cover material by `angle` (rad) around the vertical axis through (x, z), and
+ * moves the spine back by `spineShift` (m) along −X.
+ */
+export function setCoverOpen(mat: MeshPhysicalMaterial, angle: number, pivotX: number, pivotZ: number, spineShift = 0) {
+  const open = mat.userData.open as CoverOpenUniforms | undefined
+  if (!open) return
+  open.uOpenAngle.value = angle
+  open.uOpenPivot.value.set(pivotX, pivotZ)
+  open.uSpineShift.value = spineShift
 }
 
 /** Endpapers (inside of the boards). */

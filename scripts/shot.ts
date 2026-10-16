@@ -147,6 +147,8 @@ async function capture(browser: Browser, url: string, width: number, height: num
   await page.waitForFunction(() => window.__SCENE_READY__ === true, undefined, { timeout: 180_000 })
   // a selection animates the book out of the shelf: let it settle before measuring and capturing
   if (url.includes('select=')) await page.waitForTimeout(2500)
+  // …and with open=1 the cover opens after it reaches the hand (Fase 4)
+  if (url.includes('open=1')) await page.waitForTimeout(2200)
   const stats = await page.evaluate(() => window.__SCENE_STATS__)
   mkdirSync(dirname(file), { recursive: true })
   await page.screenshot({ path: file })

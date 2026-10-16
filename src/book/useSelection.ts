@@ -14,23 +14,37 @@ interface SelectionState {
   selected: string | null
   /**
    * Where the selected book is: `out` flying from the shelf to the reader's hand, `hand` held in front of
-   * the camera (the description panel shows), `back` returning to the shelf. null when nothing is selected.
+   * the camera (the description panel shows), `opening` → `open` → `closing` the reading mode (Fase 4),
+   * `back` returning to the shelf. null when nothing is selected.
    */
-  phase: 'out' | 'hand' | 'back' | null
-  /** set when the user confirms "Abrir" (opening the book is Fase 4) */
-  openRequested: string | null
+  phase: SelectionPhase
   setOrder: (ids: string[]) => void
   hover: (id: string | null) => void
   focusNext: (dir: 1 | -1) => void
   select: (id: string) => void
   /** the flying book reached the hand */
   arrived: () => void
-  /** start the return flight */
+  /** Esc / "Voltar": closes an open book first, otherwise starts the return flight */
   clear: () => void
   /** the book is back on the shelf */
   returned: () => void
+  /** "Abrir": the book moves to the reading pose and the cover opens */
   requestOpen: () => void
+  /** the cover finished opening */
+  opened: () => void
+  /** "Fechar": back to the hand pose with the cover closed */
+  close: () => void
+  /** the cover finished closing */
+  closed: () => void
 }
+
+export type SelectionPhase = 'out' | 'hand' | 'opening' | 'open' | 'closing' | 'back' | null
+
+/** Phases in which the book is (or is becoming) open: the reader bar and DOF belong to these. */
+export const isReading = (phase: SelectionPhase) => phase === 'opening' || phase === 'open' || phase === 'closing'
+
+/** Focus distance of the depth of field while reading (camera → open book), set when the hand pose is captured. */
+export const readFocus = { distance: 0.4 }
 
 const canSelect = () => {
   const nav = useNavigation.getState()
@@ -43,7 +57,6 @@ export const useSelection = create<SelectionState>((set, get) => ({
   focused: null,
   selected: null,
   phase: null,
-  openRequested: null,
 
   setOrder: (ids) => set({ order: ids }),
 
@@ -63,7 +76,7 @@ export const useSelection = create<SelectionState>((set, get) => ({
   select: (id) => {
     if (get().selected || !canSelect() || !get().order.includes(id)) return
     useNavigation.getState().setLocked(true)
-    set({ selected: id, phase: 'out', focused: id, hovered: null, openRequested: null })
+    set({ selected: id, phase: 'out', focused: id, hovered: null })
   },
 
   arrived: () => {
@@ -72,17 +85,31 @@ export const useSelection = create<SelectionState>((set, get) => ({
 
   clear: () => {
     const { phase } = get()
-    if (phase === 'out' || phase === 'hand') set({ phase: 'back', openRequested: null })
+    if (phase === 'out' || phase === 'hand') set({ phase: 'back' })
+    else if (phase === 'opening' || phase === 'open') set({ phase: 'closing' })
   },
 
   returned: () => {
     useNavigation.getState().setLocked(false)
-    set({ selected: null, phase: null, openRequested: null })
+    set({ selected: null, phase: null })
   },
 
   requestOpen: () => {
     const { selected, phase } = get()
-    if (selected && phase === 'hand') set({ openRequested: selected })
+    if (selected && phase === 'hand') set({ phase: 'opening' })
+  },
+
+  opened: () => {
+    if (get().phase === 'opening') set({ phase: 'open' })
+  },
+
+  close: () => {
+    const { phase } = get()
+    if (phase === 'opening' || phase === 'open') set({ phase: 'closing' })
+  },
+
+  closed: () => {
+    if (get().phase === 'closing') set({ phase: 'hand' })
   },
 }))
 
@@ -99,10 +126,10 @@ declare global {
       readonly selected: string | null
       readonly phase: SelectionState['phase']
       readonly focused: string | null
-      readonly openRequested: string | null
       readonly order: string[]
       select: (id: string) => void
       clear: () => void
+      open: () => void
       /** screen position (CSS px) of a book on the shelf, for pointer tests */
       screenPos?: (id: string) => { x: number; y: number } | null
     }
@@ -120,13 +147,11 @@ if (params.e2e) {
     get focused() {
       return useSelection.getState().focused
     },
-    get openRequested() {
-      return useSelection.getState().openRequested
-    },
     get order() {
       return useSelection.getState().order
     },
     select: (id) => useSelection.getState().select(id),
     clear: () => useSelection.getState().clear(),
+    open: () => useSelection.getState().requestOpen(),
   }
 }

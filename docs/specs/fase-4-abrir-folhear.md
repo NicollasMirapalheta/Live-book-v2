@@ -21,6 +21,16 @@ Ponto de partida (Fase 3 revisada): o livro já veio da estante para a mão do u
 
 `useSelection.phase` ganha `opening` → `open` → `closing`; `src/book/reader/useReader.ts` guarda a página atual, o progresso da virada e a direção.
 
+## Implementação (2026-10-15)
+
+- `src/book/reader/pages.ts`: contas puras (páginas visíveis, folha no ar, espessura das pilhas, limites).
+- `useReader.ts`: folhas viradas, virada em curso (`t` 0 → 1, alvo, arrasto), fila de viradas pelo teclado; 0,75 s por folha (60% com movimento reduzido), lenta nas pontas.
+- `BookReader.tsx`: monta só no livro sendo lido. A metade da frente (placa, pilha esquerda, página esquerda, guarda) gira em torno da fronteira entre as pilhas; a placa gira no shader da capa e a lombada afunda atrás da calha. Abertura a 175°.
+- `pageContent.ts` (`// PLACEHOLDER`): páginas em canvas 1024 px de altura, sombra da calha no lado da costura.
+- Pose de leitura em `BookShelf.tsx`: o livro aberto ocupa ~80% da largura (ou 74% da altura), centrado na calha, inclinado 10°. Abrir dura 1,2 s: a pose vai primeiro, a capa termina depois.
+- Barra de leitura (‹ p. 4–5 › Fechar) no rodapé; `Esc` fecha; roda do mouse folheia.
+- Screenshots: `?select=<id>&open=1&page=N`, `&turn=0..1`, `&openAt=0..1`.
+
 ## Verificação
 
 - `npm run test`: cálculo das pilhas (espessura por lado), índices de página e limites (não passa da última/primeira).

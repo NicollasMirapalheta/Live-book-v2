@@ -1,16 +1,18 @@
 import { Html } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { use, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Box3, Color, Euler, Quaternion, Vector3, type Group, type Mesh, type MeshPhysicalMaterial, type MeshStandardMaterial } from 'three'
+import { Box3, Color, Euler, Quaternion, Vector3, type Group, type Mesh, type PerspectiveCamera, type MeshPhysicalMaterial, type MeshStandardMaterial } from 'three'
 import { params } from '../app/params'
 import { invalidateShadows } from '../scene/shadows'
 import { Book } from './Book'
+import type { OpenState } from './reader/BookReader'
+import { useReader } from './reader/useReader'
 import { backShadowTexture, contactShadowTexture } from './canvasTextures'
 import type { FixtureBook } from './fixtures'
 import { bookDimensions } from './geometry'
 import { loadBookcase, shelfBooks, shelfLayoutFor, shelfOrder } from './shelfData'
 import type { PlacedBook, Shelf } from './shelfLayout'
-import { useSelection } from './useSelection'
+import { isReading, readFocus, useSelection } from './useSelection'
 import './selection.css'
 
 const HOVER_PULL = 0.012
@@ -35,6 +37,16 @@ const HAND_LEFT = 0.08 // fraction of the distance
  * the reader's own body also shades it. Albedo and reflections scale down to this while it is held.
  */
 const HAND_EXPOSURE = 0.5
+
+/**
+ * Reading pose (Fase 4): centered, the open spread filling ~80% of the width (or 78% of the height), tilted
+ * back a little. Opening: the pose moves first, the cover follows and finishes after it.
+ */
+const OPEN_S = 1.2
+const READ_FILL_W = 0.8
+const READ_FILL_H = 0.74
+const READ_TILT = (10 * Math.PI) / 180
+const READ_DROP = -0.008 // negative: a little above the view center, clear of the reading bar
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
@@ -64,12 +76,14 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
   const d = useMemo(() => bookDimensions(book.pageCount, book.trim), [book.pageCount, book.trim])
   const outer = useRef<Group>(null)
   const inner = useRef<Group>(null)
-  const anim = useRef({ hover: 0, glow: 0, s: 0 })
-  const flight = useRef<{ handPos: Vector3; handQuat: Quaternion } | null>(null)
+  const anim = useRef({ hover: 0, glow: 0, s: 0, o: 0 })
+  const flight = useRef<{ handPos: Vector3; handQuat: Quaternion; readPos: Vector3; readQuat: Quaternion } | null>(null)
+  const openState = useRef<OpenState>({ cover: 0 })
   const scratch = useMemo(() => ({ pos: new Vector3(), quat: new Quaternion(), euler: new Euler(), fwd: new Vector3(), up: new Vector3() }), [])
   const camera = useThree((st) => st.camera)
   const hover = useSelection((st) => st.hover)
   const isSelected = useSelection((st) => st.selected === book.id)
+  const isReadingThis = useSelection((st) => st.selected === book.id && isReading(st.phase))
   const select = useSelection((st) => st.select)
 
   // shelf pose: pivot at the bottom corner toward the lean (the corner that stays on the shelf)
@@ -112,13 +126,49 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
         .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2 + HAND_TURN))
         .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), HAND_TILT))
       const handPos = handCenter.sub(center.clone().applyQuaternion(handQuat))
-      flight.current = { handPos, handQuat }
+
+      // reading pose: the open spread centered on the gutter (closed-book z = 0, page surface x ≈ +block/2)
+      const cam = camera as PerspectiveCamera
+      const halfH = Math.tan(((cam.fov ?? 50) * Math.PI) / 360)
+      const halfW = halfH * (cam.aspect ?? 16 / 9)
+      const openW = 2 * d.coverWidth + 0.02
+      const readDist = Math.max(openW / (2 * halfW * READ_FILL_W), d.coverHeight / (2 * halfH * READ_FILL_H))
+      readFocus.distance = readDist
+      const readQuat = camera.quaternion
+        .clone()
+        .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2))
+        .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), READ_TILT))
+      const gutter = new Vector3(-place.thickness / 2 + d.blockThickness / 2, d.coverHeight / 2, 0)
+      const readPos = camera.position
+        .clone()
+        .addScaledVector(k.fwd, readDist)
+        .addScaledVector(k.up, -READ_DROP)
+        .sub(gutter.applyQuaternion(readQuat))
+      flight.current = { handPos, handQuat, readPos, readQuat }
     }
 
-    const before = a.s + a.hover
+    const before = a.s + a.hover + a.o
     if (isSel && (st.phase === 'out' || st.phase === 'hand')) {
       a.s = Math.min(total, a.s + dt * speed)
-      if (a.s >= total && st.phase === 'out') st.arrived()
+      if (a.s >= total && st.phase === 'out') {
+        st.arrived()
+        if (params.open) useSelection.getState().requestOpen()
+      }
+    } else if (isSel && st.phase === 'opening') {
+      if (a.o === 0) useReader.getState().start(book.pageCount, params.page)
+      // ?openAt=<0..1> freezes the opening part way (screenshots of the hinge)
+      a.o = Math.min(params.openAt ?? 1, a.o + (dt * speed) / OPEN_S)
+      if (a.o >= 1) {
+        st.opened()
+        // ?turn=<0..1>: a sheet frozen mid-turn (screenshots of the curl)
+        if (params.turn !== undefined && useReader.getState().beginDrag(1)) useReader.getState().dragTo(params.turn)
+      }
+    } else if (isSel && st.phase === 'closing') {
+      a.o = Math.max(0, a.o - (dt * speed) / OPEN_S)
+      if (a.o <= 0) {
+        st.closed()
+        useReader.getState().reset()
+      }
     } else if (isSel && st.phase === 'back') {
       a.s = Math.max(0, a.s - (dt * speed) / RETURN_FACTOR)
       if (a.s <= 0) {
@@ -147,12 +197,21 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
         o.position.lerpVectors(k.pos, flight.current.handPos, u)
         if (!reducedMotion()) o.position.y += Math.sin(Math.PI * u) * 0.06
         o.quaternion.copy(IDENTITY).slerp(flight.current.handQuat, u)
+        if (a.o > 0) {
+          // reading: from the hand pose to the reading pose, then the cover opens (BookReader)
+          const f = flight.current
+          const poseT = easeInOut(Math.min(1, a.o / 0.65))
+          o.position.lerpVectors(f.handPos, f.readPos, poseT)
+          o.quaternion.copy(f.handQuat).slerp(f.readQuat, poseT)
+        }
       }
     }
-    if (Math.abs(a.s + a.hover - before) > 1e-5) invalidateShadows()
+    openState.current.cover = easeInOut(Math.min(1, Math.max(0, (a.o - 0.3) / 0.7)))
+    if (Math.abs(a.s + a.hover + a.o - before) > 1e-5) invalidateShadows()
     const exposure = 1 - (1 - HAND_EXPOSURE) * easeInOut(Math.min(1, a.s / total))
     const g = inner.current
-    if (g && (Math.abs(a.glow - (g.userData.glow ?? -1)) > 0.002 || Math.abs(exposure - (g.userData.exposure ?? -1)) > 0.002)) {
+    // (every frame while reading: the open book's page meshes appear after the first pass)
+    if (g && (isSel && isReading(st.phase) || Math.abs(a.glow - (g.userData.glow ?? -1)) > 0.002 || Math.abs(exposure - (g.userData.exposure ?? -1)) > 0.002)) {
       g.userData.glow = a.glow
       g.userData.exposure = exposure
       g.traverse((obj) => {
@@ -196,7 +255,7 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
       }}
     >
       <group ref={inner} position={[-place.thickness / 2, 0, 0]}>
-        <Book book={book} detail={isSelected ? 'full' : 'shelf'} />
+        <Book book={book} detail={isSelected ? 'full' : 'shelf'} openState={isReadingThis ? openState : undefined} />
       </group>
       <TitlePopover book={book} anchor={[-place.thickness / 2, d.coverHeight + 0.03, 0]} />
     </group>

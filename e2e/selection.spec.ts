@@ -8,7 +8,6 @@ declare global {
       readonly selected: string | null
       readonly phase: string | null
       readonly focused: string | null
-      readonly openRequested: string | null
       readonly order: string[]
       screenPos?: (id: string) => { x: number; y: number } | null
     }
@@ -48,9 +47,6 @@ test('teclado: ← → percorre os livros, Enter abre a descrição, Esc volta',
   await expect(page.getByRole('button', { name: 'Avançar' })).toHaveCount(0)
   await page.waitForTimeout(800)
   await page.screenshot({ path: testInfo.outputPath('selected.png') })
-
-  await page.getByRole('button', { name: 'Abrir' }).click()
-  expect(await page.evaluate(() => window.__SEL__!.openRequested)).toBe(order[0])
 
   await page.keyboard.press('Escape')
   await expect(panel).toHaveCount(0)

@@ -335,12 +335,16 @@ export function coverGeometry(d: BookDimensions, opts: CoverGeometryOptions = {}
     const ring1 = spineArc(d, -BOARD)
     for (const [y, up] of [[0, false], [H, true]] as const) {
       const ny = up ? 1 : -1
-      const quad = (pts: [number, number][]) => {
-        const ids = pts.map(([x, z]) => vertex(b, x, y, z, 0, ny, 0, z, x, 1))
+      // panel per piece: the front board's caps turn with it when the book opens (Fase 4)
+      const quad = (pts: [number, number][], panel = 1) => {
+        const ids = pts.map(([x, z]) => vertex(b, x, y, z, 0, ny, 0, z, x, panel))
         b.idx.push(ids[0], ids[1], ids[2], ids[0], ids[2], ids[3])
       }
-      quad([[-T + e, 0], [-T + BOARD, 0], [-T + BOARD, zEnd - e], [-T + e, zEnd - e]])
-      quad([[T - BOARD, 0], [T - e, 0], [T - e, zEnd - e], [T - BOARD, zEnd - e]])
+      quad([[-T + e, HINGE_OFFSET], [-T + BOARD, HINGE_OFFSET], [-T + BOARD, zEnd - e], [-T + e, zEnd - e]], 0)
+      quad([[T - BOARD, HINGE_OFFSET], [T - e, HINGE_OFFSET], [T - e, zEnd - e], [T - BOARD, zEnd - e]], 2)
+      // from the spine to the hinge: stays with the spine
+      quad([[-T + e, 0], [-T + BOARD, 0], [-T + BOARD, HINGE_OFFSET], [-T + e, HINGE_OFFSET]])
+      quad([[T - BOARD, 0], [T - e, 0], [T - e, HINGE_OFFSET], [T - BOARD, HINGE_OFFSET]])
       for (let i = 0; i < ring0.length - 1; i++) {
         quad([
           [ring0[i].x, ring0[i].y],

@@ -1,23 +1,32 @@
 import { useEffect, useRef } from 'react'
 import { params } from '../app/params'
 import { useNavigation } from '../navigation/useNavigation'
+import { currentSpread, useReader } from './reader/useReader'
 import { shelfBooks } from './shelfData'
 import { SPINE_COLOR_LABELS } from './palette'
 import { SELECTION_NODE, useSelection } from './useSelection'
 import './selection.css'
 
+const WHEEL_GAP_MS = 350
+
 /**
  * Keyboard for the bookcase node: ←/→ move the focus between the books, Enter selects, Esc goes back.
- * Registered in the capture phase so the look controls don't also turn the camera.
+ * While reading: ←/→ turn the pages, Esc closes the book. Registered in the capture phase so the look
+ * controls don't also turn the camera.
  */
 function useSelectionKeys() {
   useEffect(() => {
+    let lastWheel = 0
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select')) return
       const nav = useNavigation.getState()
       const sel = useSelection.getState()
       if (sel.selected) {
-        if (e.key === 'Escape') {
+        if (sel.phase === 'open' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+          e.preventDefault()
+          e.stopImmediatePropagation()
+          useReader.getState().turnPage(e.key === 'ArrowRight' ? 1 : -1)
+        } else if (e.key === 'Escape') {
           e.preventDefault()
           e.stopImmediatePropagation()
           sel.clear()
@@ -35,27 +44,41 @@ function useSelectionKeys() {
         sel.select(sel.focused)
       }
     }
+    // mouse wheel turns the pages while reading (down = forward)
+    const onWheel = (e: WheelEvent) => {
+      if (useSelection.getState().phase !== 'open' || Math.abs(e.deltaY) < 4) return
+      const now = performance.now()
+      if (now - lastWheel < WHEEL_GAP_MS) return
+      lastWheel = now
+      useReader.getState().turnPage(e.deltaY > 0 ? 1 : -1)
+    }
     window.addEventListener('keydown', onKey, { capture: true })
-    return () => window.removeEventListener('keydown', onKey, { capture: true })
+    window.addEventListener('wheel', onWheel, { passive: true })
+    return () => {
+      window.removeEventListener('keydown', onKey, { capture: true })
+      window.removeEventListener('wheel', onWheel)
+    }
   }, [])
 }
 
-/** Description panel of the selected book with "Abrir" (Fase 4) and "Voltar". */
+/** Description panel of the book in the hand, with "Abrir" (reading mode) and "Voltar" (back to the shelf). */
 export function SelectionPanel() {
   useSelectionKeys()
   const selected = useSelection((s) => s.selected)
-  const inHand = useSelection((s) => s.phase === 'hand')
-  const openRequested = useSelection((s) => s.openRequested)
+  const phase = useSelection((s) => s.phase)
   const clear = useSelection((s) => s.clear)
   const requestOpen = useSelection((s) => s.requestOpen)
   const openRef = useRef<HTMLButtonElement>(null)
+  const inHand = phase === 'hand'
 
   useEffect(() => {
     if (inHand) openRef.current?.focus()
   }, [inHand])
 
+  if (params.shot || !selected) return null
+  if (phase === 'open') return <ReaderBar />
   // the panel shows only once the book is in the reader's hand (spec Fase 3)
-  if (params.shot || !selected || !inHand) return null
+  if (!inHand) return null
   const book = shelfBooks().find((b) => b.id === selected)
   if (!book) return null
 
@@ -72,7 +95,6 @@ export function SelectionPanel() {
         </h2>
         {book.subtitle && <p className="sel-subtitle">{book.subtitle}</p>}
         <p className="sel-description">{book.description}</p>
-        {openRequested && <p className="sel-note">A abertura do livro chega na próxima fase.</p>}
         <div className="sel-actions">
           <button type="button" className="sel-btn sel-btn-primary" ref={openRef} onClick={requestOpen}>
             Abrir
@@ -83,5 +105,30 @@ export function SelectionPanel() {
         </div>
       </aside>
     </>
+  )
+}
+
+/** Reading controls (spec Fase 4): previous / pages shown / next, and "Fechar". */
+function ReaderBar() {
+  const spread = useReader((s) => currentSpread(s))
+  const atStart = useReader((s) => s.turned === 0 && !s.turn)
+  const atEnd = useReader((s) => s.turned === s.sheets && !s.turn)
+  const close = useSelection((s) => s.close)
+  const turnPage = useReader((s) => s.turnPage)
+  return (
+    <nav className="sel-reader" aria-label="Leitura">
+      <button type="button" className="sel-btn sel-icon" aria-label="Página anterior" disabled={atStart} onClick={() => turnPage(-1)}>
+        ‹
+      </button>
+      <span className="sel-spread" aria-live="polite">
+        {spread ? `p. ${spread}` : atStart ? 'Guarda' : 'Fim'}
+      </span>
+      <button type="button" className="sel-btn sel-icon" aria-label="Próxima página" disabled={atEnd} onClick={() => turnPage(1)}>
+        ›
+      </button>
+      <button type="button" className="sel-btn" onClick={close}>
+        Fechar
+      </button>
+    </nav>
   )
 }

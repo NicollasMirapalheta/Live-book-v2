@@ -90,12 +90,6 @@
   color: #e9dcc4;
 }
 
-.sel-note {
-  margin: 12px 0 0;
-  font-size: 13px;
-  color: #c9a35a;
-}
-
 .sel-actions {
   display: flex;
   gap: 10px;
@@ -121,4 +115,48 @@
 .sel-btn:focus-visible {
   outline: 2px solid #e8c88f;
   outline-offset: 3px;
+}
+
+/* reading bar (Fase 4): bottom center, out of the way of the open spread */
+.sel-reader {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 200, 143, 0.28);
+  background: rgba(28, 18, 12, 0.72);
+  color: #f3e6cf;
+  font: 15px Georgia, 'Times New Roman', serif;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  animation: sel-pop 0.25s ease-out;
+}
+
+.sel-reader .sel-btn {
+  padding: 6px 14px;
+}
+
+.sel-icon {
+  width: 34px;
+  height: 34px;
+  padding: 0 !important;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.sel-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.sel-spread {
+  min-width: 72px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }

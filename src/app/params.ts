@@ -1,4 +1,4 @@
-// URL parameters (spec Fase 0 §6): ?node= ?yaw= ?pitch= ?fov= ?shot=1 ?e2e=1 ?dev=book ?quality=
+// URL parameters (spec Fase 0 §6): ?node= ?yaw= ?pitch= ?fov= ?shot=1 ?e2e=1 ?dev=book ?quality= ?select= ?open=1 ?page=
 const search = new URLSearchParams(window.location.search)
 
 function num(name: string): number | undefined {
@@ -26,6 +26,14 @@ export const params = {
   off: new Set((search.get('off') ?? '').split(',').filter(Boolean)),
   /** opens the selection of this book id at N2 (screenshots) */
   select: search.get('select') ?? undefined,
+  /** with ?select: opens the book right after it reaches the hand (Fase 4 screenshots) */
+  open: search.get('open') === '1',
+  /** with ?open=1: opening frozen part way, 0..1 (screenshots) */
+  openAt: num('openAt'),
+  /** with ?open=1: sheet frozen mid-turn, 0..1 (screenshots) */
+  turn: num('turn'),
+  /** with ?open=1: first page shown (1-based) */
+  page: num('page'),
   /** book screenshot preset (0..2) for ?dev=book&shot=1 */
   preset: num('preset'),
 }

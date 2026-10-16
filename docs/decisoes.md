@@ -216,3 +216,23 @@ Formato de cada entrada:
   - Seleção redesenhada na Fase 3 (spec atualizada): popover de título no hover; clique → o livro sai reto da fileira (sem tocar os vizinhos) e voa até a "mão" (≈0,45 m à frente da câmera, um pouco abaixo do centro, capa de frente); painel aparece quando ele chega; Voltar/Esc faz o caminho inverso. Com movimento reduzido: a mesma trajetória em ~60% do tempo.
   - A Fase 4 passa a começar da "mão": **Abrir** abre a capa ali mesmo e permite folhear.
 - Precisa do usuário? não.
+
+## 2026-10-15 — Fase 3: livro na mão menos lavado (revisão E4)
+- Contexto: `art-reviewer` deu 2/5 ao livro na mão: na altura dos olhos, quase de frente, capa clara demais (bordô e natural saíam com a mesma cor bege-rosada). Medindo, ~2/3 do brilho da capa vinha das luzes em tempo real: o lustre fica atrás e acima do leitor, e a capa virada para a câmera fica no pico especular dele.
+- Escolha: pose na altura do peito, inclinada 20° para trás em torno da largura do livro e girada 11° (mostra a lombada); enquanto o livro está fora da estante, albedo, reflexo do ambiente e especular descem (exposição 0,5, especular ao quadrado), como se o corpo do leitor fizesse sombra. Dourado mais acetinado (rugosidade 0,42) e verniz do couro 0,1.
+- Alternativa: luz própria para o livro em mãos (rig separado) — mais controle, mais draw calls e uma luz que a sala não tem.
+- Como reverter: constantes `HAND_*` e `HAND_EXPOSURE` em `src/book/BookShelf.tsx`.
+- Precisa do usuário? não (aprovação visual segue com o usuário).
+
+## 2026-10-15 — Fase 4: como o livro abre
+- Contexto: spec `docs/specs/fase-4-abrir-folhear.md`. A capa é uma malha só (placa de trás + lombada + placa da frente) e o miolo é um bloco.
+- Escolha:
+  - A placa da frente gira no vertex shader da capa (atributo `aPanel` = 2 já existia); a lombada afunda para trás da calha quando o livro abre. Sem malha nova da capa.
+  - O miolo vira duas pilhas: o próprio bloco escalado na espessura (direita, na placa de trás) e uma cópia na metade da frente (esquerda). A dobradiça fica na fronteira entre as pilhas, então as duas páginas visíveis ficam sempre no mesmo nível, e a metade da frente para em 175° (o "V" de um livro aberto na mão).
+  - Folha virando: malha 24 × 6 com curvatura integrada no vertex shader (a ponta lidera); frente e verso em um material só (`gl_FrontFacing`). Só existem as texturas das páginas visíveis (cache de 10).
+  - Fechar: a capa fecha com as pilhas como estão (o livro fecha naquela página); ao terminar, o leitor volta para a página 1.
+  - Livro aberto sem sombra do sol (o passe de profundidade não roda o shader da dobradiça); a sombra volta quando fecha.
+  - DOF só durante a leitura, tier high, foco na distância de leitura.
+- Parâmetros de screenshot: `?select=<id>&open=1&page=N`, `&turn=0..1` (folha parada no meio), `&openAt=0..1` (abertura parada no meio).
+- Como reverter: `src/book/reader/`, `setCoverOpen` em `materials.ts`.
+- Precisa do usuário? não.

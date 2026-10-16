@@ -1,6 +1,6 @@
 import { useTexture } from '@react-three/drei'
-import { useEffect, useMemo, useState } from 'react'
-import { Vector2, type Texture } from 'three'
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { Vector2, type Group, type Mesh, type Texture } from 'three'
 import {
   clothWeaveHeight,
   contactShadowTexture,
@@ -34,6 +34,7 @@ import {
   polaroidCardMaterial,
   polaroidPhotoMaterial,
 } from './materials'
+import { BookReader, type OpenState } from './reader/BookReader'
 import type { BookData } from './types'
 
 export interface BookProps {
@@ -42,6 +43,8 @@ export interface BookProps {
   rotation?: [number, number, number]
   /** 'shelf': only what shows on a shelf (spine, edges); the front tooling and the polaroid are skipped (draw calls) */
   detail?: 'full' | 'shelf'
+  /** reading mode (Fase 4): the cover opening progress, written every frame by the owner of the pose */
+  openState?: RefObject<OpenState>
 }
 
 const TEX = '/textures/book'
@@ -76,7 +79,11 @@ function usePhoto(book: BookProps['book']): Texture | null {
  * Local frame: X thickness (front cover +X), Y height (bottom at 0), spine at z ≈ 0 (bulging to +Z),
  * fore-edge toward −Z.
  */
-export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0], detail = 'full' }: BookProps) {
+export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0], detail = 'full', openState }: BookProps) {
+  const coverMesh = useRef<Mesh>(null)
+  const pageBlock = useRef<Mesh>(null)
+  const frontHalf = useRef<Group>(null)
+  const spineFoilMesh = useRef<Mesh>(null)
   const d = useMemo(() => bookDimensions(book.pageCount, book.trim), [book.pageCount, book.trim])
   const prefix = book.coverMaterial === 'leather' ? 'leather' : 'cloth'
   const [lum, normal, arm] = useTexture([`${TEX}/${prefix}_lum.jpg`, `${TEX}/${prefix}_normal.jpg`, `${TEX}/${prefix}_arm.jpg`])
@@ -126,6 +133,7 @@ export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0], detail 
     }
   }, [geo.cover, d, book.title, book.coverMaterial, book.color, lum, normal, arm])
 
+  const pageMats = useMemo(() => [mats.pageEdge, mats.pageSide], [mats])
   const photoMat = useMemo(() => (photo ? polaroidPhotoMaterial(photo) : null), [photo])
 
   // deterministic ±2° tilt of the polaroid, from the book id
@@ -155,17 +163,34 @@ export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0], detail 
       <group scale={[1, 1, -1]}>
       {/* cover: groups 0 outer, 1 board edges, 2 inner face. The inner face shows the cover's turn-ins at the
           squares; the endpaper (mats.endpaper) is only visible once the book opens (Fase 4). */}
-      <mesh name="cover" geometry={geo.cover} material={mats.cover} castShadow receiveShadow />
-      <mesh name="pageBlock" geometry={geo.pages} material={[mats.pageEdge, mats.pageSide]} castShadow receiveShadow />
-      <mesh name="spineFoil" geometry={geo.spineFoil} material={mats.spineFoil} />
-      <mesh name="frontFoil" geometry={geo.frontFoil} material={mats.frontFoil} visible={detail === 'full'} />
-      <group name="polaroid" position={geo.polaroid.position} rotation={[tilt, 0, 0]} visible={detail === 'full'}>
-        <mesh rotation={[0, Math.PI / 2, 0]} position={[0.00003, 0, 0]} material={mats.shadow} renderOrder={1}>
-          <planeGeometry args={[geo.polaroidSize[0] * 1.12, geo.polaroidSize[1] * 1.1]} />
-        </mesh>
-        <mesh geometry={geo.polaroid.card} material={mats.card} castShadow receiveShadow />
-        {photoMat && <mesh geometry={geo.polaroid.photo} material={photoMat} />}
+      <mesh ref={coverMesh} name="cover" geometry={geo.cover} material={mats.cover} castShadow receiveShadow />
+      <mesh ref={pageBlock} name="pageBlock" geometry={geo.pages} material={pageMats} castShadow receiveShadow />
+      <mesh ref={spineFoilMesh} name="spineFoil" geometry={geo.spineFoil} material={mats.spineFoil} />
+      {/* everything fixed to the front board: turns with it when the book opens */}
+      <group ref={frontHalf} name="frontHalf">
+        <mesh name="frontFoil" geometry={geo.frontFoil} material={mats.frontFoil} visible={detail === 'full'} />
+        <group name="polaroid" position={geo.polaroid.position} rotation={[tilt, 0, 0]} visible={detail === 'full'}>
+          <mesh rotation={[0, Math.PI / 2, 0]} position={[0.00003, 0, 0]} material={mats.shadow} renderOrder={1}>
+            <planeGeometry args={[geo.polaroidSize[0] * 1.12, geo.polaroidSize[1] * 1.1]} />
+          </mesh>
+          <mesh geometry={geo.polaroid.card} material={mats.card} castShadow receiveShadow />
+          {photoMat && <mesh geometry={geo.polaroid.photo} material={photoMat} />}
+        </group>
       </group>
+      {openState && detail === 'full' && (
+        <BookReader
+          book={book}
+          d={d}
+          openState={openState}
+          coverMesh={coverMesh}
+          spineFoil={spineFoilMesh}
+          rightStack={pageBlock}
+          frontHalf={frontHalf}
+          pagesGeometry={geo.pages}
+          pageMaterials={pageMats}
+          endpaper={mats.endpaper}
+        />
+      )}
       </group>
     </group>
   )
