@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { params } from '../app/params'
 import { SELECTION_NODE, useSelection } from '../book/useSelection'
 import { useAccount } from '../data/cloud'
@@ -20,6 +20,7 @@ export function LibraryUI() {
   // with the cloud on (Fase 7) a book needs an owner: signed out, "Novo livro" asks to sign in first
   const needsSignIn = useAccount((s) => s.status === 'out')
   const [askSignIn, setAskSignIn] = useState(false)
+  const closeAsk = useCallback(() => setAskSignIn(false), [])
   const dragging = usePdfDropToCreate(!formOpen, needsSignIn, () => setAskSignIn(true))
   // ?form=new opens the form (screenshots of it; in shot mode it is the only UI)
   useEffect(() => {
@@ -34,8 +35,9 @@ export function LibraryUI() {
         </button>
       )}
       {dragging && <div className="lib-dropping">Solte o PDF para criar um livro</div>}
-      {askSignIn && <SignInFirst onClose={() => setAskSignIn(false)} />}
-      <AccountUI />
+      {askSignIn && <SignInFirst onClose={closeAsk} />}
+      {/* anywhere in the room (sign in on arrival); out of the way with a book in the hand or open, the form, the sign-in ask */}
+      <AccountUI visible={!selected && !formOpen && !askSignIn} />
       <BookForm />
     </>
   )

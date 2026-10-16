@@ -531,29 +531,57 @@
   }
 }
 
-/* account (Fase 7): top right */
+/* account (Fase 7): top right, the same weight as "Novo livro" (bottom left) */
 .acc {
   position: fixed;
-  top: 16px;
-  right: 18px;
+  top: 24px;
+  right: 24px;
   z-index: 10;
+  animation: ui-fade var(--lb-slow) var(--lb-ease);
+}
+
+/* signed out: one pill, like .lib-new */
+.acc-in,
+.acc-signin {
+  min-height: var(--lb-touch);
+  border-radius: var(--lb-pill);
+  border: 1px solid var(--lb-glass-line-strong);
+  background: var(--lb-glass-light);
+  color: var(--lb-ink);
+  font: var(--lb-text) var(--lb-serif);
+  backdrop-filter: var(--lb-blur);
+  box-shadow: var(--lb-shadow-small);
+}
+
+.acc-signin {
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background var(--lb-fast);
+}
+
+.acc-signin:hover {
+  background: var(--lb-glass);
+}
+
+.acc-signin:focus-visible,
+.acc-out:focus-visible {
+  outline: 2px solid var(--lb-gold-light);
+  outline-offset: 3px;
+}
+
+/* signed in: avatar, name and a borderless "Sair" inside one glass capsule */
+.acc-in {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 4px;
-  border-radius: var(--lb-pill);
-  background: var(--lb-glass-light);
-  border: 1px solid var(--lb-glass-line);
-  color: var(--lb-ink);
-  font: var(--lb-small) var(--lb-serif);
-  backdrop-filter: var(--lb-blur);
+  padding: 0 0 0 6px;
 }
 
 .acc-avatar {
   width: 32px;
   height: 32px;
-  margin-left: 6px;
   border-radius: 50%;
+  border: 1px solid var(--lb-glass-line-strong);
   object-fit: cover;
 }
 
@@ -562,25 +590,61 @@
   place-items: center;
   background: var(--lb-gold);
   color: var(--lb-on-gold);
+  font-size: var(--lb-small);
 }
 
 .acc-name {
   max-width: 160px;
   overflow: hidden;
+  color: var(--lb-ink-soft);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.acc-offer {
+.acc-out {
+  position: relative;
+  min-height: var(--lb-touch);
+  padding: 0 18px 0 14px;
+  border: 0;
+  border-radius: var(--lb-pill);
+  background: none;
+  color: var(--lb-ink);
+  font: var(--lb-small) var(--lb-serif);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+/* a thin rule between the name and the action */
+.acc-out::before {
+  content: '';
   position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  width: min(340px, calc(100vw - 32px));
-  padding: 16px 18px;
+  left: 0;
+  top: 13px;
+  bottom: 13px;
+  width: 1px;
+  background: var(--lb-glass-line);
+}
+
+.acc-out:hover {
+  color: var(--lb-gold);
+}
+
+/* bottom right, level with "Novo livro": off the books it talks about */
+.acc-offer {
+  position: fixed;
+  right: 24px;
+  bottom: 28px;
+  width: min(360px, calc(100vw - 32px));
+  padding: 18px 20px;
 }
 
 .acc-offer p {
   margin: 0;
+}
+
+.acc-offer p:not(.ui-kicker):not(.ui-error) {
+  color: var(--lb-ink-soft);
+  line-height: 1.5;
 }
 
 .acc-first {
@@ -592,4 +656,15 @@
   margin: 0;
   color: var(--lb-ink-soft);
   line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  .acc {
+    top: 16px;
+    right: 16px;
+  }
+
+  .acc-name {
+    display: none;
+  }
 }

@@ -6,14 +6,14 @@ import { create } from 'zustand'
 import type { BookRow, CloudDb } from './cloudBooks'
 import { getCachedFile, putCachedFile } from './db'
 
-const URL = import.meta.env.VITE_SUPABASE_URL
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
 const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
-export const cloudConfigured = !!(URL && KEY)
+export const cloudConfigured = !!(SUPABASE_URL && KEY)
 
 let clientPromise: Promise<SupabaseClient> | null = null
 export function getClient(): Promise<SupabaseClient> {
   clientPromise ??= import('@supabase/supabase-js').then(({ createClient }) =>
-    createClient(URL!, KEY!, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } }),
+    createClient(SUPABASE_URL!, KEY!, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } }),
   )
   return clientPromise
 }

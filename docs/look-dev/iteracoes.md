@@ -143,3 +143,18 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 - Luzes em tempo real dos livros/objetos levadas 30% (sol) e 40% (lustre) ao branco — o lustre a 2400 K tirava quase todo o azul; bake e env map intocados. Prévia com luz-chave quase neutra na frente da capa (a sala tem balanço de branco, a prévia não): azul-petróleo mede (73, 81, 89) na prévia e (72, 73, 77) na mão. Prévia a 40° com a lombada para a câmera, FOV 22, ~65% da altura. Sumário com linhas de 36 px no mouse e fade no pé. Botão × para tirar a foto; rótulo do PDF.
 - **art-reviewer (I3):** coerência 5 · legibilidade 4 · consistência 4 · formulário 4 — **"pronto para o usuário"**. Aplicado depois: texto da confirmação de Remover com entrelinha 1,45 e botão Remover tingido; × da foto centrado; prévia 6 mm para a direita.
 - Pendência: na mão, o azul-petróleo lê quase neutro (72, 73, 77) contra (73, 81, 89) na prévia; esfriar mais as luzes dos objetos mudaria a aparência já aprovada dos objetos da estante — fica para o usuário decidir.
+
+## Conta (Fase 7)
+
+### C1 — 2026-10-16
+- Pílula "Entrar com Google" no canto superior direito; modal "Entre para guardar os seus livros" ao pedir "Novo livro" deslogado.
+- **art-reviewer:** consistência 4 · legibilidade 4 · composição 3 — "iterar": contorno duplo, pílula menor que "Novo livro", visível com o livro na mão/aberto, modal sem Esc nem foco, textos.
+
+### C2
+- Pílula igual à "Novo livro" (15 px, sombra, fade, 44 px, cantos a 24 px); logado: cápsula com avatar com borda, nome em ink-soft e "Sair" sem borda; some com livro na mão ou aberto e no formulário. Modal com Esc e foco no primário. Textos: "Guardar na conta", erro sem mensagem técnica.
+- **art-reviewer:** 4 · 4 · 3 — "iterar": aviso de migração cobrindo os livros da prateleira de cima, "Sair" grudado no nome, foco visível, cor do texto do aviso, kicker repetindo "navegador".
+
+### C3
+- Aviso de migração embaixo à direita (na altura do "Novo livro"); filete entre o nome e "Sair"; `:focus-visible` dourado; texto do aviso em ink-soft; kicker "Sua conta"; pílula escondida atrás do modal de login.
+- Decisão: a conta fica visível pela sala toda (não só na estante), para entrar logo na chegada; o revisor sugeriu só na estante.
+- Shots: `shots/latest/ui_conta_estante.jpg`, `ui_conta_logado_levar.jpg` (conta simulada), `ui_conta_entrar_primeiro.jpg`. O estado logado real (foto do Google) só com as chaves.
