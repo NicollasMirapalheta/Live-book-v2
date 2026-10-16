@@ -41,6 +41,15 @@ Screenshots: `npm run shot` (sala) e `npm run shot -- --dev book` (livro).
 - `assets_contact.png`: folha de contato dos assets
 - `blender_N0.png`, `blender_N2.png`: prévias do Cycles
 
+## Fase 4 — abrir e folhear (com o livro na mão)
+
+- Clique no livro → ele sai reto da fileira e vem até a mão, de capa fechada; o painel aparece quando ele chega. **Abrir** → o livro centraliza, a capa gira na dobradiça e mostra a guarda e a página de rosto; o fundo desfoca.
+- Folhear: clique na página direita/esquerda, arrastar (passou da metade completa, pouco arrasto volta), `←/→`, roda do mouse. Barra no rodapé: ‹ p. 4–5 › **Fechar**. `Esc` fecha o livro; outro `Esc` devolve à estante.
+- Páginas provisórias (texto de exemplo em canvas, `// PLACEHOLDER`) até a Fase 5.
+- Shots: `shots/latest/N2_selected.png` (na mão), `N2_opening.png`, `N2_open.png`, `N2_turn.png`, `N2_open_low.png`. Para ver: `?node=N2&select=fx-bordo&open=1&page=3` (`&turn=0.4` congela uma folha virando).
+- `art-reviewer`: 3 rodadas, terminou em **4 · 4 · 4 · 4, "pronto para o usuário"**. Pendências: serrilhado das bordas no tier low, sulco da dobradiça, corte do bloco visível, sombra real da folha.
+- Testes: 26 unitários, 13 e2e (4 de leitura). Draw calls com o livro aberto: 138 (high), 88 (low).
+
 ## Fase 3 — livros na estante e seleção (depois da aprovação)
 
 - Os 6 livros de teste ficam de pé na prateleira de cima, centralizados entre o par de apoios de latão, com o último livro inclinado encostado no apoio e sombras de contato. Os outros objetos se reorganizam pelo `shelfLayout.ts`. Pares de apoios sem livros ficam escondidos.

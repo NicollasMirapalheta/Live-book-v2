@@ -129,9 +129,9 @@ export function setCoverOpen(mat: MeshPhysicalMaterial, angle: number, pivotX: n
   open.uSpineShift.value = spineShift
 }
 
-/** Endpapers (inside of the boards). */
+/** Endpapers (inside of the boards): a darker laid paper than the text block, so the inside of the cover never reads as a page. */
 export function endpaperMaterial(paper: Texture) {
-  return new MeshStandardMaterial({ color: new Color('#E9DDC3'), map: paper, roughness: 0.85, side: DoubleSide })
+  return new MeshStandardMaterial({ color: new Color('#CBB386'), map: paper, roughness: 0.85, envMapIntensity: 0.5, side: DoubleSide })
 }
 
 export function pageEdgeMaterial(edge: Texture) {

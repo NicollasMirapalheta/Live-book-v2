@@ -39,13 +39,15 @@ const HAND_LEFT = 0.08 // fraction of the distance
 const HAND_EXPOSURE = 0.5
 
 /**
- * Reading pose (Fase 4): centered, the open spread filling ~80% of the width (or 78% of the height), tilted
+ * Reading pose (Fase 4): centered, the open spread filling ~60% of the width (or 62% of the height), tilted
  * back a little. Opening: the pose moves first, the cover follows and finishes after it.
  */
 const OPEN_S = 1.2
-const READ_FILL_W = 0.8
-const READ_FILL_H = 0.74
-const READ_TILT = (10 * Math.PI) / 180
+const READ_FILL_W = 0.6
+const READ_FILL_H = 0.62
+const READ_TILT = (14 * Math.PI) / 180 // top back: the head of the block and the cover's squares show
+const READ_TURN = (4 * Math.PI) / 180
+const OPEN_BACKOFF = 0.07 // m
 const READ_DROP = -0.008 // negative: a little above the view center, clear of the reading bar
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -77,7 +79,7 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
   const outer = useRef<Group>(null)
   const inner = useRef<Group>(null)
   const anim = useRef({ hover: 0, glow: 0, s: 0, o: 0 })
-  const flight = useRef<{ handPos: Vector3; handQuat: Quaternion; readPos: Vector3; readQuat: Quaternion } | null>(null)
+  const flight = useRef<{ handPos: Vector3; handQuat: Quaternion; readPos: Vector3; readQuat: Quaternion; fwd: Vector3 } | null>(null)
   const openState = useRef<OpenState>({ cover: 0 })
   const scratch = useMemo(() => ({ pos: new Vector3(), quat: new Quaternion(), euler: new Euler(), fwd: new Vector3(), up: new Vector3() }), [])
   const camera = useThree((st) => st.camera)
@@ -136,7 +138,7 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
       readFocus.distance = readDist
       const readQuat = camera.quaternion
         .clone()
-        .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2))
+        .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2 + READ_TURN))
         .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), READ_TILT))
       const gutter = new Vector3(-place.thickness / 2 + d.blockThickness / 2, d.coverHeight / 2, 0)
       const readPos = camera.position
@@ -144,7 +146,7 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
         .addScaledVector(k.fwd, readDist)
         .addScaledVector(k.up, -READ_DROP)
         .sub(gutter.applyQuaternion(readQuat))
-      flight.current = { handPos, handQuat, readPos, readQuat }
+      flight.current = { handPos, handQuat, readPos, readQuat, fwd: k.fwd.clone() }
     }
 
     const before = a.s + a.hover + a.o
@@ -203,6 +205,9 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
           const poseT = easeInOut(Math.min(1, a.o / 0.65))
           o.position.lerpVectors(f.handPos, f.readPos, poseT)
           o.quaternion.copy(f.handQuat).slerp(f.readQuat, poseT)
+          // the board swings toward the camera mid-opening: step back a little so its corner stays in frame
+          const coverT = easeInOut(Math.min(1, Math.max(0, (a.o - 0.3) / 0.7)))
+          o.position.addScaledVector(f.fwd, OPEN_BACKOFF * Math.sin(Math.PI * coverT))
         }
       }
     }

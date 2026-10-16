@@ -85,3 +85,19 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 - Ajustes: pose na altura do peito (0,085 m abaixo do centro da vista), inclinação de 20° em torno da largura do livro (sem rolagem na tela), giro de 11° mostrando a lombada, distância 2,5× a altura. Causa da capa lavada: o lustre fica atrás e acima do leitor, então a capa virada para a câmera fica no pico especular dele. Na mão, albedo, reflexo e especular descem (exposição 0,5; especular ao quadrado). Dourado com rugosidade 0,42 e relevo 0,2; verniz do couro 0,1.
 - Medido na capa: bordô passou de 148/99/69 para 121/64/44 (alvo #6E2320); natural voltou a ser marrom.
 - Pendente: DOF/escurecer o fundo quando o livro está aberto (Fase 4); veio repetido no fundo da estante; estante com poucos livros (fase de teste).
+
+## Fase 4 — abrir e folhear (livro na mão)
+
+### R1 — 2026-10-15
+- Capa gira na dobradiça (shader), miolo em duas pilhas, folha com curvatura, páginas provisórias em canvas, DOF na leitura, barra de leitura.
+- **art-reviewer:** abertura 3 · livro aberto 2 · folha 3 · integração 3 — "iterar". Páginas planas como cartão, calha sem vale, livro de frente sem espessura, papel chapado e claro, guarda igual ao miolo, perto demais, DOF fraco.
+
+### R2
+- Páginas sobem da calha 8 mm, pose inclinada 14° com yaw de 4°, livro a ~55% da largura, papel #E6DAC0 com queda de luz de cima para baixo, folha no ar escurece a página de baixo, guarda #D6C29C com 13 mm de dobra de couro, bokeh 5,5. Corrigido o NaN de MSAA (`pow` de base negativa) que deixava o quadro preto depois do bloom.
+- **art-reviewer:** 4 · 3 · 3 · 4 — "iterar": pontos claros na calha, folha sem marca, papel rígido.
+
+### R3
+- Páginas continuam 1,8 mm além da costura, sombra da folha mais forte, contraluz na folha, ondulação de 0,7 mm, transparência do verso, papel #DDD0B4, guarda em papel vergê #CBB386, livro recua 7 cm no meio da abertura.
+- **art-reviewer:** 4 · 4 · 4 · 4 — "iterar" só pelos traços claros perto da calha. A causa eram letras do dourado da lombada atravessando a margem esquerda; o dourado agora some com o livro aberto e a lombada recua mais. Transparência do verso a 4%, meia linha deslocada.
+- Pendências: serrilhado das bordas no tier low (sem AA), sulco da dobradiça, corte do bloco visível na borda de baixo, sombra projetada real da folha (o sol vem de trás do livro).
+- **Conferência pós-correção (art-reviewer):** traços sumiram, nada regrediu — **4 · 4 · 4 · 4, "pronto para o usuário"**.

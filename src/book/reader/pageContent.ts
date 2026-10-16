@@ -5,7 +5,8 @@ import { CanvasTexture, SRGBColorSpace, type Texture } from 'three'
 
 export const PAGE_TEX_HEIGHT = 1024
 
-const PAPER = '#EFE5CF'
+// greyed cream, a step under the room's highlights: #EFE5CF came out peach and brighter than the windows
+const PAPER = '#DDD0B4'
 const INK = '#2B1E15'
 const INK_SOFT = '#6B5442'
 const SERIF = "Georgia, 'Times New Roman', serif"
@@ -17,6 +18,9 @@ const PARAGRAPHS = [
   'Naquele verão aprendemos a esperar. Esperar a fruta amadurecer, a carta chegar, a tinta secar na página antes de virar a folha. O tempo tinha outra espessura, e as horas se empilhavam como papel.',
   'Há fotografias que não mostram o que aconteceu, mas o que quisemos lembrar. A moldura branca da polaroide recorta um instante e o devolve mais quente, mais calmo, um pouco desbotado nas bordas.',
   'Quando a noite caía, acendíamos as velas do candelabro e líamos em voz alta. As sombras dos livros cresciam na parede, e cada história parecia pertencer à sala tanto quanto a nós.',
+  'Guardei as cartas numa caixa de lata, amarradas com barbante. Algumas têm selos de lugares que hoje mudaram de nome; outras foram escritas a lápis, às pressas, no balcão de uma estação.',
+  'De manhã cedo o jardim parecia outro. O orvalho pesava nas folhas, as abelhas ainda não tinham chegado e o portão rangia como se acordasse junto conosco.',
+  'Minha avó dizia que todo livro tem uma página preferida, aquela em que ele se abre sozinho. A dela era uma receita de bolo, manchada de farinha e de dedos apressados.',
   'O mapa da viagem ainda está dobrado no fundo da gaveta, com as estradas marcadas a lápis. Algumas cidades têm um círculo; outras, apenas um ponto de interrogação e o desenho torto de uma árvore.',
 ]
 
@@ -94,6 +98,37 @@ export function drawPage(book: PageBook, page: number, aspect: number): HTMLCanv
   }
 
   const recto = page % 2 === 1
+  // show-through: the print on the other side of the sheet, mirrored and faint (paper is not card)
+  const back = recto ? page + 1 : page - 1
+  if (back >= 1 && back <= book.pageCount) {
+    const off = document.createElement('canvas')
+    off.width = W
+    off.height = H
+    drawContent(off.getContext('2d')!, book, back, W, H)
+    ctx.save()
+    // faint, and half a line off: the two sides never print on exactly the same baselines
+    ctx.globalAlpha = 0.04
+    ctx.translate(W, 0)
+    ctx.scale(-1, 1)
+    ctx.drawImage(off, 0, Math.round(H * 0.015))
+    ctx.restore()
+  }
+  drawContent(ctx, book, page, W, H)
+
+  // gutter: the paper curves into the binding and darkens
+  const gw = W * 0.11
+  const g = recto ? ctx.createLinearGradient(0, 0, gw, 0) : ctx.createLinearGradient(W, 0, W - gw, 0)
+  g.addColorStop(0, 'rgba(60,40,20,0.55)')
+  g.addColorStop(0.3, 'rgba(60,40,20,0.12)')
+  g.addColorStop(1, 'rgba(60,40,20,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(recto ? 0 : W - gw, 0, gw, H)
+  return c
+}
+
+/** The printed part of a page (no paper): title page, colophon or running head + body + folio. */
+function drawContent(ctx: CanvasRenderingContext2D, book: PageBook, page: number, W: number, H: number) {
+  const recto = page % 2 === 1
   const inner = Math.round(W * 0.13)
   const outer = Math.round(W * 0.1)
   const left = recto ? inner : outer
@@ -134,7 +169,7 @@ export function drawPage(book: PageBook, page: number, aspect: number): HTMLCanv
       // body
       ctx.fillStyle = INK
       ctx.textAlign = 'left'
-      const size = Math.round(H * 0.024)
+      const size = Math.round(H * 0.0205)
       ctx.font = `${size}px ${SERIF}`
       const lineH = size * 1.48
       let y = H * 0.135
@@ -153,16 +188,6 @@ export function drawPage(book: PageBook, page: number, aspect: number): HTMLCanv
       ctx.fillText(String(page), left + textW / 2, H * 0.94)
     }
   }
-
-  // gutter: the paper curves into the binding and darkens
-  const gw = W * 0.16
-  const g = recto ? ctx.createLinearGradient(0, 0, gw, 0) : ctx.createLinearGradient(W, 0, W - gw, 0)
-  g.addColorStop(0, 'rgba(60,40,20,0.42)')
-  g.addColorStop(0.3, 'rgba(60,40,20,0.12)')
-  g.addColorStop(1, 'rgba(60,40,20,0)')
-  ctx.fillStyle = g
-  ctx.fillRect(recto ? 0 : W - gw, 0, gw, H)
-  return c
 }
 
 /** Small LRU of page textures: only the visible pages (and the sheet in the air) exist at a time. */

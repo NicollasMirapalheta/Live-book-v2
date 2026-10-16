@@ -241,6 +241,36 @@ export function paperTexture(seed = 3): Texture {
 }
 
 /**
+ * Laid paper for the endpapers: fine horizontal laid lines and sparse vertical chain lines over fibre, so the
+ * inside of the cover reads as a different paper from the pages. Tiles; one tile ≈ 4 cm on the board.
+ */
+export function laidPaperTexture(seed = 7): Texture {
+  const N = 512
+  const { c, ctx } = canvas(N, N)
+  const r = rand(seed)
+  ctx.fillStyle = '#F2E8D2'
+  ctx.fillRect(0, 0, N, N)
+  // laid lines ~0.8 mm apart
+  for (let y = 0; y < N; y += 10) {
+    ctx.fillStyle = `rgba(120,95,60,${0.07 + r() * 0.03})`
+    ctx.fillRect(0, y, N, 3)
+  }
+  // chain lines ~2.5 cm apart
+  for (let x = 0; x < N; x += 320) {
+    ctx.fillStyle = 'rgba(120,95,60,0.08)'
+    ctx.fillRect(x + 40, 0, 4, N)
+  }
+  for (let i = 0; i < 3000; i++) {
+    ctx.fillStyle = `rgba(140,110,70,${r() * 0.06})`
+    ctx.fillRect(r() * N, r() * N, 1 + r() * 3, 1)
+  }
+  const t = texture(c, true)
+  t.wrapS = t.wrapT = RepeatWrapping
+  t.repeat.set(3.5, 5)
+  return t
+}
+
+/**
  * Edge wear in cover UV space (u = arc length along the profile in meters, v = height in meters):
  * light at the top/bottom edges, along the spine and at the fore-edge corners, broken by noise.
  */

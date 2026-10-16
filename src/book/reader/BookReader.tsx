@@ -7,7 +7,7 @@ import { setCoverOpen } from '../materials'
 import { useSelection } from '../useSelection'
 import { layoutPages, stackSplit } from './pages'
 import { PageTextures, type PageBook } from './pageContent'
-import { pageMaterial, pagePlaneGeometry, SHEET_SEGMENTS, sheetMaterial, type SheetUniforms } from './sheetMaterial'
+import { pageMaterial, pagePlaneGeometry, SHEET_SEGMENTS, sheetMaterial, type PageUniforms, type SheetUniforms } from './sheetMaterial'
 import { useReader } from './useReader'
 
 /** Opening angle of the cover: a little short of flat, like a book held open (the two halves form a V). */
@@ -16,7 +16,13 @@ export const OPEN_ANGLE = (175 * Math.PI) / 180
 const PIVOT_Z = 0
 const EPS = 0.0002
 /** rise of the open pages out of the gutter (m) */
-const PAGE_LIFT = 0.004
+const PAGE_LIFT = 0.008
+/** slow wave in the paper (m) */
+const PAGE_RIPPLE = 0.0007
+/** each open page runs this far past the binding, under the other: the two pages never leave a gap */
+const GUTTER_OVERLAP = 0.0018
+/** leather turn-in left visible around the endpapers on the inside of the boards (m) */
+const TURN_IN = 0.013
 const DRAG_CLICK_PX = 6
 const REDUCED_FACTOR = 0.6
 
@@ -62,22 +68,23 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
   const H = d.pageHeight
   const geo = useMemo(
     () => ({
-      right: pagePlaneGeometry(W, H, SQUARE, 1, 16, 1, false, PAGE_LIFT),
-      left: pagePlaneGeometry(W, H, SQUARE, -1, 16, 1, true, PAGE_LIFT),
-      sheet: pagePlaneGeometry(W, H, SQUARE, 1, SHEET_SEGMENTS.u, SHEET_SEGMENTS.v),
-      endFront: pagePlaneGeometry(d.coverWidth - HINGE_OFFSET - 0.004, d.coverHeight - 0.008, 0.004, -1),
-      endBack: pagePlaneGeometry(d.coverWidth - HINGE_OFFSET - 0.004, d.coverHeight - 0.008, 0.004, 1),
+      right: pagePlaneGeometry(W, H, SQUARE, 1, { segU: 40, segV: 6, lift: PAGE_LIFT, ripple: PAGE_RIPPLE, extend: GUTTER_OVERLAP, seed: 1 }),
+      left: pagePlaneGeometry(W, H, SQUARE, -1, { segU: 40, segV: 6, mirrorU: true, lift: PAGE_LIFT, ripple: PAGE_RIPPLE, extend: GUTTER_OVERLAP, seed: 4 }),
+      sheet: pagePlaneGeometry(W, H, SQUARE, 1, { segU: SHEET_SEGMENTS.u, segV: SHEET_SEGMENTS.v }),
+      endFront: pagePlaneGeometry(d.coverWidth - HINGE_OFFSET - TURN_IN, d.coverHeight - 2 * TURN_IN, TURN_IN, -1),
+      endBack: pagePlaneGeometry(d.coverWidth - HINGE_OFFSET - TURN_IN, d.coverHeight - 2 * TURN_IN, TURN_IN, 1),
     }),
     [W, H, d.coverWidth, d.coverHeight],
   )
   const textures = useMemo(() => new PageTextures(book, W / H), [book, W, H])
   const mats = useMemo(() => {
     const blank = textures.get(book.pageCount + 1000)
-    const right = pageMaterial()
-    const left = pageMaterial()
+    const right = pageMaterial(0)
+    // the left page is read mirrored: its binding is at uv.x = 1
+    const left = pageMaterial(1)
     right.map = blank
     left.map = blank
-    const sheetMat = sheetMaterial(W)
+    const sheetMat = sheetMaterial(W, PAGE_LIFT)
     sheetMat.map = blank
     ;(sheetMat.userData.sheet as SheetUniforms).backMap.value = blank
     return { right, left, sheet: sheetMat }
@@ -99,7 +106,10 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     const front = frontHalf.current
     const foil = spineFoil.current
     return () => {
-      if (foil) foil.position.x = 0
+      if (foil) {
+        foil.position.x = 0
+        foil.visible = true
+      }
       if (cover) {
         setCoverOpen(cover.material as MeshPhysicalMaterial, 0, 0, 0)
         cover.castShadow = true
@@ -140,9 +150,13 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     const cover = coverMesh.current
     if (cover) {
       // the spine sinks behind the gutter as the cover opens (otherwise its arc stands in front of the pages)
-      const spineShift = (openState.current?.cover ?? 0) * (T - xb + 0.002)
+      const spineShift = (openState.current?.cover ?? 0) * (T - xb + 0.006)
       setCoverOpen(cover.material as MeshPhysicalMaterial, theta, xb, PIVOT_Z, spineShift)
-      if (spineFoil.current) spineFoil.current.position.x = -spineShift
+      // the spine title faces away once the book is open; its letters poked through the left page's margin
+      if (spineFoil.current) {
+        spineFoil.current.position.x = -spineShift
+        spineFoil.current.visible = theta < 0.5
+      }
       // the depth pass does not run the hinge shader: no sun shadow from a cover that is (partly) open
       const cast = theta < 1e-4
       if (cover.castShadow !== cast) {
@@ -164,6 +178,11 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
       ls.scale.x = Math.max(split.left / block, 1e-4)
       ls.position.x = xb + split.left / 2
     }
+
+    // the sheet in the air shades the page it leaves (first half) and the one it lands on (second half)
+    const lift = lay.turning ? Math.sin(Math.PI * lay.turning.t) : 0
+    ;(mats.right.userData.page as PageUniforms).uShade.value = lay.turning ? lift * (1 - lay.turning.t) : 0
+    ;(mats.left.userData.page as PageUniforms).uShade.value = lay.turning ? lift * lay.turning.t : 0
 
     const open = theta > 1e-4
     const rp = rightPage.current

@@ -69,3 +69,27 @@ test('clicar na página direita avança; na esquerda, volta', async ({ page }) =
   await page.mouse.click(vp.width * 0.32, vp.height * 0.5)
   await page.waitForFunction(() => window.__READER__!.turned === 0 && !window.__READER__!.turning)
 })
+
+test('arrastar a página: passou da metade completa, pouco arrasto volta', async ({ page }) => {
+  await bookInHand(page)
+  await page.getByRole('button', { name: 'Abrir' }).click()
+  await settled(page)
+  const vp = page.viewportSize()!
+  const y = vp.height * 0.5
+  // short drag (well under half a page): the sheet falls back
+  await page.mouse.move(vp.width * 0.7, y)
+  await page.mouse.down()
+  await page.mouse.move(vp.width * 0.66, y, { steps: 6 })
+  await page.waitForTimeout(200)
+  await page.mouse.up()
+  await page.waitForFunction(() => !window.__READER__!.turning)
+  expect(await page.evaluate(() => window.__READER__!.turned)).toBe(0)
+  // long drag to the left page: the turn completes
+  await page.mouse.move(vp.width * 0.7, y)
+  await page.mouse.down()
+  await page.mouse.move(vp.width * 0.4, y, { steps: 12 })
+  expect(await page.evaluate(() => window.__READER__!.turning)).toBe(true)
+  await page.waitForTimeout(200)
+  await page.mouse.up()
+  await page.waitForFunction(() => window.__READER__!.turned === 1 && !window.__READER__!.turning)
+})
