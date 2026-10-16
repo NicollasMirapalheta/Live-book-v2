@@ -24,10 +24,6 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 
-# saídas do pipeline (regeráveis com npm run pipeline)
-public/models/
-public/lightmaps/
-public/env/
-public/data/sizes.json
+# as saídas do pipeline (public/models, lightmaps, env, textures) ficam NO git desde a Fase 7: a Vercel
+# publica a partir do repositório e não roda o Blender, e o repositório é o backup do projeto
 shots/debug-*/
-public/textures/

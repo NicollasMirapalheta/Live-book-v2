@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-16T01:15:36.765Z",
+  "textures": "webp",
+  "sizes": {
+    "room.glb": "12.58 MB",
+    "room.low.glb": "6.16 MB",
+    "props.glb": "2.47 MB",
+    "props.low.glb": "1.29 MB",
+    "atlas_shell.webp": "3.57 MB",
+    "atlas_bookcase.webp": "0.81 MB",
+    "atlas_props.webp": "3.71 MB",
+    "room_N1.hdr": "2.10 MB",
+    "sky.jpg": "0.35 MB"
+  }
+}
