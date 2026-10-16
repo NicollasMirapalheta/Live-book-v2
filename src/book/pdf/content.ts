@@ -28,6 +28,20 @@ export interface BookContent {
   progress?: number
   /** when loading started (ms, performance.now) — the panel only shows a progress bar for slow ones */
   startedAt?: number
+  /** a dropped file names the book (until reload) */
+  title?: string
+}
+
+/** "relatorio_final-v3.pdf" → "relatorio final v3" */
+export const titleFromFile = (name: string) => name.replace(/\.pdf$/i, '').replace(/_+/g, ' ').replace(/\s+/g, ' ').trim() || 'PDF'
+
+/**
+ * The book as shown: with a PDF the user dropped, it takes the file's name and loses the test book's
+ * subtitle and description (they described other content).
+ */
+export function displayBook<B extends { title: string; subtitle?: string; description?: string }>(book: B, content: BookContent | undefined): B {
+  if (content?.source !== 'file' || !content.title) return book
+  return { ...book, title: content.title, subtitle: undefined, description: '' }
 }
 
 /** A PDF that takes longer than this is given up (an error instead of an endless "Preparando páginas…"). */
@@ -62,7 +76,9 @@ async function compose(book: ContentBook, data: ArrayBuffer, source: string, onP
 export const useBookContent = create<ContentState>((set, get) => {
   const load = (book: ContentBook, source: BookContent['source'], name: string, read: () => Promise<ArrayBuffer>) => {
     const startedAt = performance.now()
-    set((s) => ({ byId: { ...s.byId, [book.id]: { status: 'loading', source, progress: 0, startedAt } } }))
+    const title = source === 'file' ? titleFromFile(name) : undefined
+    if (title) book = { ...book, title, subtitle: undefined }
+    set((s) => ({ byId: { ...s.byId, [book.id]: { status: 'loading', source, progress: 0, startedAt, title } } }))
     const current = () => get().byId[book.id]?.startedAt === startedAt
     const progress = (p: number) => {
       if (current()) set((s) => ({ byId: { ...s.byId, [book.id]: { ...s.byId[book.id], progress: p } } }))
@@ -73,11 +89,11 @@ export const useBookContent = create<ContentState>((set, get) => {
       .then((done) => {
         // a newer file may have replaced this one meanwhile
         if (!current()) return
-        set((s) => ({ byId: { ...s.byId, [book.id]: { status: 'ready', source, ...done } } }))
+        set((s) => ({ byId: { ...s.byId, [book.id]: { status: 'ready', source, title, ...done } } }))
       })
       .catch((err: unknown) => {
         console.error('[pdf]', err)
-        if (current()) set((s) => ({ byId: { ...s.byId, [book.id]: { status: 'error', source, error: err instanceof Error ? err.message : String(err) } } }))
+        if (current()) set((s) => ({ byId: { ...s.byId, [book.id]: { status: 'error', source, title, error: err instanceof Error ? err.message : String(err) } } }))
       })
   }
   return {

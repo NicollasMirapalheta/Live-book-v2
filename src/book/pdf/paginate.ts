@@ -206,7 +206,8 @@ export function paginate(doc: DocStructure, meta: BookMeta, aspect: number, meas
   const lineH = PAGE.body * PAGE.leading
   // the book's own title (the user's) wins over whatever the PDF calls itself
   const title = meta.title || doc.title || ''
-  const subtitle = meta.subtitle ?? doc.subtitle
+  // the PDF cover's subtitle only when it is one short line (a cover's list of stamps and labels is not one)
+  const subtitle = meta.subtitle ?? (doc.subtitle && doc.subtitle.length <= 70 ? doc.subtitle : undefined)
   const pages: PagePlan[] = []
   const toc: TocEntry[] = [{ title: 'Página de rosto', page: 1 }]
 

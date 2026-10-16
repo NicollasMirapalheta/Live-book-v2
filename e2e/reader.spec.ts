@@ -14,6 +14,8 @@ async function bookInHand(page: Page) {
   await page.keyboard.press('ArrowRight')
   await page.keyboard.press('Enter')
   await page.waitForFunction(() => window.__SEL__!.phase === 'hand')
+  // a book with a PDF is still being prepared for a moment (clicking it then does nothing, by design)
+  await page.waitForFunction(() => (window as unknown as { __CONTENT__?: { status: (id: string) => string | null } }).__CONTENT__?.status(window.__SEL__!.selected!) !== 'loading')
 }
 
 const settled = (page: Page) => page.waitForFunction(() => window.__SEL__!.phase === 'open' && !window.__READER__!.turning)
@@ -101,7 +103,8 @@ test('livro na mão: clicar nele abre; aberto, clicar fora não fecha; clicar na
   await page.mouse.click(vp.width * 0.5, vp.height * 0.55)
   await settled(page)
   // outside the open book: nothing happens
-  await page.mouse.click(vp.width * 0.03, vp.height * 0.5)
+  // (the right side: the left one holds the table of contents)
+  await page.mouse.click(vp.width * 0.97, vp.height * 0.5)
   await page.waitForTimeout(400)
   expect(await page.evaluate(() => window.__SEL__!.phase)).toBe('open')
   // first spread: the left side is the inside of the cover; clicking it closes the book
@@ -140,4 +143,24 @@ test('sumário: escolher um capítulo folheia até ele (vai e volta)', async ({ 
 
   await toc.getByRole('button', { name: /Página de rosto/ }).click()
   await page.waitForFunction(() => !window.__READER__!.turning && window.__READER__!.turned === 0, undefined, { timeout: 10_000 })
+})
+
+test('na última folha, clicar na página direita vira (não fecha o livro)', async ({ page }) => {
+  await bookInHand(page)
+  await page.getByRole('button', { name: 'Abrir' }).click()
+  await settled(page)
+  const sheets = await page.evaluate(() => window.__READER__!.sheets)
+  // to the end, then one sheet back: the last sheet lies on the right
+  await page.getByRole('navigation', { name: 'Sumário' }).getByRole('button', { name: /Última página/ }).click()
+  await page.waitForFunction((n) => window.__READER__!.turned === n && !window.__READER__!.turning, sheets, { timeout: 10_000 })
+  await page.keyboard.press('ArrowLeft')
+  await page.waitForFunction((n) => window.__READER__!.turned === n - 1 && !window.__READER__!.turning, sheets)
+  const vp = page.viewportSize()!
+  // a human click: the turn starts on press and the page under the pointer is gone by the release
+  await page.mouse.move(vp.width * 0.68, vp.height * 0.5)
+  await page.mouse.down()
+  await page.waitForTimeout(150)
+  await page.mouse.up()
+  await page.waitForFunction((n) => window.__READER__!.turned === n && !window.__READER__!.turning, sheets)
+  expect(await page.evaluate(() => window.__SEL__!.phase)).toBe('open')
 })

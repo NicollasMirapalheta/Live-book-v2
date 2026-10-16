@@ -295,3 +295,11 @@ Formato de cada entrada:
   - Estrutura: linhas ordenadas da esquerda para a direita (número do parágrafo e "lead" em negrito voltam ao começo), espaços medidos contra o espaço entre letras (texto espaçado), colunas lidas uma de cada vez (cortes recursivos), capa detectada (pouco texto, título grande), capítulos = títulos que abrem página no PDF, "CAPÍTULO 3" do PDF vira o número do capítulo, Introdução/Prefácio/Conclusão/Anexo sem número.
 - Teste de regressão: `public/books/test-shared-image.pdf` (mesma imagem em 3 páginas) + e2e.
 - Precisa do usuário? não.
+
+## 2026-10-16 — PDF solto dá nome ao livro; clique na última folha
+- Contexto: teste do usuário com o próprio PDF.
+- Escolha:
+  - Com um PDF solto, o livro passa a se chamar como o arquivo (sem extensão, `_` vira espaço) na lombada, no painel, na página de rosto e no cabeço; o subtítulo e a descrição do livro de teste somem (descreviam outro conteúdo). Até recarregar (persistência é da Fase 6).
+  - Subtítulo vindo da capa do PDF só quando é uma linha curta (≤ 70 caracteres): a lista de carimbos e rótulos de uma capa virava um subtítulo ilegível na página de rosto.
+  - O clique que começa a virar a última folha (ou a primeira, para trás) descobre a guarda debaixo do ponteiro; ao soltar, o clique caía nela e fechava o livro. Agora um clique que virou uma folha nunca fecha. O e2e simula um clique humano (150 ms entre apertar e soltar) — com o clique instantâneo do Playwright o defeito não aparecia.
+- Precisa do usuário? não.

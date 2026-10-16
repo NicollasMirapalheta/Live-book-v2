@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { params } from '../app/params'
 import { useNavigation } from '../navigation/useNavigation'
-import { useBookContent } from './pdf/content'
+import { displayBook, useBookContent } from './pdf/content'
 import { bookToc, currentEntry } from './reader/toc'
 import { currentSpread, useReader } from './reader/useReader'
 import { shelfBooks } from './shelfData'
@@ -137,7 +137,8 @@ export function SelectionPanel() {
   }
   // the panel shows only once the book is in the reader's hand (spec Fase 3)
   if (!inHand) return null
-  const book = shelfBooks().find((b) => b.id === selected)
+  const found = shelfBooks().find((b) => b.id === selected)
+  const book = found && displayBook(found, content)
   if (!book) return null
 
   return (
@@ -151,7 +152,7 @@ export function SelectionPanel() {
           {book.title}
         </h2>
         {book.subtitle && <p className="sel-subtitle">{book.subtitle}</p>}
-        <p className="sel-description">{book.description}</p>
+        {book.description && <p className="sel-description">{book.description}</p>}
         {content?.status === 'error' && <p className="sel-hint sel-hint-error">Não consegui ler esse PDF ({content.error}). O livro abre com as páginas de exemplo.</p>}
         {content?.source === 'file' && content.status === 'ready' && <p className="sel-hint">Mostrando o PDF que você soltou (até recarregar a página).</p>}
         <p className="sel-hint">Solte um PDF na janela para ver este livro com o seu conteúdo.</p>

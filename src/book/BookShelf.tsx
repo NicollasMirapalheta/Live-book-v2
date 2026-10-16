@@ -6,7 +6,7 @@ import { params } from '../app/params'
 import { invalidateShadows } from '../scene/shadows'
 import { Book } from './Book'
 import { OPEN_ANGLE, type OpenState } from './reader/BookReader'
-import { useBookContent } from './pdf/content'
+import { displayBook, useBookContent } from './pdf/content'
 import { useReader } from './reader/useReader'
 import { backShadowTexture, contactShadowTexture } from './canvasTextures'
 import type { FixtureBook } from './fixtures'
@@ -89,6 +89,9 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
   const camera = useThree((st) => st.camera)
   const hover = useSelection((st) => st.hover)
   const isSelected = useSelection((st) => st.selected === book.id)
+  // a PDF the user dropped renames the book (spine, title page, panel) until the page reloads
+  const content = useBookContent((st) => st.byId[book.id])
+  const shown = useMemo(() => displayBook(book, content), [book, content])
   // the PDF is composed while the book flies to the hand (Fase 5)
   useEffect(() => {
     if (isSelected) useBookContent.getState().ensure(book)
@@ -280,13 +283,16 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
           return
         }
         // the open book: the cover (its rim, or the endpaper when nothing lies on it) closes it
-        if (st.phase === 'open' && e.object.userData.closesBook) st.close()
+        // …but not the click that just lifted a page: turning the last sheet (or the first, backwards) uncovers
+        // the endpaper under the pointer, and that click used to land on it and close the book
+        const reader = useReader.getState()
+        if (st.phase === 'open' && e.object.userData.closesBook && !reader.turn && !reader.riffle) st.close()
       }}
     >
       <group ref={inner} position={[-place.thickness / 2, 0, 0]}>
-        <Book book={book} detail={isSelected ? 'full' : 'shelf'} openState={isReadingThis ? openState : undefined} />
+        <Book book={shown} detail={isSelected ? 'full' : 'shelf'} openState={isReadingThis ? openState : undefined} />
       </group>
-      <TitlePopover book={book} anchor={[-place.thickness / 2, d.coverHeight + 0.03, 0]} />
+      <TitlePopover book={shown} anchor={[-place.thickness / 2, d.coverHeight + 0.03, 0]} />
     </group>
   )
 }

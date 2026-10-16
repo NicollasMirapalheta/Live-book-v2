@@ -59,6 +59,9 @@ test('soltar um PDF com o livro na mão troca o conteúdo dele nesta sessão', a
   await page.waitForFunction(() => window.__CONTENT__!.status('fx-natural') === 'ready', undefined, { timeout: 30_000 })
   expect(await page.evaluate(() => window.__CONTENT__!.toc('fx-natural'))).toContain('Carta de janeiro')
   await expect(page.getByRole('dialog')).toContainText('PDF que você soltou')
+  // the book takes the file's name; the test book's description goes away
+  await expect(page.getByRole('dialog').getByRole('heading')).toHaveText('meu-livro')
+  await expect(page.getByRole('dialog')).not.toContainText('Todas as receitas da família')
 })
 
 test('PDF com a mesma imagem em várias páginas não fica preparando para sempre', async ({ page }) => {
