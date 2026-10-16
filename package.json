@@ -12,6 +12,7 @@
     "test": "vitest run",
     "e2e": "vite build --logLevel error && playwright test",
     "shot": "node --env-file-if-exists=.env.local --import tsx scripts/shot.ts",
+    "perf": "node --import tsx scripts/perf.ts",
     "assets:fetch": "node scripts/fetch-assets.mjs",
     "assets:contact": "node --env-file-if-exists=.env.local --import tsx scripts/contact-sheet.ts",
     "blender:check": "node --env-file-if-exists=.env.local scripts/blender.mjs check",
