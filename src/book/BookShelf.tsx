@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { use, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Box3, Color, Euler, Quaternion, Vector3, type Group, type Mesh, type PerspectiveCamera, type MeshPhysicalMaterial, type MeshStandardMaterial } from 'three'
 import { params } from '../app/params'
+import { reducedMotion } from '../app/motion'
 import { invalidateShadows } from '../scene/shadows'
 import { Book } from './Book'
 import { OPEN_ANGLE, type OpenState } from './reader/BookReader'
@@ -55,7 +56,6 @@ const READ_TURN = -(Math.PI - OPEN_ANGLE) / 2
 const OPEN_BACKOFF = 0.07 // m
 const READ_DROP = -0.008 // negative: a little above the view center, clear of the reading bar
 
-const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 /** Exponential approach with time constant tau (s). */
 function approach(current: number, target: number, dt: number, tau: number) {

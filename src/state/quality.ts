@@ -8,8 +8,19 @@ interface QualityState {
   forced: boolean
   /** the first tier is decided: the scene loads only then, so one set of models is downloaded and kept */
   resolved: boolean
+  /**
+   * Relief on a machine that cannot keep up at high (plano de desempenho, Etapa 3), without reloading models:
+   * 0 as designed; 1 pixel ratio 1 and MSAA 2×; 2 no MSAA and no ambient occlusion (and the next visit
+   * starts at low). Set by AdaptiveQuality.
+   */
+  relief: 0 | 1 | 2
+  relieve: () => void
   setQuality: (q: Quality) => void
 }
+
+/** detect-gpu reads its benchmark data from a CDN: a slow network must not hold the room back. */
+const DETECT_TIMEOUT_MS = 1500
+const STORAGE_KEY = 'lb-quality'
 
 const forcedParam = new URLSearchParams(window.location.search).get('quality')
 const forced = forcedParam === 'high' || forcedParam === 'low'
@@ -18,14 +29,23 @@ export const useQuality = create<QualityState>((set, get) => ({
   quality: forced ? (forcedParam as Quality) : 'high',
   forced,
   resolved: forced,
+  relief: 0,
+  relieve: () => {
+    const next = Math.min(2, get().relief + 1) as 0 | 1 | 2
+    set({ relief: next })
+    if (next === 2 && !get().forced) {
+      try {
+        localStorage.setItem(STORAGE_KEY, 'low')
+      } catch {
+        // private mode: nothing to remember
+      }
+    }
+  },
   setQuality: (q) => {
     if (!get().forced) set({ quality: q })
   },
 }))
 
-/** detect-gpu reads its benchmark data from a CDN: a slow network must not hold the room back. */
-const DETECT_TIMEOUT_MS = 1500
-const STORAGE_KEY = 'lb-quality'
 
 function stored(): Quality | null {
   try {

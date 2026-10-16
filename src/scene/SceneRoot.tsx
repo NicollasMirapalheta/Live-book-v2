@@ -12,6 +12,8 @@ import { useSelection } from '../book/useSelection'
 import { NavigationUI } from '../navigation/NavigationUI'
 import { NodeMarkers } from '../navigation/NodeMarkers'
 import { useQuality } from '../state/quality'
+import { useCreator } from '../ui/creator'
+import { AdaptiveQuality } from './AdaptiveQuality'
 import { DynamicLights } from './DynamicLights'
 import { Effects } from './Effects'
 import { LightBeams } from './LightBeams'
@@ -23,12 +25,16 @@ import { Sky } from './Sky'
 export function SceneRoot() {
   const quality = useQuality((s) => s.quality)
   const resolved = useQuality((s) => s.resolved)
+  const relief = useQuality((s) => s.relief)
+  // behind the book form the room is blurred and still: it stops rendering until the form closes
+  const formOpen = useCreator((s) => s.mode !== null)
   return (
     <>
       <Canvas
         // Tone mapping happens once, in the post-processing chain (AgX).
         gl={{ antialias: false, toneMapping: NoToneMapping, preserveDrawingBuffer: params.shot }}
-        dpr={quality === 'high' ? [1, 2] : 1}
+        dpr={quality === 'high' && relief === 0 ? [1, 2] : 1}
+        frameloop={formOpen && !params.shot ? 'demand' : 'always'}
         shadows={quality === 'high' ? 'soft' : false}
         onCreated={({ gl }) => {
           // +0.3 EV over the Cycles setup (the reference reads brighter); AgX reads this uniform
@@ -56,6 +62,7 @@ export function SceneRoot() {
             <NodeMarkers />
             {!params.off.has('effects') && <Effects />}
             <Readiness />
+            <AdaptiveQuality />
           </Suspense>
         )}
       </Canvas>

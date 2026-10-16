@@ -1,6 +1,7 @@
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import { DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Vector3, type BufferGeometry, type Group, type Material, type MeshPhysicalMaterial, type MeshStandardMaterial } from 'three'
+import { reducedMotion } from '../../app/motion'
 import { invalidateShadows } from '../../scene/shadows'
 import { useQuality } from '../../state/quality'
 import { useBookContent } from '../pdf/content'
@@ -42,7 +43,6 @@ const DRAG_CLICK_PX = 6
 const REDUCED_FACTOR = 0.6
 
 const Y = new Vector3(0, 1, 0)
-const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 export interface OpenState {
   /** cover opening 0 (closed) → 1 (open) */

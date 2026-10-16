@@ -1,5 +1,5 @@
 import { useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { Scene } from 'three'
 import { params } from '../app/params'
 import { useSceneReady } from '../state/ready'
@@ -21,6 +21,7 @@ declare global {
 }
 
 const FRAMES_BEFORE_READY = 30
+const STATS = params.e2e || params.shot || !!params.debug
 
 function gpuName(gl: WebGLRenderingContext | WebGL2RenderingContext): string {
   const ext = gl.getExtension('WEBGL_debug_renderer_info')
@@ -53,16 +54,17 @@ export function Readiness() {
     }
   }, [gl])
 
+  // the stats are for the tools (e2e, shots, perf): a visitor's frames do not pay for them
+  const gpu = useMemo(() => (STATS ? gpuName(gl.getContext()) : ''), [gl])
+
   // Runs first in each frame: the counters still hold the previous full frame.
   useFrame(() => {
     frames.current++
-    if (frames.current > 2) {
-      window.__SCENE_STATS__ = {
-        calls: gl.info.render.calls,
-        triangles: gl.info.render.triangles,
-        textures: gl.info.memory.textures,
-        gpu: gpuName(gl.getContext()),
-      }
+    if (STATS && frames.current > 2) {
+      const s = (window.__SCENE_STATS__ ??= { calls: 0, triangles: 0, textures: 0, gpu })
+      s.calls = gl.info.render.calls
+      s.triangles = gl.info.render.triangles
+      s.textures = gl.info.memory.textures
     }
     gl.info.reset()
     if (frames.current === FRAMES_BEFORE_READY) {

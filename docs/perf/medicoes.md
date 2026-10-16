@@ -74,3 +74,34 @@ Quadros, 30 livros, N2 com a CPU 4× mais lenta (p50 / p95):
 A medição de quadro com CPU limitada varia bastante entre rodadas. A Etapa 3 trata o custo por quadro.
 
 O que sobra no high são as texturas 2K da sala (Etapa 2, KTX2) e os buffers do pós-processamento em MSAA 4× (Etapa 3).
+
+## Etapa 3 — custo por quadro sem mudar a imagem aprovada (16/10)
+
+O que mudou:
+- a sala para de renderizar enquanto o formulário está aberto (`frameloop="demand"`). O quadro com o formulário aberto caiu de ~5 ms para 0,2 ms;
+- as estatísticas de render (`__SCENE_STATS__`) só existem nas ferramentas (`?e2e`, `?shot`, `?debug`);
+- "reduzir movimento" usa uma MediaQueryList única, em vez de `matchMedia` por livro a cada quadro;
+- **PerformanceMonitor** (`src/scene/AdaptiveQuality.tsx`): no high, quando a média fica abaixo de 45 fps em 5 s, o alívio vem em dois passos, sem recarregar modelos:
+  1. pixel ratio 1 e MSAA 2×;
+  2. sem MSAA e sem N8AO; a próxima visita já começa no low.
+  Teste com a CPU 20× mais lenta: chegou ao passo 2 e guardou `low`. Sem limitação: nada mudou.
+
+### Chamadas de desenho
+
+Com 30 livros, tier high, no N2:
+
+| Configuração | Chamadas de desenho |
+|---|---|
+| tudo ligado | 270 |
+| sem pós | 166 |
+| sem livros | 74 |
+| sem objetos | 233 |
+
+O N8AO redesenha a cena inteira (cerca de 100 chamadas com 30 livros). Cada livro custa 3,5 chamadas no low e 5,2 no high.
+
+### Próximos candidatos
+
+Esses mudam a imagem e precisam de aprovação:
+- N8AO só nos objetos dinâmicos (a sala já tem AO no bake);
+- livros da estante agrupados (página e lombada num material só, ou BatchedMesh);
+- reflexo do piso em ¼ da tela.
