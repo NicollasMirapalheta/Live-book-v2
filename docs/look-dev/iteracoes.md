@@ -109,3 +109,7 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 ### R5 — 2026-10-16 (sumário e folhear rápido, pedidos do usuário)
 - Livro aberto sem giro próprio (só a inclinação para a estante, "V" dividido igualmente); curvatura das páginas cresce com o ângulo da capa (sem atravessar a capa na abertura); sumário à esquerda; ir a um capítulo folheia rápido (até 14 voos, até 7 folhas no ar, 142 draw calls); páginas de abertura de capítulo.
 - **art-reviewer:** nada regrediu — "pronto para o usuário". Aplicado depois: sumário mais estreito (encostava na página esquerda a 1280 px), destaque do destino durante o folhear, página anterior a um capítulo termina curta.
+
+### R6 — 2026-10-16 (teste do usuário: contracapa e folhear rápido)
+- Virando a última folha, a direita mostrava papel no lugar da guarda de trás: a folha no ar ainda contava na pilha direita. Agora ela não conta em nenhuma das duas (a dobradiça fica onde estava, as páginas de baixo não pulam).
+- No folhear rápido o texto "mudava de estilo" e voltava ao parar: os tamanhos de fonte eram arredondados por resolução, e a textura pequena quebrava as linhas em outros lugares. Tamanhos e margens agora são frações exatas da página (mesmas quebras em qualquer resolução, conferido lado a lado a 768 e 1536 px); texturas do voo a 768 px; a página de destino é desenhada em tamanho cheio quando o folhear começa.

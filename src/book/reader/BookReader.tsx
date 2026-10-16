@@ -19,7 +19,7 @@ const EPS = 0.0002
 /** sheets that can be in the air at once (riffle: flight time / launch gap, rounded up) */
 const SHEET_POOL = 7
 /** page textures while riffling (px high) */
-const RIFFLE_TEX_HEIGHT = 512
+const RIFFLE_TEX_HEIGHT = 768
 
 interface Flight {
   front: number
@@ -76,6 +76,7 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
   const leftPage = useRef<Mesh>(null)
   const sheetRefs = useRef<(Mesh | null)[]>([])
   const scratch = useMemo(() => ({ q: new Quaternion(), p: new Vector3(), r: new Vector3() }), [])
+  const lastRiffle = useRef<object | null>(null)
 
   const T = d.totalThickness / 2
   const W = d.pageWidth
@@ -160,7 +161,7 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     const { sheets, turned, turn, riffle } = useReader.getState()
     const theta = OPEN_ANGLE * (openState.current?.cover ?? 0)
     // one sheet turning (or none), or a riffle with several flights in the air
-    let lay: { left: number | null; right: number | null; flights: Flight[]; leftSheets: number }
+    let lay: { left: number | null; right: number | null; flights: Flight[]; leftSheets: number; rightSheets: number }
     if (riffle) {
       const rl = layoutRiffle(sheets, riffle)
       lay = { ...rl, flights: rl.flights.map((f) => ({ ...f, dir: riffle.dir })) }
@@ -174,9 +175,18 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
         right: pl.right,
         flights: tr ? [{ front: tr.front, back: tr.back, t: tr.t, dir: turn?.target === 0 ? -1 : 1 }] : [],
         leftSheets: tr ? tr.sheet : pl.leftSheets,
+        // …nor to the right one: on the last spread the right side stays the back endpaper
+        rightSheets: tr ? sheets - tr.sheet - 1 : sheets - pl.leftSheets,
       }
     }
     const tex = riffle ? quick : textures
+    if (riffle && riffle !== lastRiffle.current && lastRiffle.current === null) {
+      // a riffle starts: draw the destination spread at full size now, so the landing shows it right away
+      const dest = layoutPages(sheets, riffle.bounds[riffle.bounds.length - 1], null)
+      if (dest.left !== null) textures.get(dest.left)
+      if (dest.right !== null) textures.get(dest.right)
+    }
+    lastRiffle.current = riffle
     const split = stackSplit(d.blockThickness, sheets, lay.leftSheets)
     const t = d.blockThickness / 2
     const xb = -t + split.right
@@ -213,9 +223,11 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     // the two stacks partition the closed text block [−t, t] at xb
     const rs = rightStack.current
     if (rs) {
-      setShown(rs, split.right > 1e-6)
-      rs.scale.x = Math.max(split.right / block, 1e-4)
-      rs.position.x = -t + split.right / 2
+      // without the sheets in the air (the hinge stays at xb, so the pages under them do not jump)
+      const right = (block * lay.rightSheets) / Math.max(1, sheets)
+      setShown(rs, right > 1e-6)
+      rs.scale.x = Math.max(right / block, 1e-4)
+      rs.position.x = -t + right / 2
     }
     const ls = leftStack.current
     if (ls) {

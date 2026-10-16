@@ -97,6 +97,8 @@ export interface RiffleLayout {
   flights: { front: number; back: number; t: number }[]
   /** sheets on the left stack (the ones in the air belong to neither until they land) */
   leftSheets: number
+  /** sheets on the right stack (likewise without the ones in the air) */
+  rightSheets: number
   /** sheets turned so far (landed) */
   turned: number
 }
@@ -117,6 +119,7 @@ export function layoutRiffle(sheets: number, r: Riffle): RiffleLayout {
       return { front: recto(lo), back: verso(hi - 1), t }
     }),
     leftSheets: leftAt,
+    rightSheets: sheets - rightAt,
     turned: landedAt,
   }
 }

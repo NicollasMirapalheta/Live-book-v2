@@ -81,6 +81,8 @@ describe('riffle (sumário)', () => {
     expect([l.left, l.right]).toEqual([20, 41])
     expect(l.flights).toEqual([{ front: 21, back: 40, t: 0.4 }])
     expect(l.leftSheets).toBe(10)
+    // the 10 sheets in the air are on neither stack
+    expect(l.rightSheets).toBe(30)
     expect(l.turned).toBe(10)
   })
 

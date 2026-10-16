@@ -258,3 +258,9 @@ Formato de cada entrada:
 - Draw calls: 142 medidos no meio do folhear (e2e do sumário verifica < 150).
 - Como reverter: `goTo`/`stepRiffle` em `useReader.ts`, `ReaderToc` em `SelectionPanel.tsx`.
 - Precisa do usuário? não.
+
+## 2026-10-16 — Folhas no ar fora das duas pilhas; texto igual em qualquer resolução
+- Contexto: o usuário viu papel no lugar da contracapa ao virar a última folha, e o texto mudando de estilo durante o folhear rápido.
+- Escolha: folhas no ar não contam em nenhuma pilha (a pilha direita perde a espessura delas, a dobradiça não se move). O desenho da página usa tamanhos fracionários (sem `Math.round`), então a textura do voo e a final têm as mesmas linhas; voo a 768 px; destino pré-desenhado em tamanho cheio.
+- Como reverter: `rightSheets` em `pages.ts`/`BookReader.tsx`; `RIFFLE_TEX_HEIGHT`.
+- Precisa do usuário? não.

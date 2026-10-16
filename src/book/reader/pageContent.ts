@@ -107,7 +107,7 @@ export function drawPage(book: PageBook, page: number, aspect: number, H: number
     const off = document.createElement('canvas')
     off.width = W
     off.height = H
-    drawContent(off.getContext('2d')!, book, back, W, H)
+    drawContent(off.getContext('2d')!, book, back, H * aspect, H)
     ctx.save()
     // faint, and half a line off: the two sides never print on exactly the same baselines
     ctx.globalAlpha = 0.03
@@ -116,7 +116,7 @@ export function drawPage(book: PageBook, page: number, aspect: number, H: number
     ctx.drawImage(off, 0, Math.round(H * 0.015))
     ctx.restore()
   }
-  drawContent(ctx, book, page, W, H)
+  drawContent(ctx, book, page, H * aspect, H)
 
   // gutter: the paper curves into the binding and darkens
   const gw = W * 0.11
@@ -130,10 +130,12 @@ export function drawPage(book: PageBook, page: number, aspect: number, H: number
 }
 
 /** The printed part of a page (no paper): title page, colophon or running head + body + folio. */
+// sizes are fractions of the page, never rounded: the same page lays out line for line at any resolution
+// (rounded font sizes reflowed the text between the riffle textures and the full-size ones)
 function drawContent(ctx: CanvasRenderingContext2D, book: PageBook, page: number, W: number, H: number) {
   const recto = page % 2 === 1
-  const inner = Math.round(W * 0.13)
-  const outer = Math.round(W * 0.1)
+  const inner = W * 0.13
+  const outer = W * 0.1
   const left = recto ? inner : outer
   const textW = W - inner - outer
   ctx.textBaseline = 'alphabetic'
@@ -142,12 +144,12 @@ function drawContent(ctx: CanvasRenderingContext2D, book: PageBook, page: number
     if (page === 1) {
       ctx.fillStyle = INK
       ctx.textAlign = 'center'
-      ctx.font = `${Math.round(H * 0.05)}px ${SERIF}`
+      ctx.font = `${H * 0.05}px ${SERIF}`
       const title = book.title
       ctx.fillText(title, left + textW / 2, H * 0.36, textW)
       if (book.subtitle) {
         ctx.fillStyle = INK_SOFT
-        ctx.font = `italic ${Math.round(H * 0.026)}px ${SERIF}`
+        ctx.font = `italic ${H * 0.026}px ${SERIF}`
         ctx.fillText(book.subtitle, left + textW / 2, H * 0.36 + H * 0.05, textW)
       }
       // small rule
@@ -161,7 +163,7 @@ function drawContent(ctx: CanvasRenderingContext2D, book: PageBook, page: number
     } else if (page === 2) {
       ctx.fillStyle = INK_SOFT
       ctx.textAlign = 'left'
-      ctx.font = `italic ${Math.round(H * 0.018)}px ${SERIF}`
+      ctx.font = `italic ${H * 0.018}px ${SERIF}`
       ctx.fillText(`${book.title} · ${book.pageCount} páginas`, left, H * 0.86, textW)
     } else {
       const chapter = chapterAt(book, page)
@@ -171,10 +173,10 @@ function drawContent(ctx: CanvasRenderingContext2D, book: PageBook, page: number
         const cx = left + textW / 2
         ctx.textAlign = 'center'
         ctx.fillStyle = INK_SOFT
-        ctx.font = `${Math.round(H * 0.017)}px ${SERIF}`
+        ctx.font = `${H * 0.017}px ${SERIF}`
         ctx.fillText(`CAPÍTULO ${chapter.chapter}`.split('').join(String.fromCharCode(8202)), cx, H * 0.2, textW)
         ctx.fillStyle = INK
-        ctx.font = `${Math.round(H * 0.036)}px ${SERIF}`
+        ctx.font = `${H * 0.036}px ${SERIF}`
         ctx.fillText(chapter.title, cx, H * 0.255, textW)
         ctx.strokeStyle = '#A5824B'
         ctx.lineWidth = Math.max(1, H / 600)
@@ -187,13 +189,13 @@ function drawContent(ctx: CanvasRenderingContext2D, book: PageBook, page: number
         // running head (a touch larger and darker: it read faint)
         ctx.fillStyle = INK_HEAD
         ctx.textAlign = 'center'
-        ctx.font = `italic ${Math.round(H * 0.021)}px ${SERIF}`
+        ctx.font = `italic ${H * 0.021}px ${SERIF}`
         ctx.fillText(book.title, left + textW / 2, H * 0.075, textW)
       }
       // body
       ctx.fillStyle = INK
       ctx.textAlign = 'left'
-      const size = Math.round(H * 0.0205)
+      const size = H * 0.0205
       ctx.font = `${size}px ${SERIF}`
       const lineH = size * 1.48
       const maxY = H * 0.88
@@ -209,7 +211,7 @@ function drawContent(ctx: CanvasRenderingContext2D, book: PageBook, page: number
       // folio
       ctx.fillStyle = INK_SOFT
       ctx.textAlign = 'center'
-      ctx.font = `${Math.round(H * 0.02)}px ${SERIF}`
+      ctx.font = `${H * 0.02}px ${SERIF}`
       ctx.fillText(String(page), left + textW / 2, H * 0.94)
     }
   }
