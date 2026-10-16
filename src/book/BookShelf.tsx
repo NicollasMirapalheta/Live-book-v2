@@ -1,7 +1,7 @@
 import { Html } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { use, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Box3, Color, Euler, Quaternion, Vector3, type Group, type Mesh, type MeshStandardMaterial } from 'three'
+import { Box3, Color, Euler, Quaternion, Vector3, type Group, type Mesh, type MeshPhysicalMaterial, type MeshStandardMaterial } from 'three'
 import { params } from '../app/params'
 import { invalidateShadows } from '../scene/shadows'
 import { Book } from './Book'
@@ -25,11 +25,16 @@ const RETURN_FACTOR = 0.85
 const REDUCED_FACTOR = 0.6
 
 /** Hand pose relative to the camera: the distance scales with the book so it fills ~60% of the view height. */
-const HAND_DISTANCE_PER_HEIGHT = 2.2
-const HAND_DROP = 0.035 // below the view center (m)
-const HAND_TILT = (-7 * Math.PI) / 180 // top leaning back, like a book held to read the cover
-const HAND_TURN = (5 * Math.PI) / 180
+const HAND_DISTANCE_PER_HEIGHT = 2.5
+const HAND_DROP = 0.085 // below the view center (m): chest height, not eye level
+const HAND_TILT = (20 * Math.PI) / 180 // top leaning back, like a book held to read the cover
+const HAND_TURN = (11 * Math.PI) / 180 // shows the spine and the thickness
 const HAND_LEFT = 0.08 // fraction of the distance
+/**
+ * Near the camera the book sits much closer to the chandelier than the shelf does and read washed out;
+ * the reader's own body also shades it. Albedo and reflections scale down to this while it is held.
+ */
+const HAND_EXPOSURE = 0.5
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
@@ -101,10 +106,11 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
         .addScaledVector(right, -HAND_LEFT * dist)
       // camera frame, then tilt the top back around the camera's horizontal axis, then turn the book so its
       // front cover (local +X) faces the camera with the spine on the left
+      // (yaw first, then the tilt around the book's own width axis, local Z: no roll on screen)
       const handQuat = camera.quaternion
         .clone()
-        .multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), HAND_TILT))
         .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2 + HAND_TURN))
+        .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), HAND_TILT))
       const handPos = handCenter.sub(center.clone().applyQuaternion(handQuat))
       flight.current = { handPos, handQuat }
     }
@@ -144,11 +150,27 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
       }
     }
     if (Math.abs(a.s + a.hover - before) > 1e-5) invalidateShadows()
-    if (inner.current && Math.abs(a.glow - (inner.current.userData.glow ?? -1)) > 0.002) {
-      inner.current.userData.glow = a.glow
-      inner.current.traverse((obj) => {
-        const m = (obj as Mesh).material as MeshStandardMaterial | undefined
-        if (m && 'emissive' in m && m.emissive) m.emissive.copy(HIGHLIGHT).multiplyScalar(0.03 * a.glow)
+    const exposure = 1 - (1 - HAND_EXPOSURE) * easeInOut(Math.min(1, a.s / total))
+    const g = inner.current
+    if (g && (Math.abs(a.glow - (g.userData.glow ?? -1)) > 0.002 || Math.abs(exposure - (g.userData.exposure ?? -1)) > 0.002)) {
+      g.userData.glow = a.glow
+      g.userData.exposure = exposure
+      g.traverse((obj) => {
+        const mats = (obj as Mesh).material
+        for (const m of (Array.isArray(mats) ? mats : mats ? [mats] : []) as MeshStandardMaterial[]) {
+          if (!('emissive' in m) || !m.emissive) continue
+          m.emissive.copy(HIGHLIGHT).multiplyScalar(0.03 * a.glow)
+          const phys = m as MeshPhysicalMaterial
+          const base = (m.userData.lbBase ??= { color: m.color.clone(), env: m.envMapIntensity, spec: phys.specularIntensity ?? 1, coat: phys.clearcoat ?? 0 })
+          m.color.copy(base.color).multiplyScalar(exposure)
+          m.envMapIntensity = base.env * exposure
+          // the chandelier is behind the reader: a cover facing the camera sits right in its specular peak
+          // and turned into a uniform sheen of the light's color. Dielectric sheen goes down with the albedo.
+          if (phys.isMeshPhysicalMaterial) {
+            phys.specularIntensity = base.spec * exposure * exposure
+            phys.clearcoat = base.coat * exposure
+          }
+        }
       })
     }
   })

@@ -55,7 +55,8 @@ export function coverMaterial(
     side: DoubleSide,
   })
   if (kind === 'leather') {
-    mat.clearcoat = 0.25
+    // a thin coat: a stronger one mirrored the sky at grazing angles (cyan pixels along the tooling)
+    mat.clearcoat = 0.1
     mat.clearcoatRoughness = 0.45
     mat.normalScale.set(0.8, 0.8)
   } else {
@@ -110,13 +111,14 @@ export function foilMaterial(mask: Texture, normal: Texture) {
     // less red than #C9A35A: under the warm key light and AgX the pure palette value reads as copper
     color: new Color(GOLD).lerp(new Color('#B9A867'), 0.55),
     metalness: 1,
-    roughness: 0.34,
+    // satin, not mirror: a sharp gold rule aliased into a row of sparkling dots
+    roughness: 0.42,
     alphaMap: mask,
     alphaTest: 0.35,
     // smooth thin rules under MSAA instead of the shimmering of a hard alpha cut
     alphaToCoverage: true,
     normalMap: normal,
-    normalScale: new Vector2(0.6, 0.6),
+    normalScale: new Vector2(0.2, 0.2),
     polygonOffset: true,
     polygonOffsetFactor: -2,
   })

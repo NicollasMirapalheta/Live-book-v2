@@ -156,10 +156,12 @@ export function clothWeaveHeight(tileM: number, seed = 5): HTMLCanvasElement {
 export function contactShadowTexture(): Texture {
   const N = 256
   const { c, ctx } = canvas(N, N)
-  ctx.clearRect(0, 0, N, N)
-  ctx.filter = 'blur(10px)'
+  // alphaMap reads the green channel, not alpha: the falloff is drawn as gray on opaque black
+  ctx.fillStyle = '#000'
+  ctx.fillRect(0, 0, N, N)
+  ctx.filter = 'blur(18px)'
   ctx.fillStyle = '#fff'
-  ctx.fillRect(N * 0.1, N * 0.1, N * 0.8, N * 0.8)
+  ctx.fillRect(N * 0.2, N * 0.2, N * 0.6, N * 0.6)
   return texture(c, false)
 }
 
@@ -177,7 +179,11 @@ export function backShadowTexture(): Texture {
   for (let y = 0; y < 256; y++)
     for (let x = 0; x < 64; x++) {
       const k = Math.min(1, Math.min(x, 63 - x) / 12)
-      img.data[(y * 64 + x) * 4 + 3] *= k
+      // alphaMap reads green: move the falloff from alpha to gray on opaque black
+      const i = (y * 64 + x) * 4
+      const v = img.data[i + 3] * k
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = v
+      img.data[i + 3] = 255
     }
   ctx.putImageData(img, 0, 0)
   return texture(c, false)
