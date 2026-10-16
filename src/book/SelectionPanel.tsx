@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { params } from '../app/params'
 import { useNavigation } from '../navigation/useNavigation'
+import { bookToc, currentEntry } from './reader/toc'
 import { currentSpread, useReader } from './reader/useReader'
 import { shelfBooks } from './shelfData'
 import { SPINE_COLOR_LABELS } from './palette'
@@ -76,7 +77,14 @@ export function SelectionPanel() {
   }, [inHand])
 
   if (params.shot || !selected) return null
-  if (phase === 'open') return <ReaderBar />
+  if (phase === 'open') {
+    return (
+      <>
+        <ReaderToc bookId={selected} />
+        <ReaderBar />
+      </>
+    )
+  }
   // the panel shows only once the book is in the reader's hand (spec Fase 3)
   if (!inHand) return null
   const book = shelfBooks().find((b) => b.id === selected)
@@ -108,6 +116,47 @@ export function SelectionPanel() {
 }
 
 /** Reading controls (spec Fase 4): previous / pages shown / next, and "Fechar". */
+const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+
+/**
+ * Table of contents beside the open book (provisional chapters until Fase 5). Picking an entry riffles
+ * through the pages to it instead of jumping, so the book keeps feeling like a book.
+ */
+function ReaderToc({ bookId }: { bookId: string }) {
+  const book = shelfBooks().find((b) => b.id === bookId)
+  const toc = useMemo(() => (book ? bookToc(book) : []), [book])
+  // highest page on the open spread; while riffling, the destination (the chapters flashing by are noise)
+  const shownPage = useReader((s) => 2 * (s.riffle ? s.riffle.bounds[s.riffle.bounds.length - 1] : s.turned) + 1)
+  const busy = useReader((s) => s.turn !== null || s.riffle !== null)
+  const goTo = useReader((s) => s.goTo)
+  const current = currentEntry(toc, shownPage)
+  if (!book) return null
+  return (
+    <nav className="sel-toc" aria-label="Sumário">
+      <h3 className="sel-toc-title">Sumário</h3>
+      <ol>
+        {toc.map((e) => (
+          <li key={e.page}>
+            <button
+              type="button"
+              className="sel-toc-item"
+              aria-current={e === current ? 'true' : undefined}
+              disabled={busy}
+              onClick={() => goTo(e.page, prefersReducedMotion())}
+            >
+              <span className="sel-toc-name">
+                {e.chapter !== undefined && <span className="sel-toc-num">{e.chapter}</span>}
+                {e.title}
+              </span>
+              <span className="sel-toc-page">{e.page}</span>
+            </button>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
+}
+
 function ReaderBar() {
   const spread = useReader((s) => currentSpread(s))
   const atStart = useReader((s) => s.turned === 0 && !s.turn)

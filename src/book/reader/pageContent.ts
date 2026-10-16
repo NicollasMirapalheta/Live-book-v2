@@ -2,6 +2,7 @@
 // Each page is drawn on a canvas in the panel's typography: title page, running head, justified body text
 // and the page number, on cream paper with a soft gutter shadow on the binding side.
 import { CanvasTexture, SRGBColorSpace, type Texture } from 'three'
+import { chapterAt } from './toc'
 
 /** page texture height (px): 1.5K on the high tier, 1K on the low tier (budget: ≤ 2K / 1K) */
 export const PAGE_TEX_HEIGHT = { high: 1536, low: 1024 } as const
@@ -163,22 +164,44 @@ function drawContent(ctx: CanvasRenderingContext2D, book: PageBook, page: number
       ctx.font = `italic ${Math.round(H * 0.018)}px ${SERIF}`
       ctx.fillText(`${book.title} · ${book.pageCount} páginas`, left, H * 0.86, textW)
     } else {
-      // running head (a touch larger and darker: it read faint)
-      ctx.fillStyle = INK_HEAD
-      ctx.textAlign = 'center'
-      ctx.font = `italic ${Math.round(H * 0.021)}px ${SERIF}`
-      ctx.fillText(book.title, left + textW / 2, H * 0.075, textW)
+      const chapter = chapterAt(book, page)
+      let y = H * 0.135
+      if (chapter) {
+        // chapter opening: no running head, number and title set low, the text starts a third down
+        const cx = left + textW / 2
+        ctx.textAlign = 'center'
+        ctx.fillStyle = INK_SOFT
+        ctx.font = `${Math.round(H * 0.017)}px ${SERIF}`
+        ctx.fillText(`CAPÍTULO ${chapter.chapter}`.split('').join(String.fromCharCode(8202)), cx, H * 0.2, textW)
+        ctx.fillStyle = INK
+        ctx.font = `${Math.round(H * 0.036)}px ${SERIF}`
+        ctx.fillText(chapter.title, cx, H * 0.255, textW)
+        ctx.strokeStyle = '#A5824B'
+        ctx.lineWidth = Math.max(1, H / 600)
+        ctx.beginPath()
+        ctx.moveTo(cx - W * 0.05, H * 0.29)
+        ctx.lineTo(cx + W * 0.05, H * 0.29)
+        ctx.stroke()
+        y = H * 0.36
+      } else {
+        // running head (a touch larger and darker: it read faint)
+        ctx.fillStyle = INK_HEAD
+        ctx.textAlign = 'center'
+        ctx.font = `italic ${Math.round(H * 0.021)}px ${SERIF}`
+        ctx.fillText(book.title, left + textW / 2, H * 0.075, textW)
+      }
       // body
       ctx.fillStyle = INK
       ctx.textAlign = 'left'
       const size = Math.round(H * 0.0205)
       ctx.font = `${size}px ${SERIF}`
       const lineH = size * 1.48
-      let y = H * 0.135
       const maxY = H * 0.88
       // consecutive pages never open on the same paragraph
       let k = page * 5 + (hashSeed(book.id) % PARAGRAPHS.length)
-      while (y < maxY) {
+      // the page before a chapter opening ends with its paragraph, short, as in print
+      const endsChapter = chapterAt(book, page + 1) !== undefined
+      while (y < (endsChapter ? H * 0.45 : maxY)) {
         y = paragraph(ctx, PARAGRAPHS[k % PARAGRAPHS.length], left, y, textW, lineH, maxY, size * 1.6)
         y += lineH * 0.25
         k++

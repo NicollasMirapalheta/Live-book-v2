@@ -9,6 +9,8 @@ declare global {
       readonly phase: string | null
       readonly focused: string | null
       readonly order: string[]
+      select: (id: string) => void
+      open: () => void
       screenPos?: (id: string) => { x: number; y: number } | null
     }
   }

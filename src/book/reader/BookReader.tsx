@@ -6,7 +6,7 @@ import { useQuality } from '../../state/quality'
 import { BOARD, HINGE_OFFSET, SQUARE, type BookDimensions } from '../geometry'
 import { setCoverOpen } from '../materials'
 import { useSelection } from '../useSelection'
-import { layoutPages, stackSplit } from './pages'
+import { layoutPages, layoutRiffle, stackSplit } from './pages'
 import { PAGE_TEX_HEIGHT, PageTextures, type PageBook } from './pageContent'
 import { pageMaterial, pagePlaneGeometry, SHEET_SEGMENTS, sheetMaterial, type PageUniforms, type SheetUniforms } from './sheetMaterial'
 import { useReader } from './useReader'
@@ -16,6 +16,17 @@ export const OPEN_ANGLE = (175 * Math.PI) / 180
 /** Hinge line of the pages and of the open cover (z in the closed-book frame). */
 const PIVOT_Z = 0
 const EPS = 0.0002
+/** sheets that can be in the air at once (riffle: flight time / launch gap, rounded up) */
+const SHEET_POOL = 7
+/** page textures while riffling (px high) */
+const RIFFLE_TEX_HEIGHT = 512
+
+interface Flight {
+  front: number
+  back: number
+  t: number
+  dir: number
+}
 /** rise of the open pages out of the gutter (m) */
 const PAGE_LIFT = 0.008
 /** slow wave in the paper (m) */
@@ -63,7 +74,7 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
   const leftStack = useRef<Mesh>(null)
   const rightPage = useRef<Mesh>(null)
   const leftPage = useRef<Mesh>(null)
-  const sheet = useRef<Mesh>(null)
+  const sheetRefs = useRef<(Mesh | null)[]>([])
   const scratch = useMemo(() => ({ q: new Quaternion(), p: new Vector3(), r: new Vector3() }), [])
 
   const T = d.totalThickness / 2
@@ -82,6 +93,8 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
   )
   const quality = useQuality((st) => st.quality)
   const textures = useMemo(() => new PageTextures(book, W / H, PAGE_TEX_HEIGHT[quality]), [book, W, H, quality])
+  // while riffling, every page is seen for a few frames in motion: small textures, drawn fast
+  const quick = useMemo(() => new PageTextures(book, W / H, RIFFLE_TEX_HEIGHT, 32), [book, W, H])
   const mats = useMemo(() => {
     const blank = textures.get(book.pageCount + 1000)
     const right = pageMaterial(0)
@@ -89,19 +102,25 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     const left = pageMaterial(1)
     right.map = blank
     left.map = blank
-    const sheetMat = sheetMaterial(W, PAGE_LIFT, PAGE_RIPPLE, PAGE_SEED)
-    sheetMat.map = blank
-    ;(sheetMat.userData.sheet as SheetUniforms).backMap.value = blank
-    return { right, left, sheet: sheetMat }
+    const sheets = Array.from({ length: SHEET_POOL }, () => {
+      const m = sheetMaterial(W, PAGE_LIFT, PAGE_RIPPLE, PAGE_SEED)
+      m.map = blank
+      ;(m.userData.sheet as SheetUniforms).backMap.value = blank
+      return m
+    })
+    return { right, left, sheets }
   }, [textures, book.pageCount, W])
 
   useEffect(
     () => () => {
       Object.values(geo).forEach((g) => g.dispose())
-      Object.values(mats).forEach((m) => m.dispose())
+      mats.right.dispose()
+      mats.left.dispose()
+      mats.sheets.forEach((m) => m.dispose())
       textures.dispose()
+      quick.dispose()
     },
-    [geo, mats, textures],
+    [geo, mats, textures, quick],
   )
 
   // closed again (or unmounted): the text block is whole, the front board back in place
@@ -138,12 +157,27 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     const reader = useReader.getState()
     const reduced = reducedMotion()
     reader.step(Math.min(delta, 0.1), reduced ? 1 / REDUCED_FACTOR : 1)
-    const { sheets, turned, turn } = useReader.getState()
+    const { sheets, turned, turn, riffle } = useReader.getState()
     const theta = OPEN_ANGLE * (openState.current?.cover ?? 0)
-    const lay = layoutPages(sheets, turned, turn)
-    // the sheet in the air belongs to neither stack until it lands: on the first spread the left side stays
-    // the endpaper (a growing left stack showed a blank page over it)
-    const split = stackSplit(d.blockThickness, sheets, lay.turning ? lay.turning.sheet : lay.leftSheets)
+    // one sheet turning (or none), or a riffle with several flights in the air
+    let lay: { left: number | null; right: number | null; flights: Flight[]; leftSheets: number }
+    if (riffle) {
+      const rl = layoutRiffle(sheets, riffle)
+      lay = { ...rl, flights: rl.flights.map((f) => ({ ...f, dir: riffle.dir })) }
+    } else {
+      const pl = layoutPages(sheets, turned, turn)
+      const tr = pl.turning
+      // the sheet in the air belongs to neither stack until it lands: on the first spread the left side
+      // stays the endpaper (a growing left stack showed a blank page over it)
+      lay = {
+        left: pl.left,
+        right: pl.right,
+        flights: tr ? [{ front: tr.front, back: tr.back, t: tr.t, dir: turn?.target === 0 ? -1 : 1 }] : [],
+        leftSheets: tr ? tr.sheet : pl.leftSheets,
+      }
+    }
+    const tex = riffle ? quick : textures
+    const split = stackSplit(d.blockThickness, sheets, lay.leftSheets)
     const t = d.blockThickness / 2
     const xb = -t + split.right
     const block = d.blockThickness
@@ -190,37 +224,53 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
       ls.position.x = xb + split.left / 2
     }
 
-    // the sheet in the air shades the page it leaves (first half) and the one it lands on (second half)
-    const lift = lay.turning ? Math.sin(Math.PI * lay.turning.t) : 0
-    ;(mats.right.userData.page as PageUniforms).uShade.value = lay.turning ? lift * (1 - lay.turning.t) : 0
-    ;(mats.left.userData.page as PageUniforms).uShade.value = lay.turning ? lift * lay.turning.t : 0
+    // a sheet in the air shades the page it leaves (first half) and the one it lands on (second half)
+    let shadeR = 0
+    let shadeL = 0
+    for (const f of lay.flights) {
+      const lift = Math.sin(Math.PI * f.t)
+      shadeR = Math.max(shadeR, lift * (1 - f.t))
+      shadeL = Math.max(shadeL, lift * f.t)
+    }
+    ;(mats.right.userData.page as PageUniforms).uShade.value = shadeR
+    ;(mats.left.userData.page as PageUniforms).uShade.value = shadeL
 
     const open = theta > 1e-4
+    // the paper only rises once the board has swung clear of it: with the cover nearly closed the 8 mm curve
+    // poked through the board for a frame or two
+    const rise = smoothstep(0.03, 0.6, theta)
     const rp = rightPage.current
     if (rp) {
       setShown(rp, open && lay.right !== null)
       rp.position.x = xb + EPS
-      if (lay.right !== null) setMap(mats.right, textures.get(lay.right))
+      rp.scale.x = Math.max(rise, 1e-3)
+      if (lay.right !== null) setMap(mats.right, tex.get(lay.right))
     }
     const lp = leftPage.current
     if (lp) {
       setShown(lp, open && lay.left !== null)
       lp.position.x = xb - EPS
-      if (lay.left !== null) setMap(mats.left, textures.get(lay.left))
+      lp.scale.x = Math.max(rise, 1e-3)
+      if (lay.left !== null) setMap(mats.left, tex.get(lay.left))
     }
-    const sh = sheet.current
-    if (sh) {
-      sh.visible = open && lay.turning !== null
-      if (lay.turning) {
-        const u = mats.sheet.userData.sheet as SheetUniforms
-        u.uTurn.value = lay.turning.t
-        u.uTheta.value = theta
-        u.uPivot.value.set(xb, PIVOT_Z)
-        u.uDir.value = turn?.target === 0 ? -1 : 1
-        u.uCurl.value = reduced ? 0 : 0.35
-        setMap(mats.sheet, textures.get(lay.turning.front))
-        u.backMap.value = textures.get(lay.turning.back)
-      }
+    for (let i = 0; i < SHEET_POOL; i++) {
+      const sh = sheetRefs.current[i]
+      const f = lay.flights[i]
+      if (!sh) continue
+      sh.visible = open && f !== undefined
+      if (!f) continue
+      const m = mats.sheets[i]
+      const u = m.userData.sheet as SheetUniforms
+      u.uTurn.value = f.t
+      u.uTheta.value = theta
+      u.uLift.value = PAGE_LIFT * rise
+      u.uRipple.value = PAGE_RIPPLE * rise
+      u.uPivot.value.set(xb, PIVOT_Z)
+      u.uDir.value = f.dir
+      // riffled sheets curl more: they are flicked, not turned
+      u.uCurl.value = reduced ? 0 : riffle ? 0.5 : 0.35
+      setMap(m, tex.get(f.front))
+      u.backMap.value = tex.get(f.back)
     }
   })
 
@@ -272,7 +322,22 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
   return (
     <>
       <mesh ref={rightPage} name="page_right" geometry={geo.right} material={mats.right} visible={false} onPointerDown={onDown(1)} onPointerOver={cursor(true)} onPointerOut={cursor(false)} />
-      <mesh ref={sheet} name="page_turning" geometry={geo.sheet} material={mats.sheet} visible={false} frustumCulled={false} raycast={noRaycast} />
+      {mats.sheets.map((m, i) => (
+        <mesh
+          key={i}
+          ref={(el) => {
+            sheetRefs.current[i] = el
+          }}
+          name="page_turning"
+          geometry={geo.sheet}
+          material={m}
+          visible={false}
+          frustumCulled={false}
+          raycast={noRaycast}
+          // later flights are drawn over earlier ones where they cross mid-air
+          renderOrder={i}
+        />
+      ))}
       <mesh name="endpaper_back" geometry={geo.endBack} material={endpaper} position={[-endX, 0, HINGE_OFFSET]} userData={closes} />
       <mesh name="cover_hit_back" geometry={geo.board} material={hitMat} position={[-hitX, 0, 0]} userData={closes} />
       <group ref={leftHalf}>
@@ -297,4 +362,9 @@ function setShown(mesh: Mesh, shown: boolean) {
 
 function setMap(mat: MeshStandardMaterial, tex: MeshStandardMaterial['map']) {
   if (mat.map !== tex) mat.map = tex
+}
+
+function smoothstep(a: number, b: number, x: number) {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)))
+  return t * t * (3 - 2 * t)
 }

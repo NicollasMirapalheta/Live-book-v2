@@ -109,3 +109,35 @@ test('livro na mão: clicar nele abre; aberto, clicar fora não fecha; clicar na
   await page.waitForFunction(() => window.__SEL__!.phase === 'hand')
   await expect(page.getByRole('dialog')).toBeVisible()
 })
+
+test('sumário: escolher um capítulo folheia até ele (vai e volta)', async ({ page }, testInfo) => {
+  await page.goto('/?e2e=1&node=N2')
+  await page.waitForFunction(() => window.__SCENE_READY__ === true && (window.__SEL__?.order.length ?? 0) > 0, undefined, {
+    timeout: 90_000,
+  })
+  // the longest test book
+  await page.evaluate(() => window.__SEL__!.select('fx-natural'))
+  await page.waitForFunction(() => window.__SEL__!.phase === 'hand')
+  await page.evaluate(() => window.__SEL__!.open())
+  await settled(page)
+  const toc = page.getByRole('navigation', { name: 'Sumário' })
+  await expect(toc).toBeVisible()
+  await expect(toc.getByRole('button', { name: /Página de rosto/ })).toHaveAttribute('aria-current', 'true')
+
+  const sheets = await page.evaluate(() => window.__READER__!.sheets)
+  await toc.getByRole('button', { name: /Última página/ }).click()
+  // mid-riffle: several sheets in the air
+  await page.waitForTimeout(500)
+  expect(await page.evaluate(() => window.__READER__!.turning)).toBe(true)
+  // budget: < 150 draw calls even with the most sheets in the air
+  const calls = (await page.evaluate(() => (window as unknown as { __SCENE_STATS__?: { calls: number } }).__SCENE_STATS__?.calls)) ?? -1
+  console.log('draw calls (folheando)', calls)
+  expect(calls).toBeLessThan(150)
+  await page.screenshot({ path: testInfo.outputPath('riffle.png') })
+  await page.waitForFunction(() => !window.__READER__!.turning, undefined, { timeout: 10_000 })
+  expect(await page.evaluate(() => window.__READER__!.turned)).toBe(sheets)
+  await expect(toc.getByRole('button', { name: /Última página/ })).toHaveAttribute('aria-current', 'true')
+
+  await toc.getByRole('button', { name: /Página de rosto/ }).click()
+  await page.waitForFunction(() => !window.__READER__!.turning && window.__READER__!.turned === 0, undefined, { timeout: 10_000 })
+})

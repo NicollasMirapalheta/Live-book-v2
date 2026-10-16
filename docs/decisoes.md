@@ -246,3 +246,15 @@ Formato de cada entrada:
   - Texto: tinta #1E130B, cabeço #3D2C1F e maior; páginas a 1,5K no tier high (1K no low, dentro do orçamento).
 - Como reverter: constantes `HAND_*` em `BookShelf.tsx`; `onPointerMissed` em `SceneRoot.tsx`; `cover_hit_*` em `BookReader.tsx`.
 - Precisa do usuário? não.
+
+## 2026-10-16 — Sumário e folhear rápido (pedido do usuário)
+- Contexto: o usuário aprovou as correções, pediu o livro aberto só inclinado para a estante, sem o "piscar" da página atravessando a capa na abertura, e um sumário lateral para não precisar clicar página a página até o fim, mantendo a animação de folhear.
+- Escolha:
+  - Sumário à esquerda no mesmo vidro da barra; capítulos provisórios até a Fase 5.
+  - Ir a um capítulo **folheia** em vez de pular: o salto vira até 14 voos (cada voo leva um bloco de folhas), até 7 no ar ao mesmo tempo, ~1,3 s para qualquer distância. Cada voo mostra a frente da primeira folha do bloco e o verso da última, e as páginas paradas mostram exatamente o que está embaixo. Texturas de 512 px durante o voo (a 1,5K, desenhar ~30 páginas travaria a animação).
+  - Pose aberta: o giro de 4° saiu; sobra só a compensação do "V" (metade dos 5° para cada lado), que deixa as duas metades simétricas.
+  - Piscar na abertura: a página tem 8 mm de curvatura e a capa quase fechada fica a < 1 mm dela; a curvatura agora cresce com o ângulo da capa.
+- Alternativa: pular direto para a página (sem animação) — descartada, o usuário pediu a animação de folhear.
+- Draw calls: 142 medidos no meio do folhear (e2e do sumário verifica < 150).
+- Como reverter: `goTo`/`stepRiffle` em `useReader.ts`, `ReaderToc` em `SelectionPanel.tsx`.
+- Precisa do usuário? não.

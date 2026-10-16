@@ -5,7 +5,7 @@ import { Box3, Color, Euler, Quaternion, Vector3, type Group, type Mesh, type Pe
 import { params } from '../app/params'
 import { invalidateShadows } from '../scene/shadows'
 import { Book } from './Book'
-import type { OpenState } from './reader/BookReader'
+import { OPEN_ANGLE, type OpenState } from './reader/BookReader'
 import { useReader } from './reader/useReader'
 import { backShadowTexture, contactShadowTexture } from './canvasTextures'
 import type { FixtureBook } from './fixtures'
@@ -47,7 +47,9 @@ const OPEN_S = 1.2
 const READ_FILL_W = 0.6
 const READ_FILL_H = 0.62
 const READ_TILT = (14 * Math.PI) / 180 // top back: the head of the block and the cover's squares show
-const READ_TURN = (4 * Math.PI) / 180
+// no turn of its own (user feedback): only the tilt toward the shelf. This just splits the open book's V
+// evenly, so neither half leans toward the reader more than the other
+const READ_TURN = -(Math.PI - OPEN_ANGLE) / 2
 const OPEN_BACKOFF = 0.07 // m
 const READ_DROP = -0.008 // negative: a little above the view center, clear of the reading bar
 

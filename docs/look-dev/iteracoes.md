@@ -105,3 +105,7 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 ### R4 — 2026-10-15 (ajustes do teste do usuário)
 - Livro na mão centralizado e de frente (12° para trás); a primeira folha não mostra mais papel no lugar da guarda; a folha no ar parte da mesma ondulação das páginas (sem letras misturadas); tinta e cabeço mais escuros, páginas a 1,5K.
 - **art-reviewer:** nada regrediu — "pronto para o usuário". Acabamento aplicado: transparência do verso 3%, linhas-corrente do vergê com metade do contraste. Opção para o usuário: 2–3° de giro no livro na mão devolve a lombada à vista.
+
+### R5 — 2026-10-16 (sumário e folhear rápido, pedidos do usuário)
+- Livro aberto sem giro próprio (só a inclinação para a estante, "V" dividido igualmente); curvatura das páginas cresce com o ângulo da capa (sem atravessar a capa na abertura); sumário à esquerda; ir a um capítulo folheia rápido (até 14 voos, até 7 folhas no ar, 142 draw calls); páginas de abertura de capítulo.
+- **art-reviewer:** nada regrediu — "pronto para o usuário". Aplicado depois: sumário mais estreito (encostava na página esquerda a 1280 px), destaque do destino durante o folhear, página anterior a um capítulo termina curta.

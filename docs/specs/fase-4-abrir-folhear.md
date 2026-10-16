@@ -29,6 +29,8 @@ Ponto de partida (Fase 3 revisada): o livro já veio da estante para a mão do u
 - `pageContent.ts` (`// PLACEHOLDER`): páginas em canvas 1024 px de altura, sombra da calha no lado da costura.
 - Pose de leitura em `BookShelf.tsx`: o livro aberto ocupa ~80% da largura (ou 74% da altura), centrado na calha, inclinado 10°. Abrir dura 1,2 s: a pose vai primeiro, a capa termina depois.
 - Barra de leitura (‹ p. 4–5 › Fechar) no rodapé; `Esc` fecha; roda do mouse folheia.
+- **Sumário** à esquerda (mesmo vidro da barra; some em telas estreitas): página de rosto, capítulos e última página, com o atual destacado. Escolher uma entrada **folheia rápido** até ela: até 14 voos (cada um leva um bloco de folhas, ~0,4 s cada, lançados a cada 75 ms, até 7 no ar), texturas de 512 px durante o voo; com movimento reduzido, até 6 voos. Uma folha de distância vira normalmente. Capítulos provisórios (`src/book/reader/toc.ts`, `// PLACEHOLDER`) até a Fase 5; cada um abre numa página ímpar com número e título.
+- Pose de leitura sem giro próprio: só a inclinação para a estante; o "V" de 175° fica dividido igualmente entre as duas metades. A curvatura das páginas cresce com o ângulo da capa (não atravessa a capa no começo da abertura).
 - Com o livro aberto, clicar fora dele **não** fecha (só a capa, `Esc` ou **Fechar**). Com o livro fechado na mão, clicar nele abre e clicar fora devolve à estante.
 - Planos invisíveis das placas recebem o clique da capa: a placa da frente gira só no shader, e na CPU a capa continua fechada sobre a página direita (o raycast da capa fica desligado durante a leitura).
 - Screenshots: `?select=<id>&open=1&page=N`, `&turn=0..1`, `&openAt=0..1`.

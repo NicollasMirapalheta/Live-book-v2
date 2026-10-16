@@ -61,3 +61,62 @@ export function spreadLabel(layout: Pick<PageLayout, 'left' | 'right'>, pageCoun
   const shown = [layout.left, layout.right].filter((p): p is number => p !== null && p <= pageCount)
   return shown.join('–')
 }
+
+// ---------------------------------------------------------------------------
+// Riffle: jumping to a far page (table of contents) flips through the book in a few seconds at most. Each
+// visible flight carries a chunk of sheets; several are in the air at once.
+// ---------------------------------------------------------------------------
+
+export interface Riffle {
+  /** sheets turned at each flight boundary: bounds[0] = start, bounds[K] = target (K flights) */
+  bounds: number[]
+  dir: 1 | -1
+  /** flights launched / landed (they land in launch order) */
+  launched: number
+  landed: number
+  /** flights in the air: index into the flights, t as in Turn (0 on the right stack, 1 on the left) */
+  inAir: { index: number; t: number }[]
+  /** seconds since the last launch */
+  clock: number
+}
+
+/** Boundaries for a riffle from `from` to `to` sheets turned, in at most `maxFlights` flights. */
+export function riffleBounds(from: number, to: number, maxFlights: number): number[] {
+  const n = Math.abs(to - from)
+  const k = Math.max(1, Math.min(n, maxFlights))
+  const dir = Math.sign(to - from)
+  const out: number[] = []
+  for (let i = 0; i <= k; i++) out.push(from + dir * Math.round((n * i) / k))
+  return out
+}
+
+export interface RiffleLayout {
+  left: number | null
+  right: number | null
+  /** the flights in the air: front = recto of the chunk's first sheet, back = verso of its last */
+  flights: { front: number; back: number; t: number }[]
+  /** sheets on the left stack (the ones in the air belong to neither until they land) */
+  leftSheets: number
+  /** sheets turned so far (landed) */
+  turned: number
+}
+
+export function layoutRiffle(sheets: number, r: Riffle): RiffleLayout {
+  const b = r.bounds
+  const landedAt = b[r.landed]
+  const launchedAt = b[r.launched]
+  // forward: what has landed is on the left, what is not launched yet on the right; backward: the reverse
+  const leftAt = r.dir > 0 ? landedAt : launchedAt
+  const rightAt = r.dir > 0 ? launchedAt : landedAt
+  return {
+    left: leftAt > 0 ? verso(leftAt - 1) : null,
+    right: rightAt < sheets ? recto(rightAt) : null,
+    flights: r.inAir.map(({ index, t }) => {
+      const lo = Math.min(b[index], b[index + 1])
+      const hi = Math.max(b[index], b[index + 1])
+      return { front: recto(lo), back: verso(hi - 1), t }
+    }),
+    leftSheets: leftAt,
+    turned: landedAt,
+  }
+}
