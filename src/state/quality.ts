@@ -6,6 +6,8 @@ interface QualityState {
   quality: Quality
   /** true when forced by ?quality=, so automatic detection must not override it */
   forced: boolean
+  /** the first tier is decided: the scene loads only then, so one set of models is downloaded and kept */
+  resolved: boolean
   setQuality: (q: Quality) => void
 }
 
@@ -15,19 +17,55 @@ const forced = forcedParam === 'high' || forcedParam === 'low'
 export const useQuality = create<QualityState>((set, get) => ({
   quality: forced ? (forcedParam as Quality) : 'high',
   forced,
+  resolved: forced,
   setQuality: (q) => {
     if (!get().forced) set({ quality: q })
   },
 }))
 
-/** Initial tier from detect-gpu (tier 0–1 or mobile → low). Ignored when ?quality= is set. */
+/** detect-gpu reads its benchmark data from a CDN: a slow network must not hold the room back. */
+const DETECT_TIMEOUT_MS = 1500
+const STORAGE_KEY = 'lb-quality'
+
+function stored(): Quality | null {
+  try {
+    const v = localStorage.getItem(STORAGE_KEY)
+    return v === 'high' || v === 'low' ? v : null
+  } catch {
+    return null
+  }
+}
+
+/** Without the GPU benchmark: few cores or little memory reads as a modest machine. */
+function guess(): Quality {
+  const nav = navigator as Navigator & { deviceMemory?: number }
+  return (nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4 ? 'low' : 'high'
+}
+
+/**
+ * Initial tier (spec Fase 0 §tiers): detect-gpu (tier 0–1 or mobile → low), remembered in this browser so the
+ * next visits start right away; on timeout or failure, a guess from the CPU and memory. Ignored with ?quality=.
+ */
 export async function detectInitialQuality(): Promise<void> {
   if (forced) return
+  const set = (q: Quality) => useQuality.setState({ quality: q, resolved: true })
+  const known = stored()
+  if (known) return set(known)
   try {
     const { getGPUTier } = await import('detect-gpu')
-    const gpu = await getGPUTier()
-    useQuality.getState().setQuality(gpu.tier <= 1 || gpu.isMobile ? 'low' : 'high')
+    const gpu = await Promise.race([
+      getGPUTier(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), DETECT_TIMEOUT_MS)),
+    ])
+    if (!gpu) return set(guess())
+    const q: Quality = gpu.tier <= 1 || gpu.isMobile ? 'low' : 'high'
+    try {
+      localStorage.setItem(STORAGE_KEY, q)
+    } catch {
+      // private mode: detect again next time
+    }
+    set(q)
   } catch {
-    // Keep the default tier when detection fails (offline benchmark data, etc.).
+    set(guess())
   }
 }

@@ -7,6 +7,7 @@ import { params } from '../app/params'
 import { useQuality } from '../state/quality'
 import { applyLightmaps, loadAtlasTexture, loadManifest, type LightmapManifest } from './Lightmaps'
 import { PlaceholderRoom } from './PlaceholderRoom'
+import { releaseAfterUpload, texturesOf } from './releaseImages'
 import { FloorReflection } from './FloorReflection'
 import { invalidateShadows } from './shadows'
 import { CandleBulbs, FloorJoints, Flames, WindowGlass } from './RoomExtras'
@@ -49,6 +50,8 @@ function BakedRoom({ assets }: { assets: RoomAssets }) {
 
   const reflect = quality === 'high' && !params.off.has('reflect')
   const unbaked = useMemo(() => applyLightmaps(room, assets.manifest, assets.atlases, envMap, reflect), [room, assets, envMap, reflect])
+  // the decoded images (textures and lightmaps) leave the RAM once on the GPU
+  useLayoutEffect(() => releaseAfterUpload(texturesOf(room)), [room, unbaked])
 
   // the bookcase and the back wall shade the shelf props from the real-time sun (it comes from behind)
   useLayoutEffect(() => {

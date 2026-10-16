@@ -22,6 +22,7 @@ import { Sky } from './Sky'
 
 export function SceneRoot() {
   const quality = useQuality((s) => s.quality)
+  const resolved = useQuality((s) => s.resolved)
   return (
     <>
       <Canvas
@@ -43,17 +44,20 @@ export function SceneRoot() {
       >
         <CameraRig />
         {!params.shot && <LookControls />}
-        <Suspense fallback={null}>
-          <Room />
-          {!params.off.has('props') && <ShelfProps />}
-          {!params.off.has('books') && <BookShelf />}
-          {!params.off.has('sky') && <Sky />}
-          {!params.off.has('lights') && <DynamicLights />}
-          {!params.off.has('beams') && <LightBeams />}
-          <NodeMarkers />
-          {!params.off.has('effects') && <Effects />}
-          <Readiness />
-        </Suspense>
+        {/* the tier is decided before anything loads (src/state/quality.ts): one set of models, not two */}
+        {resolved && (
+          <Suspense fallback={null}>
+            <Room />
+            {!params.off.has('props') && <ShelfProps />}
+            {!params.off.has('books') && <BookShelf />}
+            {!params.off.has('sky') && <Sky />}
+            {!params.off.has('lights') && <DynamicLights />}
+            {!params.off.has('beams') && <LightBeams />}
+            <NodeMarkers />
+            {!params.off.has('effects') && <Effects />}
+            <Readiness />
+          </Suspense>
+        )}
       </Canvas>
       <NavigationUI />
       <SelectionPanel />

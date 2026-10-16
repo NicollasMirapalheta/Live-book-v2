@@ -8,7 +8,7 @@ import { Book } from './Book'
 import { OPEN_ANGLE, type OpenState } from './reader/BookReader'
 import { useBookContent } from './pdf/content'
 import { useReader } from './reader/useReader'
-import { backShadowTexture, contactShadowTexture } from './canvasTextures'
+import { backShadowTexture, contactShadowTexture, shared } from './canvasTextures'
 import type { FixtureBook } from './fixtures'
 import { bookDimensions } from './geometry'
 import { libraryReady, useLibrary } from '../data/library'
@@ -313,7 +313,8 @@ function TitlePopover({ book, anchor }: { book: FixtureBook; anchor: [number, nu
  * is baked, so the real-time sun shadow cannot darken it; without these the books look pasted on.
  */
 function RowShadows({ shelf, x0, x1 }: { shelf: Shelf; x0: number; x1: number }) {
-  const [floor, back] = useMemo(() => [contactShadowTexture(), backShadowTexture()], [])
+  const floor = shared('contact-shadow', () => contactShadowTexture())
+  const back = shared('back-shadow', () => backShadowTexture())
   const w = x1 - x0 + 0.05
   const cx = (x0 + x1) / 2
   const depth = shelf.zFront - shelf.zBack

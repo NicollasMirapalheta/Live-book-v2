@@ -1,9 +1,10 @@
 import { useGLTF } from '@react-three/drei'
-import { use, useLayoutEffect, useMemo } from 'react'
+import { use, useLayoutEffect } from 'react'
 import { Box3, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3, type MeshStandardMaterial, type Object3D } from 'three'
-import { contactShadowTexture } from '../book/canvasTextures'
+import { contactShadowTexture, shared } from '../book/canvasTextures'
 import { loadBookcase, shelfLayoutFor, useShelfBooks } from '../book/shelfData'
 import { useQuality } from '../state/quality'
+import { releaseAfterUpload, texturesOf } from './releaseImages'
 import { invalidateShadows } from './shadows'
 
 /**
@@ -33,9 +34,10 @@ export function ShelfProps() {
         if (/brass/i.test(mat.name)) mat.roughness = 0.9
       }
     })
+    releaseAfterUpload(texturesOf(scene))
   }, [scene, quality])
 
-  const blobTex = useMemo(() => contactShadowTexture(), [])
+  const blobTex = shared('contact-shadow', () => contactShadowTexture())
   // re-laid out when a book is created or removed (the props make room)
   const books = useShelfBooks()
 

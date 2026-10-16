@@ -13,6 +13,21 @@ function rand(seed: number) {
   return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296)
 }
 
+const sharedTextures = new Map<string, Texture>()
+
+/**
+ * One texture for every user of `key` (plano de desempenho): paper, edges, contact shadows and the cloth weave
+ * come out identical for every book, so they are drawn and uploaded once and live as long as the page.
+ * Never dispose a shared texture.
+ */
+export function shared(key: string, make: () => Texture): Texture {
+  let t = sharedTextures.get(key)
+  if (!t) sharedTextures.set(key, (t = make()))
+  return t
+}
+
+export const isShared = (t: Texture) => [...sharedTextures.values()].includes(t)
+
 function texture(c: HTMLCanvasElement, color: boolean): Texture {
   const t = new CanvasTexture(c)
   t.colorSpace = color ? SRGBColorSpace : NoColorSpace
