@@ -258,7 +258,8 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 14px;
+  /* just under the book (it fills ~65% of the column, a little above the middle) */
+  bottom: 14%;
   margin: 0;
   text-align: center;
   font-size: var(--lb-label);
@@ -322,6 +323,45 @@
   text-transform: none;
   letter-spacing: 0;
   color: var(--lb-ink-soft);
+}
+
+.ui-label {
+  display: block;
+  margin: 12px 0 5px;
+  font-size: var(--lb-label);
+  letter-spacing: var(--lb-label-tracking);
+  text-transform: uppercase;
+  color: var(--lb-ink-muted);
+}
+
+.bf-photo-field {
+  position: relative;
+}
+
+/* remove the photo: a round 44 px button inside the filled zone, top right */
+.bf-clear {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: var(--lb-touch);
+  height: var(--lb-touch);
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  color: var(--lb-ink-soft);
+  font: 22px var(--lb-serif);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.bf-clear:hover {
+  background: var(--lb-hover);
+  color: var(--lb-ink);
+}
+
+.bf-clear:focus-visible {
+  outline: 2px solid var(--lb-gold-light);
+  outline-offset: -2px;
 }
 
 .ui-req {

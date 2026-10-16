@@ -1,5 +1,5 @@
 {
-  "at": "2026-10-16T04:35:32.061Z",
+  "at": "2026-10-16T11:46:39.253Z",
   "quality": "high",
   "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)",
   "browserMode": "headless + ANGLE default",
@@ -8,7 +8,7 @@
     "N2": {
       "stats": {
         "calls": 114,
-        "triangles": 212342,
+        "triangles": 212318,
         "textures": 132,
         "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)"
       },

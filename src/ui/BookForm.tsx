@@ -12,10 +12,15 @@ import { isPdf, useCreator } from './creator'
 import './ui.css'
 
 const COLORS = Object.keys(SPINE_COLORS) as SpineColor[]
-const PREVIEW_YAW = (32 * Math.PI) / 180
+const PREVIEW_YAW = (40 * Math.PI) / 180
 const PREVIEW_PITCH = (8 * Math.PI) / 180
-/** the room's sun (config/room.json, 3200 K): the colour picked here is the colour on the shelf */
-const WARM = '#FFBB78'
+/**
+ * Preview light: the room shows its books through a white-balance grade (scene/Grade.tsx) that this small
+ * canvas does not have, so it gets a near-neutral key in front of the cover and less of the (warm) room env
+ * map. Matched by measurement: petrol-blue cloth reads (73, 81, 89) here and (72, 73, 77) in the hand.
+ */
+const PREVIEW_KEY = '#FFF1E2'
+const PREVIEW_ENV = 0.6
 /** thickness of the preview before the PDF is composed */
 const DRAFT_PAGES = 120
 
@@ -180,10 +185,10 @@ function BookFormOpen() {
     <div className="ui-overlay" onDragOver={(e) => e.preventDefault()} onDrop={(e) => (e.preventDefault(), pickPdf([...e.dataTransfer.files].find(isPdf)))}>
       <form className="ui-card bf" role="dialog" aria-modal="true" aria-labelledby={`${ids}-h`} onSubmit={submit}>
         <div className="bf-preview" aria-hidden="true">
-          <Canvas dpr={[1, 2]} camera={{ fov: 30, position: [0.62, 0.05, 0] }} gl={{ antialias: true, toneMapping: AgXToneMapping, toneMappingExposure: 1.1 }}>
+          <Canvas dpr={[1, 2]} camera={{ fov: 22, position: [0.8, 0.1, 0] }} gl={{ antialias: true, toneMapping: AgXToneMapping, toneMappingExposure: 1.1 }}>
             <Suspense fallback={null}>
-              <RoomEnvironment background={false} intensity={1} />
-              <directionalLight position={[0.8, 1, 0.6]} intensity={2.2} color={WARM} />
+              <RoomEnvironment background={false} intensity={PREVIEW_ENV} />
+              <directionalLight position={[1, 0.9, -0.7]} intensity={3} color={PREVIEW_KEY} />
               <PreviewBook book={preview} />
             </Suspense>
           </Canvas>
@@ -196,17 +201,12 @@ function BookFormOpen() {
             {mode === 'edit' ? (editing?.title ?? d.title) : 'Um livro para a estante'}
           </h2>
 
-          <label className="bf-drop" data-filled={d.pdf ? '' : undefined}>
+          <span className="ui-label" id={`${ids}-pdf`}>
+            PDF do conteúdo <Req />
+          </span>
+          <label className="bf-drop" data-filled={d.pdf ? '' : undefined} aria-labelledby={`${ids}-pdf`}>
             <input type="file" accept="application/pdf,.pdf" onChange={(e) => pickPdf(e.target.files?.[0])} />
-            <span className="bf-drop-main">
-              {d.pdf ? (
-                d.pdfName
-              ) : (
-                <>
-                  Escolha ou arraste o PDF do conteúdo <Req />
-                </>
-              )}
-            </span>
+            <span className="bf-drop-main">{d.pdf ? d.pdfName : 'Escolha ou arraste o arquivo'}</span>
             <span className="bf-drop-sub">{d.pdf ? 'trocar arquivo' : 'o texto e as imagens viram as páginas do livro'}</span>
           </label>
           {loading && (
@@ -284,7 +284,7 @@ function BookFormOpen() {
             </fieldset>
           </div>
 
-          <div className="ui-field">
+          <div className="ui-field bf-photo-field">
             <span>Foto da capa</span>
             <label className="bf-drop bf-drop-photo" data-filled={d.coverPhoto ? '' : undefined}>
               <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && set({ coverPhoto: e.target.files[0] })} />
@@ -295,8 +295,8 @@ function BookFormOpen() {
               </span>
             </label>
             {d.coverPhoto && (
-              <button type="button" className="ui-link" onClick={() => set({ coverPhoto: null })}>
-                tirar a foto
+              <button type="button" className="bf-clear" aria-label="Tirar a foto" title="Tirar a foto" onClick={() => set({ coverPhoto: null })}>
+                ×
               </button>
             )}
           </div>
@@ -336,14 +336,16 @@ function PreviewBook({ book }: { book: Parameters<typeof Book>[0]['book'] }) {
   const g = useRef<Group>(null)
   const d = bookDimensions(book.pageCount, book.trim)
   useFrame(({ clock, camera, size }) => {
-    // three-quarter view: spine and cover together, swaying a little
-    if (g.current) g.current.rotation.y = -PREVIEW_YAW + Math.sin(clock.elapsedTime * 0.45) * 0.1
-    // the book fills ~65% of the column's height, or its width when the column is short and wide (phones)
+    // three-quarter view with the spine toward the camera (a thin book's spine only shows from that side)
+    if (g.current) g.current.rotation.y = PREVIEW_YAW + Math.sin(clock.elapsedTime * 0.45) * 0.08
+    // the book fills ~65% of the column's height, or ~90% of its width when the column is short and wide
     const cam = camera as PerspectiveCamera
     const half = Math.tan((cam.fov * Math.PI) / 360)
-    const dist = Math.max(d.coverHeight / (2 * half * 0.65), (d.coverWidth * 0.62) / (half * (size.width / size.height)))
+    const projected = d.coverWidth * Math.cos(PREVIEW_YAW) + d.totalThickness * Math.sin(PREVIEW_YAW)
+    const dist = Math.max(d.coverHeight / (2 * half * 0.65), projected / (2 * half * (size.width / size.height) * 0.9))
     cam.position.set(dist * Math.cos(PREVIEW_PITCH), dist * Math.sin(PREVIEW_PITCH), 0)
-    cam.lookAt(0, 0, 0)
+    // aim a little low: the book sits above the middle, the page count just under it
+    cam.lookAt(0, -dist * half * 0.12, 0)
   })
   return (
     <group ref={g}>

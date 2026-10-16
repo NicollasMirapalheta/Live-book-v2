@@ -333,3 +333,26 @@
   border-color: var(--lb-danger);
   color: var(--lb-danger);
 }
+
+/* with a mouse the rows can be denser (touch keeps 44 px): a long book's chapters fit without scrolling */
+@media (pointer: fine) {
+  .sel-toc-item {
+    min-height: 36px;
+    padding: 8px 8px 6px;
+  }
+}
+
+/* the list scrolls inside the panel; when it does, it fades out at the foot instead of cutting a row */
+.sel-toc {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important;
+}
+
+.sel-toc ol {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 18px;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
+}

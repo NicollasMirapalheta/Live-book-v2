@@ -1,8 +1,9 @@
 import { useThree } from '@react-three/fiber'
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import { Color, type DirectionalLight } from 'three'
+import type { DirectionalLight } from 'three'
 import { room, sunTravelDirection } from '../config/room'
 import { useQuality } from '../state/quality'
+import { CHANDELIER_TO_WHITE, objectLight, SUN_TO_WHITE } from './lightColor'
 import { setShadowInvalidator } from './shadows'
 
 /**
@@ -67,7 +68,7 @@ export function DynamicLights() {
       <directionalLight
         ref={sun}
         position={sunPos}
-        color={new Color(room.lighting.sun.colorHex)}
+        color={objectLight(room.lighting.sun.colorHex, SUN_TO_WHITE)}
         intensity={14}
         castShadow={quality === 'high'}
         shadow-mapSize={[1024, 1024]}
@@ -76,7 +77,7 @@ export function DynamicLights() {
       />
       <pointLight
         position={[ch.anchor[0], ch.bottomY + 0.25, ch.anchor[2]]}
-        color={new Color(room.lighting.chandelier.colorHex)}
+        color={objectLight(room.lighting.chandelier.colorHex, CHANDELIER_TO_WHITE)}
         intensity={12}
         decay={2}
         distance={0}

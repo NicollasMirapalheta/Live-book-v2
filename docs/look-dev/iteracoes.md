@@ -137,3 +137,7 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 
 ### I2
 - Prévia a 32°/8° com a luz quente do sol da sala; primário em ouro; rótulos 12 px com 0,14 em; título 26 px em token; foto como zona com miniatura; obrigatórios marcados; overlay mais leve; alvos ≥ 44 px; nome da cor visível; seta sem destino escondida; fade de navegação no mesmo escuro da abertura.
+
+### I3
+- **art-reviewer (I2):** 4 · 4 · 4 · 3 — "iterar": azul-petróleo virava verde-oliva (na sala e na prévia), prévia ainda de frente e pequena, sumário cortando item, "tirar a foto" solto, PDF sem rótulo.
+- Luzes em tempo real dos livros/objetos levadas 30% (sol) e 40% (lustre) ao branco — o lustre a 2400 K tirava quase todo o azul; bake e env map intocados. Prévia com luz-chave quase neutra na frente da capa (a sala tem balanço de branco, a prévia não): azul-petróleo mede (73, 81, 89) na prévia e (72, 73, 77) na mão. Prévia a 40° com a lombada para a câmera, FOV 22, ~65% da altura. Sumário com linhas de 36 px no mouse e fade no pé. Botão × para tirar a foto; rótulo do PDF.
