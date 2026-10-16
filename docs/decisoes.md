@@ -340,3 +340,9 @@ Formato de cada entrada:
 - Alternativas: Google Drive do usuário como armazenamento (sem banco, mas exigiria verificação do Google para o escopo de arquivos); Supabase auto-hospedado (mais trabalho, sem pausa); Firebase (equivalente, menos SQL).
 - Como reverter: tirar as variáveis de ambiente volta ao modo só-local, sem mudar código; `library.ts` concentra a escolha do armazenamento.
 - Precisa do usuário? sim: criar as contas e colar as chaves (`docs/deploy/passo-a-passo.md`); push para o GitHub só quando pedir; aprovar a Fase 7 depois de testar com duas contas.
+
+## 2026-10-16 — ✅ Fase 7 aprovada pelo usuário
+- Contexto: site publicado em https://live-book-v2.vercel.app (Vercel a partir da `main` do GitHub), banco e arquivos no Supabase (`lrwqgocpkekaamjsfbbb`, schema aplicado pelo MCP), login Google com a credencial OAuth do usuário. O usuário testou o login e a criação de livros no site.
+- Escolha: aprovada no chat ("Testei e funcionou"); segue para desempenho numa branch própria (`perf-01`).
+- Como reverter: n/a (marco).
+- Precisa do usuário? não.

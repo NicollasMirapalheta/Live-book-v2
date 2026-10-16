@@ -41,7 +41,9 @@ Screenshots: `npm run shot` (sala) e `npm run shot -- --dev book` (livro).
 - `assets_contact.png`: folha de contato dos assets
 - `blender_N0.png`, `blender_N2.png`: prévias do Cycles
 
-## Fase 7 — nuvem (login Google, Supabase, Vercel)
+## ✅ Fase 7 aprovada — nuvem (login Google, Supabase, Vercel)
+
+- No ar em https://live-book-v2.vercel.app; aprovada pelo usuário em 16/10 depois de testar login e livros.
 
 - Com as chaves do Supabase, canto superior direito: **Entrar com Google**. Logado, a estante é só sua (nome/foto e **Sair**); em outro navegador, entrando com a mesma conta, os livros estão lá. Deslogado, "Novo livro" pede para entrar primeiro.
 - Primeiro login com livros criados neste navegador: aviso para **levar para a sua conta**.
