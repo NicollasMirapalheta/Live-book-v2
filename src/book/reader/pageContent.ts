@@ -3,12 +3,15 @@
 // and the page number, on cream paper with a soft gutter shadow on the binding side.
 import { CanvasTexture, SRGBColorSpace, type Texture } from 'three'
 
-export const PAGE_TEX_HEIGHT = 1024
+/** page texture height (px): 1.5K on the high tier, 1K on the low tier (budget: ≤ 2K / 1K) */
+export const PAGE_TEX_HEIGHT = { high: 1536, low: 1024 } as const
 
 // greyed cream, a step under the room's highlights: #EFE5CF came out peach and brighter than the windows
 const PAPER = '#DDD0B4'
-const INK = '#2B1E15'
-const INK_SOFT = '#6B5442'
+// darker than before: through mipmaps, AgX and the DOF the ink read washed out
+const INK = '#1E130B'
+const INK_SOFT = '#5A4535'
+const INK_HEAD = '#3D2C1F'
 const SERIF = "Georgia, 'Times New Roman', serif"
 
 // sample prose for the provisional pages (original text, written for this project)
@@ -80,8 +83,7 @@ export interface PageBook {
  * Draws page `page` (1-based) of the book. Odd pages are rectos (binding on the left of the image),
  * even pages versos (binding on the right). Pages past pageCount are blank paper.
  */
-export function drawPage(book: PageBook, page: number, aspect: number): HTMLCanvasElement {
-  const H = PAGE_TEX_HEIGHT
+export function drawPage(book: PageBook, page: number, aspect: number, H: number = PAGE_TEX_HEIGHT.high): HTMLCanvasElement {
   const W = Math.round(H * aspect)
   const c = document.createElement('canvas')
   c.width = W
@@ -161,10 +163,10 @@ function drawContent(ctx: CanvasRenderingContext2D, book: PageBook, page: number
       ctx.font = `italic ${Math.round(H * 0.018)}px ${SERIF}`
       ctx.fillText(`${book.title} · ${book.pageCount} páginas`, left, H * 0.86, textW)
     } else {
-      // running head
-      ctx.fillStyle = INK_SOFT
+      // running head (a touch larger and darker: it read faint)
+      ctx.fillStyle = INK_HEAD
       ctx.textAlign = 'center'
-      ctx.font = `italic ${Math.round(H * 0.019)}px ${SERIF}`
+      ctx.font = `italic ${Math.round(H * 0.021)}px ${SERIF}`
       ctx.fillText(book.title, left + textW / 2, H * 0.075, textW)
       // body
       ctx.fillStyle = INK
@@ -197,7 +199,10 @@ export class PageTextures {
   private aspect: number
   private max: number
 
-  constructor(book: PageBook, aspect: number, max = 10) {
+  private height: number
+
+  constructor(book: PageBook, aspect: number, height: number = PAGE_TEX_HEIGHT.high, max = 8) {
+    this.height = height
     this.book = book
     this.aspect = aspect
     this.max = max
@@ -211,7 +216,7 @@ export class PageTextures {
       this.cache.set(key, hit)
       return hit
     }
-    const t = new CanvasTexture(drawPage(this.book, page, this.aspect))
+    const t = new CanvasTexture(drawPage(this.book, page, this.aspect, this.height))
     t.colorSpace = SRGBColorSpace
     t.anisotropy = 8
     this.cache.set(key, t)

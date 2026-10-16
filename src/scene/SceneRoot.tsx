@@ -6,6 +6,7 @@ import { CameraRig } from '../navigation/CameraRig'
 import { LookControls } from '../navigation/LookControls'
 import { BookShelf } from '../book/BookShelf'
 import { SelectionPanel } from '../book/SelectionPanel'
+import { useSelection } from '../book/useSelection'
 import { NavigationUI } from '../navigation/NavigationUI'
 import { NodeMarkers } from '../navigation/NodeMarkers'
 import { useQuality } from '../state/quality'
@@ -31,6 +32,12 @@ export function SceneRoot() {
           gl.toneMappingExposure = 1.23
         }}
         camera={{ near: 0.05, far: 60 }}
+        // a click that hits no book: "outside". Only a closed book in the hand goes back to the shelf;
+        // an open book never closes by accident.
+        onPointerMissed={(e) => {
+          const sel = useSelection.getState()
+          if (e.type === 'click' && sel.phase === 'hand') sel.clear()
+        }}
       >
         <CameraRig />
         {!params.shot && <LookControls />}

@@ -12,10 +12,10 @@ Derivada do CLAUDE.md ("Na estante, escolhe um livro, que desliza para fora com 
 ## Seleção (só no nó da estante, N2) — revisada após o teste do usuário (15/10)
 
 - **Hover** (ponteiro) ou foco de teclado: o livro avança 12 mm, ganha realce quente leve e aparece um **popover com o título** (mesmo estilo do painel lateral), ancorado acima da lombada. Só o título — sem mais dados.
-- **Clique/toque ou `Enter`:** o livro **sai reto da fileira** (desliza para fora no eixo da prateleira, sem tocar vizinhos nem apoios, ~0,35 s) e **voa até a mão do usuário** (~0,9 s, `power2.inOut`, arco suave): ≈0,45 m à frente da câmera, um pouco abaixo do centro, de pé, **capa fechada voltada para o usuário**, leve inclinação para trás. A navegação trava.
+- **Clique/toque ou `Enter`:** o livro **sai reto da fileira** (desliza para fora no eixo da prateleira, sem tocar vizinhos nem apoios, ~0,35 s) e **voa até a mão do usuário** (~0,9 s, `power2.inOut`, arco suave): ≈0,6 m à frente da câmera, centralizado e um pouco abaixo do centro, de pé, **capa fechada de frente para o usuário** (sem giro), com o topo levemente inclinado para trás, em direção à estante (12°). A navegação trava.
 - **Só quando o livro chega à mão** aparece o painel à direita (cor · material · páginas, título, subtítulo, descrição, **Abrir** e **Voltar**).
-- **Voltar**, `Esc` ou clique fora: o painel some, o livro faz o caminho inverso e entra na fileira.
-- **Abrir:** Fase 4 (abre a capa na mão e permite folhear).
+- **Voltar**, `Esc` ou clique fora do livro (inclusive em outro livro da estante): o painel some, o livro faz o caminho inverso e entra na fileira.
+- **Abrir** ou **clique no livro na mão:** Fase 4 (abre a capa na mão e permite folhear).
 - `prefers-reduced-motion`: mesma trajetória em ~60% do tempo, sem arco.
 - `?shot=1` esconde painel e popover; `?select=<id>` leva o livro direto à mão (screenshots).
 

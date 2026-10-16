@@ -1,12 +1,13 @@
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
-import { Quaternion, Vector3, type BufferGeometry, type Group, type Material, type Mesh, type MeshPhysicalMaterial, type MeshStandardMaterial } from 'three'
+import { DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Vector3, type BufferGeometry, type Group, type Material, type MeshPhysicalMaterial, type MeshStandardMaterial } from 'three'
 import { invalidateShadows } from '../../scene/shadows'
+import { useQuality } from '../../state/quality'
 import { BOARD, HINGE_OFFSET, SQUARE, type BookDimensions } from '../geometry'
 import { setCoverOpen } from '../materials'
 import { useSelection } from '../useSelection'
 import { layoutPages, stackSplit } from './pages'
-import { PageTextures, type PageBook } from './pageContent'
+import { PAGE_TEX_HEIGHT, PageTextures, type PageBook } from './pageContent'
 import { pageMaterial, pagePlaneGeometry, SHEET_SEGMENTS, sheetMaterial, type PageUniforms, type SheetUniforms } from './sheetMaterial'
 import { useReader } from './useReader'
 
@@ -19,6 +20,8 @@ const EPS = 0.0002
 const PAGE_LIFT = 0.008
 /** slow wave in the paper (m) */
 const PAGE_RIPPLE = 0.0007
+/** one wave for both pages: the sheet in the air starts and lands on exactly the same surface */
+const PAGE_SEED = 1
 /** each open page runs this far past the binding, under the other: the two pages never leave a gap */
 const GUTTER_OVERLAP = 0.0018
 /** leather turn-in left visible around the endpapers on the inside of the boards (m) */
@@ -68,15 +71,17 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
   const H = d.pageHeight
   const geo = useMemo(
     () => ({
-      right: pagePlaneGeometry(W, H, SQUARE, 1, { segU: 40, segV: 6, lift: PAGE_LIFT, ripple: PAGE_RIPPLE, extend: GUTTER_OVERLAP, seed: 1 }),
-      left: pagePlaneGeometry(W, H, SQUARE, -1, { segU: 40, segV: 6, mirrorU: true, lift: PAGE_LIFT, ripple: PAGE_RIPPLE, extend: GUTTER_OVERLAP, seed: 4 }),
+      right: pagePlaneGeometry(W, H, SQUARE, 1, { segU: 40, segV: 6, lift: PAGE_LIFT, ripple: PAGE_RIPPLE, extend: GUTTER_OVERLAP, seed: PAGE_SEED }),
+      left: pagePlaneGeometry(W, H, SQUARE, -1, { segU: 40, segV: 6, mirrorU: true, lift: PAGE_LIFT, ripple: PAGE_RIPPLE, extend: GUTTER_OVERLAP, seed: PAGE_SEED }),
       sheet: pagePlaneGeometry(W, H, SQUARE, 1, { segU: SHEET_SEGMENTS.u, segV: SHEET_SEGMENTS.v }),
       endFront: pagePlaneGeometry(d.coverWidth - HINGE_OFFSET - TURN_IN, d.coverHeight - 2 * TURN_IN, TURN_IN, -1),
       endBack: pagePlaneGeometry(d.coverWidth - HINGE_OFFSET - TURN_IN, d.coverHeight - 2 * TURN_IN, TURN_IN, 1),
+      board: pagePlaneGeometry(d.coverWidth, d.coverHeight, 0, 1),
     }),
     [W, H, d.coverWidth, d.coverHeight],
   )
-  const textures = useMemo(() => new PageTextures(book, W / H), [book, W, H])
+  const quality = useQuality((st) => st.quality)
+  const textures = useMemo(() => new PageTextures(book, W / H, PAGE_TEX_HEIGHT[quality]), [book, W, H, quality])
   const mats = useMemo(() => {
     const blank = textures.get(book.pageCount + 1000)
     const right = pageMaterial(0)
@@ -84,7 +89,7 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     const left = pageMaterial(1)
     right.map = blank
     left.map = blank
-    const sheetMat = sheetMaterial(W, PAGE_LIFT)
+    const sheetMat = sheetMaterial(W, PAGE_LIFT, PAGE_RIPPLE, PAGE_SEED)
     sheetMat.map = blank
     ;(sheetMat.userData.sheet as SheetUniforms).backMap.value = blank
     return { right, left, sheet: sheetMat }
@@ -105,7 +110,11 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     const stack = rightStack.current
     const front = frontHalf.current
     const foil = spineFoil.current
+    // the hinge turns the front board in the shader only: on the CPU the cover still lies closed over the
+    // right page and would catch its clicks. The invisible board planes below stand in for it.
+    if (cover) cover.raycast = noRaycast
     return () => {
+      if (cover) cover.raycast = Mesh.prototype.raycast
       if (foil) {
         foil.position.x = 0
         foil.visible = true
@@ -117,7 +126,7 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
       if (stack) {
         stack.scale.x = 1
         stack.position.x = 0
-        stack.visible = true
+        setShown(stack, true)
       }
       front?.position.set(0, 0, 0)
       front?.quaternion.identity()
@@ -132,7 +141,9 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     const { sheets, turned, turn } = useReader.getState()
     const theta = OPEN_ANGLE * (openState.current?.cover ?? 0)
     const lay = layoutPages(sheets, turned, turn)
-    const split = stackSplit(d.blockThickness, sheets, lay.leftSheets)
+    // the sheet in the air belongs to neither stack until it lands: on the first spread the left side stays
+    // the endpaper (a growing left stack showed a blank page over it)
+    const split = stackSplit(d.blockThickness, sheets, lay.turning ? lay.turning.sheet : lay.leftSheets)
     const t = d.blockThickness / 2
     const xb = -t + split.right
     const block = d.blockThickness
@@ -168,13 +179,13 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     // the two stacks partition the closed text block [−t, t] at xb
     const rs = rightStack.current
     if (rs) {
-      rs.visible = split.right > 1e-6
+      setShown(rs, split.right > 1e-6)
       rs.scale.x = Math.max(split.right / block, 1e-4)
       rs.position.x = -t + split.right / 2
     }
     const ls = leftStack.current
     if (ls) {
-      ls.visible = split.left > 1e-6
+      setShown(ls, split.left > 1e-6)
       ls.scale.x = Math.max(split.left / block, 1e-4)
       ls.position.x = xb + split.left / 2
     }
@@ -187,13 +198,13 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     const open = theta > 1e-4
     const rp = rightPage.current
     if (rp) {
-      rp.visible = open && lay.right !== null
+      setShown(rp, open && lay.right !== null)
       rp.position.x = xb + EPS
       if (lay.right !== null) setMap(mats.right, textures.get(lay.right))
     }
     const lp = leftPage.current
     if (lp) {
-      lp.visible = open && lay.left !== null
+      setShown(lp, open && lay.left !== null)
       lp.position.x = xb - EPS
       if (lay.left !== null) setMap(mats.left, textures.get(lay.left))
     }
@@ -254,18 +265,34 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
   }
 
   const endX = T - BOARD - 0.0003
+  // clicking the cover (its rim around the pages, or the endpaper when no page lies on it) closes the book;
+  // the pages sit in front of these, so a click on a page still turns it
+  const closes = { closesBook: true }
+  const hitX = T - BOARD + 0.0005
   return (
     <>
       <mesh ref={rightPage} name="page_right" geometry={geo.right} material={mats.right} visible={false} onPointerDown={onDown(1)} onPointerOver={cursor(true)} onPointerOut={cursor(false)} />
-      <mesh ref={sheet} name="page_turning" geometry={geo.sheet} material={mats.sheet} visible={false} frustumCulled={false} />
-      <mesh name="endpaper_back" geometry={geo.endBack} material={endpaper} position={[-endX, 0, HINGE_OFFSET]} />
+      <mesh ref={sheet} name="page_turning" geometry={geo.sheet} material={mats.sheet} visible={false} frustumCulled={false} raycast={noRaycast} />
+      <mesh name="endpaper_back" geometry={geo.endBack} material={endpaper} position={[-endX, 0, HINGE_OFFSET]} userData={closes} />
+      <mesh name="cover_hit_back" geometry={geo.board} material={hitMat} position={[-hitX, 0, 0]} userData={closes} />
       <group ref={leftHalf}>
         <mesh ref={leftStack} name="pages_left" geometry={pagesGeometry} material={pageMaterials} visible={false} receiveShadow />
         <mesh ref={leftPage} name="page_left" geometry={geo.left} material={mats.left} visible={false} onPointerDown={onDown(-1)} onPointerOver={cursor(true)} onPointerOut={cursor(false)} />
-        <mesh name="endpaper_front" geometry={geo.endFront} material={endpaper} position={[endX, 0, HINGE_OFFSET]} />
+        <mesh name="endpaper_front" geometry={geo.endFront} material={endpaper} position={[endX, 0, HINGE_OFFSET]} userData={closes} />
+        <mesh name="cover_hit_front" geometry={geo.board} material={hitMat} position={[hitX, 0, 0]} userData={closes} />
       </group>
     </>
   )
+}
+
+const noRaycast = () => {}
+/** Click target only: never drawn, hit from both sides. */
+const hitMat = new MeshBasicMaterial({ visible: false, side: DoubleSide })
+
+/** Hidden meshes must not catch clicks either (three raycasts invisible objects). */
+function setShown(mesh: Mesh, shown: boolean) {
+  mesh.visible = shown
+  mesh.raycast = shown ? Mesh.prototype.raycast : noRaycast
 }
 
 function setMap(mat: MeshStandardMaterial, tex: MeshStandardMaterial['map']) {

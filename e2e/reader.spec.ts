@@ -93,3 +93,19 @@ test('arrastar a página: passou da metade completa, pouco arrasto volta', async
   await page.mouse.up()
   await page.waitForFunction(() => window.__READER__!.turned === 1 && !window.__READER__!.turning)
 })
+
+test('livro na mão: clicar nele abre; aberto, clicar fora não fecha; clicar na capa fecha', async ({ page }) => {
+  await bookInHand(page)
+  const vp = page.viewportSize()!
+  // the book in the hand is centered: clicking it opens it, like "Abrir"
+  await page.mouse.click(vp.width * 0.5, vp.height * 0.55)
+  await settled(page)
+  // outside the open book: nothing happens
+  await page.mouse.click(vp.width * 0.03, vp.height * 0.5)
+  await page.waitForTimeout(400)
+  expect(await page.evaluate(() => window.__SEL__!.phase)).toBe('open')
+  // first spread: the left side is the inside of the cover; clicking it closes the book
+  await page.mouse.click(vp.width * 0.36, vp.height * 0.45)
+  await page.waitForFunction(() => window.__SEL__!.phase === 'hand')
+  await expect(page.getByRole('dialog')).toBeVisible()
+})

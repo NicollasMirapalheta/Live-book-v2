@@ -1,9 +1,3 @@
-.sel-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 11;
-}
-
 /* title on hover: the same card look as the description panel, just the title */
 .sel-popover {
   white-space: nowrap;

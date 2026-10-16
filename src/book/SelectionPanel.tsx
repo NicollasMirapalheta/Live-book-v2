@@ -84,8 +84,7 @@ export function SelectionPanel() {
 
   return (
     <>
-      {/* clicking outside the panel goes back */}
-      <div className="sel-backdrop" onClick={clear} aria-hidden="true" />
+      {/* clicking outside the book goes back (Canvas onPointerMissed); clicking the book opens it */}
       <aside className="sel-panel" role="dialog" aria-modal="false" aria-labelledby="sel-title">
         <p className="sel-kicker">
           {SPINE_COLOR_LABELS[book.color]} · {book.coverMaterial === 'leather' ? 'couro' : 'tecido'} · {book.pageCount} páginas

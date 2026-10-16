@@ -14,7 +14,7 @@ Ponto de partida (Fase 3 revisada): o livro já veio da estante para a mão do u
 - **Avançar:** clicar na página direita, arrastar da direita para a esquerda (o progresso segue o ponteiro; ao soltar, completa ou volta conforme passou de 50% ou a velocidade), `→`, roda do mouse para baixo. **Voltar:** o inverso na página esquerda, `←`.
 - Só existem em cena a folha que vira e as duas páginas visíveis (mais a de baixo de cada lado); as pilhas esquerda/direita mudam de espessura conforme o progresso (geometria do miolo em duas metades).
 - Conteúdo provisório (até a Fase 5): página de rosto com título/subtítulo, páginas creme com número e um bloco de texto de exemplo gerado em canvas, na identidade tipográfica do painel. A textura de cada página é gerada sob demanda (só as visíveis), 1K.
-- **Fechar:** `Esc` ou botão **Fechar** → vira as páginas restantes de volta numa só (ou fecha direto a capa), o livro volta à pose da mão e o painel reaparece. **Voltar** no painel devolve o livro à estante (Fase 3).
+- **Fechar:** `Esc`, botão **Fechar** ou **clique na capa** (a borda de couro em volta das páginas, ou a guarda quando nenhuma página está sobre ela) → vira as páginas restantes de volta numa só (ou fecha direto a capa), o livro volta à pose da mão e o painel reaparece. **Voltar** no painel devolve o livro à estante (Fase 3).
 - `prefers-reduced-motion`: a capa e as páginas viram sem curvatura, em ~60% do tempo.
 
 ## Estado
@@ -29,6 +29,8 @@ Ponto de partida (Fase 3 revisada): o livro já veio da estante para a mão do u
 - `pageContent.ts` (`// PLACEHOLDER`): páginas em canvas 1024 px de altura, sombra da calha no lado da costura.
 - Pose de leitura em `BookShelf.tsx`: o livro aberto ocupa ~80% da largura (ou 74% da altura), centrado na calha, inclinado 10°. Abrir dura 1,2 s: a pose vai primeiro, a capa termina depois.
 - Barra de leitura (‹ p. 4–5 › Fechar) no rodapé; `Esc` fecha; roda do mouse folheia.
+- Com o livro aberto, clicar fora dele **não** fecha (só a capa, `Esc` ou **Fechar**). Com o livro fechado na mão, clicar nele abre e clicar fora devolve à estante.
+- Planos invisíveis das placas recebem o clique da capa: a placa da frente gira só no shader, e na CPU a capa continua fechada sobre a página direita (o raycast da capa fica desligado durante a leitura).
 - Screenshots: `?select=<id>&open=1&page=N`, `&turn=0..1`, `&openAt=0..1`.
 
 ## Verificação

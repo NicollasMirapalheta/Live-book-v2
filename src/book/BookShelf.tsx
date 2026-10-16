@@ -29,9 +29,10 @@ const REDUCED_FACTOR = 0.6
 /** Hand pose relative to the camera: the distance scales with the book so it fills ~60% of the view height. */
 const HAND_DISTANCE_PER_HEIGHT = 2.5
 const HAND_DROP = 0.085 // below the view center (m): chest height, not eye level
-const HAND_TILT = (20 * Math.PI) / 180 // top leaning back, like a book held to read the cover
-const HAND_TURN = (11 * Math.PI) / 180 // shows the spine and the thickness
-const HAND_LEFT = 0.08 // fraction of the distance
+// centered and square to the reader (user feedback): only the top leans back a little, toward the shelf
+const HAND_TILT = (12 * Math.PI) / 180
+const HAND_TURN = 0
+const HAND_LEFT = 0 // fraction of the distance
 /**
  * Near the camera the book sits much closer to the chandelier than the shelf does and read washed out;
  * the reader's own body also shades it. Albedo and reflections scale down to this while it is held.
@@ -256,7 +257,19 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
       }}
       onClick={(e) => {
         e.stopPropagation()
-        if (!useSelection.getState().selected) select(book.id)
+        // a drag (look around, turn a page) is not a click
+        if (e.delta > 6) return
+        const st = useSelection.getState()
+        if (!st.selected) return select(book.id)
+        if (st.selected !== book.id) {
+          // another book on the shelf counts as "outside" the one in the hand
+          if (st.phase === 'hand') st.clear()
+          return
+        }
+        // the book in the hand: a click opens it, like "Abrir"
+        if (st.phase === 'hand') return st.requestOpen()
+        // the open book: the cover (its rim, or the endpaper when nothing lies on it) closes it
+        if (st.phase === 'open' && e.object.userData.closesBook) st.close()
       }}
     >
       <group ref={inner} position={[-place.thickness / 2, 0, 0]}>

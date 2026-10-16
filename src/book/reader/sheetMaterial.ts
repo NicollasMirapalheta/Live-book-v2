@@ -35,9 +35,7 @@ export function pagePlaneGeometry(width: number, height: number, y0: number, fac
       const u = z / width
       const v = j / segV
       const uc = Math.max(0, u)
-      // the wave fades toward the gutter (the paper is held by the binding there)
-      const wave = ripple * Math.min(1, uc * 4) * Math.sin(2 * Math.PI * (uc / 0.4) + seed) * (0.6 + 0.4 * Math.sin(Math.PI * v + seed * 0.7))
-      pos.push(facing * (pageLift(uc, lift) + wave), y0 + v * height, z)
+      pos.push(facing * (pageLift(uc, lift) + pageWave(uc, v, ripple, seed)), y0 + v * height, z)
       nor.push(facing, 0, 0)
       uv.push(mirrorU ? 1 - u : u, v)
     }
@@ -73,8 +71,16 @@ export function pageLift(u: number, lift: number) {
   return lift * (1 - Math.pow(1 - u, 2.5)) - lift * 0.2 * Math.pow(u, 6)
 }
 
+/** Slow wave in the paper at (u, v); fades toward the gutter, where the binding holds the paper. Same in GLSL. */
+export function pageWave(u: number, v: number, ripple: number, seed: number) {
+  return ripple * Math.min(1, u * 4) * Math.sin(2 * Math.PI * (u / 0.4) + seed) * (0.6 + 0.4 * Math.sin(Math.PI * v + seed * 0.7))
+}
+
 const LB_PAGE_LIFT = /* glsl */ `
-float lbPageLift( float u, float lift ) { return lift * ( 1.0 - pow( 1.0 - u, 2.5 ) ) - lift * 0.2 * pow( u, 6.0 ); }`
+float lbPageLift( float u, float lift ) { return lift * ( 1.0 - pow( 1.0 - u, 2.5 ) ) - lift * 0.2 * pow( u, 6.0 ); }
+float lbPageWave( float u, float v, float ripple, float seed ) {
+  return ripple * min( 1.0, u * 4.0 ) * sin( 6.2831853 * ( u / 0.4 ) + seed ) * ( 0.6 + 0.4 * sin( 3.14159265 * v + seed * 0.7 ) );
+}`
 
 /**
  * Light on the paper (fragment): a little darker toward the bottom (the key light is the chandelier above) and,
@@ -117,6 +123,8 @@ export interface SheetUniforms {
   uCurl: { value: number }
   uDir: { value: number }
   uLift: { value: number }
+  uRipple: { value: number }
+  uSeed: { value: number }
   backMap: { value: Texture | null }
 }
 
@@ -126,7 +134,7 @@ export interface SheetUniforms {
  * open pages (so it starts exactly on the page it lifts). Front face = recto (map), back face = verso
  * (backMap, read from the other side).
  */
-export function sheetMaterial(width: number, lift: number) {
+export function sheetMaterial(width: number, lift: number, ripple = 0, seed = 0) {
   const uniforms: SheetUniforms = {
     uTurn: { value: 0 },
     uTheta: { value: Math.PI },
@@ -135,6 +143,8 @@ export function sheetMaterial(width: number, lift: number) {
     uCurl: { value: 0.35 },
     uDir: { value: 1 },
     uLift: { value: lift },
+    uRipple: { value: ripple },
+    uSeed: { value: seed },
     backMap: { value: null },
   }
   const mat = new MeshStandardMaterial({ roughness: 0.88, metalness: 0, envMapIntensity: 0.5, side: DoubleSide })
@@ -151,7 +161,9 @@ uniform vec2 uPivot;
 uniform float uWidth;
 uniform float uCurl;
 uniform float uDir;
-uniform float uLift;${LB_PAGE_LIFT}
+uniform float uLift;
+uniform float uRipple;
+uniform float uSeed;${LB_PAGE_LIFT}
 // angle of the paper at fraction f of the width: the fore-edge leads the turn in its direction
 float lbAngle( float f ) {
   return uTheta * clamp( uTurn + uDir * uCurl * f * sin( 3.14159265 * uTurn ), 0.0, 1.0 );
@@ -173,7 +185,10 @@ vec2 lbDir( float a ) { return vec2( sin( a ), cos( a ) ); }`,
 	for ( int i = 0; i < 16; i++ ) lbP += lbDir( lbAngle( ( float( i ) + 0.5 ) * lbDs / uWidth ) ) * lbDs;
 	// resting rise on whichever stack it lies on (flat mid-air), plus a hair above the page under it
 	float lbRest = 1.0 - 2.0 * uTurn;
-	lbP += vec2( cos( lbA ), -sin( lbA ) ) * ( 0.0004 + lbPageLift( lbF, uLift ) * abs( lbRest ) ) * sign( lbRest );
+	// same rise and wave as the page under it (else the crests of that page poke through the sheet and its
+	// letters mix with this one's), fading out mid-air
+	float lbSurface = lbPageLift( lbF, uLift ) + lbPageWave( lbF, uv.y, uRipple, uSeed );
+	lbP += vec2( cos( lbA ), -sin( lbA ) ) * ( 0.0006 + lbSurface * abs( lbRest ) ) * sign( lbRest );
 	transformed.x = uPivot.x + lbP.x;
 	transformed.z = uPivot.y + lbP.y;`,
       )

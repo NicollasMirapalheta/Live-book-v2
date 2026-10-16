@@ -236,3 +236,13 @@ Formato de cada entrada:
 - Parâmetros de screenshot: `?select=<id>&open=1&page=N`, `&turn=0..1` (folha parada no meio), `&openAt=0..1` (abertura parada no meio).
 - Como reverter: `src/book/reader/`, `setCoverOpen` em `materials.ts`.
 - Precisa do usuário? não.
+
+## 2026-10-15 — Ajustes depois do teste do usuário (Fases 3 e 4)
+- Contexto: o usuário testou a seleção e a leitura. Aprovou a navegação, o popover, o voo até a mão, a barra de leitura e as animações. Pediu: livro na mão centralizado e reto (só levemente inclinado para a estante); clicar no livro na mão abre; com o livro aberto, clicar fora não fecha; clicar na capa do livro aberto fecha. Relatou dois defeitos ao folhear: uma página aparecia no lugar da capa ao virar a primeira folha, e as letras se embaralhavam no início da virada. Achou o texto, sobretudo o cabeço, fraco.
+- Causas e escolhas:
+  - Página no lugar da capa: a pilha da esquerda já crescia com a folha no ar, e o topo dela (papel liso) cobria a guarda. Agora a folha no ar não conta em nenhuma pilha até pousar.
+  - Letras embaralhadas: as páginas paradas têm ondulação de 0,7 mm e a folha no ar não tinha, então as cristas da página de baixo atravessavam a folha. A folha agora parte da mesma superfície (subida + ondulação, uma semente só para as duas páginas) com 0,6 mm de folga.
+  - Cliques: sai o fundo invisível que capturava cliques fora do painel. "Fora" passa a ser `onPointerMissed` do Canvas, que só age com o livro fechado na mão. O clique no livro na mão abre. Com o livro aberto, planos invisíveis das placas fecham o livro.
+  - Texto: tinta #1E130B, cabeço #3D2C1F e maior; páginas a 1,5K no tier high (1K no low, dentro do orçamento).
+- Como reverter: constantes `HAND_*` em `BookShelf.tsx`; `onPointerMissed` em `SceneRoot.tsx`; `cover_hit_*` em `BookReader.tsx`.
+- Precisa do usuário? não.
