@@ -1,4 +1,5 @@
-import { FIXTURE_BOOKS, type FixtureBook } from './fixtures'
+import { shelfBooksOf, useLibrary } from '../data/library'
+import type { FixtureBook } from './fixtures'
 import { layoutShelves, type PropSlot, type Shelf, type ShelfLayout } from './shelfLayout'
 
 export interface BookcaseData {
@@ -17,18 +18,24 @@ export function loadBookcase(): Promise<BookcaseData> {
   return dataPromise
 }
 
-/** Books shown on the shelf. Fixtures until persistence arrives (Fase 6). */
+/** Books on the shelf now (Fase 6): the user's, or the samples while there are none. */
 export function shelfBooks(): FixtureBook[] {
-  return FIXTURE_BOOKS
+  return shelfBooksOf(useLibrary.getState())
 }
 
-const layoutCache = new WeakMap<BookcaseData, ShelfLayout>()
+/** The same, as a hook: re-renders when a book is created, edited or removed. */
+export const useShelfBooks = () => useLibrary(shelfBooksOf)
+
+// one layout per (bookcase, list of books): a new list (a book created or removed) lays the shelf out again
+const layoutCache = new WeakMap<BookcaseData, WeakMap<FixtureBook[], ShelfLayout>>()
 
 export function shelfLayoutFor(data: BookcaseData, books: FixtureBook[]): ShelfLayout {
-  let layout = layoutCache.get(data)
+  let byBooks = layoutCache.get(data)
+  if (!byBooks) layoutCache.set(data, (byBooks = new WeakMap()))
+  let layout = byBooks.get(books)
   if (!layout) {
     layout = layoutShelves(books, data.shelves, data.propSlots)
-    layoutCache.set(data, layout)
+    byBooks.set(books, layout)
   }
   return layout
 }

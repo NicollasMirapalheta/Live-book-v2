@@ -2,6 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import type { Scene } from 'three'
 import { params } from '../app/params'
+import { useSceneReady } from '../state/ready'
 
 export interface SceneStats {
   calls: number
@@ -64,7 +65,10 @@ export function Readiness() {
       }
     }
     gl.info.reset()
-    if (frames.current === FRAMES_BEFORE_READY) window.__SCENE_READY__ = true
+    if (frames.current === FRAMES_BEFORE_READY) {
+      window.__SCENE_READY__ = true
+      useSceneReady.setState({ ready: true })
+    }
   }, -1000)
 
   return null

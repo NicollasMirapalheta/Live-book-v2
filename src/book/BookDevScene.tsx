@@ -1,58 +1,18 @@
 import { OrbitControls, useTexture } from '@react-three/drei'
-import { Canvas, useThree } from '@react-three/fiber'
+import { Canvas } from '@react-three/fiber'
 import { Bloom, DepthOfField, EffectComposer, N8AO, ToneMapping, Vignette } from '@react-three/postprocessing'
 import { ToneMappingMode } from 'postprocessing'
-import { lazy, Suspense, use, useLayoutEffect, useState } from 'react'
-import { EquirectangularReflectionMapping, NoToneMapping, PMREMGenerator, RepeatWrapping, SRGBColorSpace, type Texture } from 'three'
-import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js'
+import { lazy, Suspense, useLayoutEffect, useState } from 'react'
+import { NoToneMapping, RepeatWrapping, SRGBColorSpace } from 'three'
 import { params } from '../app/params'
 import { ShadowFloor, WhiteBalance } from '../scene/Grade'
 import { Readiness } from '../scene/Readiness'
 import { Book } from './Book'
+import { RoomEnvironment } from './envMap'
 import { FIXTURE_BOOKS, SHOT_PRESETS, type FixtureBook } from './fixtures'
 import { bookDimensions } from './geometry'
 
 const DevControls = import.meta.env.DEV && !params.shot ? lazy(() => import('./DevControls')) : null
-
-let envPromise: Promise<Texture> | null = null
-function loadEnv() {
-  envPromise ??= (async () => {
-    // the room's env map when the pipeline ran; else the exterior sky (spec Fase 2)
-    for (const url of ['/env/room_N1.hdr', '/env/exterior_sky.hdr']) {
-      try {
-        const t = await new HDRLoader().loadAsync(url)
-        t.mapping = EquirectangularReflectionMapping
-        return t
-      } catch {
-        // try the next one
-      }
-    }
-    throw new Error('nenhum env map em public/env/ (rode npm run pipeline)')
-  })()
-  return envPromise
-}
-
-function Environment() {
-  const hdr = use(loadEnv())
-  const gl = useThree((s) => s.gl)
-  const scene = useThree((s) => s.scene)
-  useLayoutEffect(() => {
-    const pmrem = new PMREMGenerator(gl)
-    const rt = pmrem.fromEquirectangular(hdr)
-    pmrem.dispose()
-    scene.environment = rt.texture
-    scene.background = rt.texture
-    scene.backgroundBlurriness = 0.55
-    scene.backgroundIntensity = 0.35
-    scene.environmentIntensity = 1.25
-    return () => {
-      scene.environment = null
-      scene.background = null
-      rt.dispose()
-    }
-  }, [gl, scene, hdr])
-  return null
-}
 
 function Table() {
   const [map, normalMap, arm] = useTexture(['/textures/book/table_color.jpg', '/textures/book/table_normal.jpg', '/textures/book/table_arm.jpg'])
@@ -95,7 +55,7 @@ export default function BookDevScene() {
         dpr={[1, 2]}
       >
         <Suspense fallback={null}>
-          <Environment />
+          <RoomEnvironment />
           <directionalLight
             position={[-0.6, 0.9, 0.5]}
             intensity={2.4}

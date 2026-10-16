@@ -6,6 +6,11 @@ export interface FixtureBook extends BookData {
   photoSeed?: number
   /** sample PDF (npm run books:samples); its composition sets pageCount (an e2e checks they agree) */
   pdfUrl?: string
+  /** a user's book (Fase 6): the PDF they gave, as a Blob, and its file name */
+  pdf?: Blob
+  pdfName?: string
+  /** a sample book, shown while the user has none of their own */
+  example?: boolean
 }
 
 const T0 = Date.UTC(2026, 9, 14)

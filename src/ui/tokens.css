@@ -1,0 +1,49 @@
+/*
+ * Live Book interface tokens (spec Fase 6). Every piece of UI over the room uses these: the panels are
+ * smoked glass over the warm room, the type is the book's (Georgia), labels are small spaced capitals,
+ * the accent is the gold of the tooling.
+ */
+:root {
+  /* ink and paper */
+  --lb-ink: #f3e6cf;
+  --lb-ink-soft: #d8c6a6;
+  --lb-ink-muted: #b8a585;
+  --lb-gold: #c9a35a;
+  --lb-gold-light: #e8c88f;
+  --lb-gold-deep: #9c7a45;
+  --lb-danger: #e8a07a;
+  --lb-on-gold: #1b120c;
+
+  /* smoked glass */
+  --lb-glass: rgba(28, 18, 12, 0.78);
+  --lb-glass-light: rgba(28, 18, 12, 0.62);
+  --lb-glass-line: rgba(232, 200, 143, 0.28);
+  --lb-glass-line-strong: rgba(232, 200, 143, 0.5);
+  --lb-hover: rgba(232, 200, 143, 0.1);
+  --lb-blur: blur(10px);
+  --lb-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  --lb-shadow-small: 0 8px 20px rgba(0, 0, 0, 0.3);
+
+  /* type */
+  --lb-serif: Georgia, 'Times New Roman', serif;
+  --lb-text: 15px;
+  --lb-small: 13px;
+  --lb-label: 11.5px;
+  --lb-label-tracking: 0.08em;
+
+  /* shape and motion */
+  --lb-radius: 10px;
+  --lb-radius-small: 7px;
+  --lb-pill: 999px;
+  --lb-touch: 44px;
+  --lb-ease: cubic-bezier(0.22, 0.8, 0.3, 1);
+  --lb-fast: 0.18s;
+  --lb-slow: 0.35s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --lb-fast: 0s;
+    --lb-slow: 0s;
+  }
+}

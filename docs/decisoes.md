@@ -303,3 +303,21 @@ Formato de cada entrada:
   - Subtítulo vindo da capa do PDF só quando é uma linha curta (≤ 70 caracteres): a lista de carimbos e rótulos de uma capa virava um subtítulo ilegível na página de rosto.
   - O clique que começa a virar a última folha (ou a primeira, para trás) descobre a guarda debaixo do ponteiro; ao soltar, o clique caía nela e fechava o livro. Agora um clique que virou uma folha nunca fecha. O e2e simula um clique humano (150 ms entre apertar e soltar) — com o clique instantâneo do Playwright o defeito não aparecia.
 - Precisa do usuário? não.
+
+## 2026-10-16 — ✅ Fase 5 aprovada pelo usuário
+- Contexto: o usuário testou com um PDF próprio (peça diagramada com capa, colunas e texto espaçado) depois das correções de travamento, colunas, capítulos, nome do livro e clique na última folha.
+- Escolha: aprovada no chat; segue para a Fase 6 (identidade visual da interface + persistência).
+- Como reverter: n/a (marco).
+- Precisa do usuário? não.
+
+## 2026-10-16 — Fase 6: livros do usuário, criação e interface
+- Contexto: não havia spec da Fase 6; CLAUDE.md pede identidade visual da interface + persistência (IndexedDB no MVP).
+- Escolha (spec `docs/specs/fase-6-interface-persistencia.md`):
+  - Livros do usuário no IndexedDB com o PDF original (Blob); a composição roda de novo ao abrir. Sem dependência de produção nova.
+  - A estante mostra os livros do usuário; enquanto não houver nenhum, mostra os 6 de exemplo (marcados "Exemplo" no painel). O primeiro livro criado os substitui.
+  - Criar: botão "Novo livro" na estante ou soltar um PDF em qualquer lugar. PDF obrigatório (o conteúdo vem dele); o título sugerido é o nome do arquivo. Prévia 3D do próprio livro no formulário.
+  - Editar devolve o livro à estante antes de abrir o formulário (a espessura pode mudar); Remover pede confirmação e espera o livro voltar.
+  - Interface: tokens únicos (vidro esfumado, Georgia, rótulos em versalete espaçado, dourado), tela de abertura com progresso, dica de primeira visita.
+- Alternativas: manter exemplos sempre na estante junto dos livros do usuário (mistura conteúdo de teste com o real); criar livro numa escrivaninha 3D da sala (mais bonito, muito mais trabalho — fica como evolução).
+- Como reverter: `shelfBooksOf` em `library.ts` (regra dos exemplos); `LibraryUI` em `SceneRoot.tsx`.
+- Precisa do usuário? sim: confirmar se os exemplos devem sumir quando ele cria o primeiro livro.

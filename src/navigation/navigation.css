@@ -14,20 +14,20 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  border: 1px solid rgba(255, 236, 205, 0.35);
-  background: rgba(30, 20, 14, 0.55);
-  color: #f3e6cf;
-  backdrop-filter: blur(6px);
+  border: 1px solid var(--lb-glass-line-strong);
+  background: var(--lb-glass-light);
+  color: var(--lb-ink);
+  backdrop-filter: var(--lb-blur);
   cursor: pointer;
   transition: background 0.2s, opacity 0.2s;
 }
 
 .nav-btn:hover:not(:disabled) {
-  background: rgba(60, 40, 26, 0.75);
+  background: var(--lb-glass);
 }
 
 .nav-btn:focus-visible {
-  outline: 2px solid #e8c88f;
+  outline: 2px solid var(--lb-gold-light);
   outline-offset: 3px;
 }
 

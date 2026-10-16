@@ -34,6 +34,8 @@ export const params = {
   turn: num('turn'),
   /** with ?open=1: first page shown (1-based) */
   page: num('page'),
+  /** 'new': opens the book form (screenshots, Fase 6) */
+  form: search.get('form') ?? undefined,
   /** book screenshot preset (0..2) for ?dev=book&shot=1 */
   preset: num('preset'),
 }

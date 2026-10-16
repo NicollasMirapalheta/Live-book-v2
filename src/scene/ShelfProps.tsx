@@ -2,7 +2,7 @@ import { useGLTF } from '@react-three/drei'
 import { use, useLayoutEffect, useMemo } from 'react'
 import { Box3, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3, type MeshStandardMaterial, type Object3D } from 'three'
 import { contactShadowTexture } from '../book/canvasTextures'
-import { loadBookcase, shelfBooks, shelfLayoutFor } from '../book/shelfData'
+import { loadBookcase, shelfLayoutFor, useShelfBooks } from '../book/shelfData'
 import { useQuality } from '../state/quality'
 import { invalidateShadows } from './shadows'
 
@@ -36,9 +36,11 @@ export function ShelfProps() {
   }, [scene, quality])
 
   const blobTex = useMemo(() => contactShadowTexture(), [])
+  // re-laid out when a book is created or removed (the props make room)
+  const books = useShelfBooks()
 
   useLayoutEffect(() => {
-    const layout = shelfLayoutFor(data, shelfBooks())
+    const layout = shelfLayoutFor(data, books)
     // contact shadow under every visible prop (the props are not in the bake): a soft blob on the board
     const blobs: Mesh[] = []
     const addBlob = (parent: Object3D, w: number, depth: number) => {
@@ -86,7 +88,7 @@ export function ShelfProps() {
         ;(b.material as MeshBasicMaterial).dispose()
       }
     }
-  }, [scene, data, blobTex])
+  }, [scene, data, blobTex, books])
 
   return <primitive object={scene} />
 }

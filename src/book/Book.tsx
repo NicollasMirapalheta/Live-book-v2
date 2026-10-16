@@ -89,7 +89,8 @@ export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0], detail 
   const prefix = book.coverMaterial === 'leather' ? 'leather' : 'cloth'
   const [lum, normal, arm] = useTexture([`${TEX}/${prefix}_lum.jpg`, `${TEX}/${prefix}_normal.jpg`, `${TEX}/${prefix}_arm.jpg`])
   const photo = usePhoto(book)
-  const hasPolaroid = true
+  // a polaroid only with a photo (a blank card on the cover read as a sticker); the recess goes with it
+  const hasPolaroid = !!book.coverPhoto || book.photoSeed !== undefined
 
   const geo = useMemo(
     () => ({
@@ -170,7 +171,7 @@ export function Book({ book, position = [0, 0, 0], rotation = [0, 0, 0], detail 
       {/* everything fixed to the front board: turns with it when the book opens */}
       <group ref={frontHalf} name="frontHalf">
         <mesh name="frontFoil" geometry={geo.frontFoil} material={mats.frontFoil} visible={detail === 'full'} />
-        <group name="polaroid" position={geo.polaroid.position} rotation={[tilt, 0, 0]} visible={detail === 'full'}>
+        <group name="polaroid" position={geo.polaroid.position} rotation={[tilt, 0, 0]} visible={detail === 'full' && hasPolaroid}>
           <mesh rotation={[0, Math.PI / 2, 0]} position={[0.00003, 0, 0]} material={mats.shadow} renderOrder={1}>
             <planeGeometry args={[geo.polaroidSize[0] * 1.12, geo.polaroidSize[1] * 1.1]} />
           </mesh>

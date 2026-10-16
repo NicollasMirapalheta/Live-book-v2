@@ -43,40 +43,17 @@ test('sumário vem dos títulos do PDF; ir a um capítulo abre a página dele', 
   await expect(entry).toHaveAttribute('aria-current', 'true')
 })
 
-test('soltar um PDF com o livro na mão troca o conteúdo dele nesta sessão', async ({ page }) => {
-  await page.goto('/?e2e=1&node=N2')
-  await page.waitForFunction(() => window.__SCENE_READY__ === true && (window.__SEL__?.order.length ?? 0) > 0, undefined, { timeout: 90_000 })
-  // a book without a PDF of its own
-  await page.evaluate(() => window.__SEL__!.select('fx-natural'))
-  await page.waitForFunction(() => window.__SEL__!.phase === 'hand')
-  expect(await page.evaluate(() => window.__CONTENT__!.status('fx-natural'))).toBeNull()
-  await page.evaluate(async () => {
-    const blob = await (await fetch('/books/fx-bordo.pdf')).blob()
-    const dt = new DataTransfer()
-    dt.items.add(new File([blob], 'meu-livro.pdf', { type: 'application/pdf' }))
-    window.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, cancelable: true }))
-  })
-  await page.waitForFunction(() => window.__CONTENT__!.status('fx-natural') === 'ready', undefined, { timeout: 30_000 })
-  expect(await page.evaluate(() => window.__CONTENT__!.toc('fx-natural'))).toContain('Carta de janeiro')
-  await expect(page.getByRole('dialog')).toContainText('PDF que você soltou')
-  // the book takes the file's name; the test book's description goes away
-  await expect(page.getByRole('dialog').getByRole('heading')).toHaveText('meu-livro')
-  await expect(page.getByRole('dialog')).not.toContainText('Todas as receitas da família')
-})
-
 test('PDF com a mesma imagem em várias páginas não fica preparando para sempre', async ({ page }) => {
   await page.goto('/?e2e=1&node=N2')
   await page.waitForFunction(() => window.__SCENE_READY__ === true && (window.__SEL__?.order.length ?? 0) > 0, undefined, { timeout: 90_000 })
-  await page.evaluate(() => window.__SEL__!.select('fx-tabaco'))
-  await page.waitForFunction(() => window.__SEL__!.phase === 'hand')
+  // dropped on the room: the form composes it at once (it used to hang on images shared between pages)
   await page.evaluate(async () => {
     const blob = await (await fetch('/books/test-shared-image.pdf')).blob()
     const dt = new DataTransfer()
     dt.items.add(new File([blob], 'logotipo.pdf', { type: 'application/pdf' }))
     window.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, cancelable: true }))
   })
-  await page.waitForFunction(() => window.__CONTENT__!.status('fx-tabaco') === 'ready', undefined, { timeout: 20_000 })
-  // and it opens
-  await page.getByRole('button', { name: 'Abrir' }).click()
-  await page.waitForFunction(() => window.__SEL__!.phase === 'open', undefined, { timeout: 10_000 })
+  const form = page.getByRole('dialog', { name: 'Um livro para a estante' })
+  await expect(form).toContainText(/\d+ páginas/, { timeout: 20_000 })
+  await expect(form.getByRole('alert')).toHaveCount(0)
 })

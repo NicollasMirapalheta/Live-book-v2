@@ -6,12 +6,13 @@ import { params } from '../app/params'
 import { invalidateShadows } from '../scene/shadows'
 import { Book } from './Book'
 import { OPEN_ANGLE, type OpenState } from './reader/BookReader'
-import { displayBook, useBookContent } from './pdf/content'
+import { useBookContent } from './pdf/content'
 import { useReader } from './reader/useReader'
 import { backShadowTexture, contactShadowTexture } from './canvasTextures'
 import type { FixtureBook } from './fixtures'
 import { bookDimensions } from './geometry'
-import { loadBookcase, shelfBooks, shelfLayoutFor, shelfOrder } from './shelfData'
+import { libraryReady, useLibrary } from '../data/library'
+import { loadBookcase, shelfLayoutFor, shelfOrder, useShelfBooks } from './shelfData'
 import type { PlacedBook, Shelf } from './shelfLayout'
 import { isReading, readFocus, useSelection } from './useSelection'
 import './selection.css'
@@ -89,9 +90,6 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
   const camera = useThree((st) => st.camera)
   const hover = useSelection((st) => st.hover)
   const isSelected = useSelection((st) => st.selected === book.id)
-  // a PDF the user dropped renames the book (spine, title page, panel) until the page reloads
-  const content = useBookContent((st) => st.byId[book.id])
-  const shown = useMemo(() => displayBook(book, content), [book, content])
   // the PDF is composed while the book flies to the hand (Fase 5)
   useEffect(() => {
     if (isSelected) useBookContent.getState().ensure(book)
@@ -290,9 +288,9 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
       }}
     >
       <group ref={inner} position={[-place.thickness / 2, 0, 0]}>
-        <Book book={shown} detail={isSelected ? 'full' : 'shelf'} openState={isReadingThis ? openState : undefined} />
+        <Book book={book} detail={isSelected ? 'full' : 'shelf'} openState={isReadingThis ? openState : undefined} />
       </group>
-      <TitlePopover book={shown} anchor={[-place.thickness / 2, d.coverHeight + 0.03, 0]} />
+      <TitlePopover book={book} anchor={[-place.thickness / 2, d.coverHeight + 0.03, 0]} />
     </group>
   )
 }
@@ -336,9 +334,11 @@ function RowShadows({ shelf, x0, x1 }: { shelf: Shelf; x0: number; x1: number })
 /** The books on the bookcase, placed by shelfLayout (spec Fase 3). */
 export function BookShelf() {
   const data = use(loadBookcase())
+  use(libraryReady())
   const scene = useThree((s) => s.scene)
-  const books = shelfBooks()
+  const books = useShelfBooks()
   const layout = shelfLayoutFor(data, books)
+  const pendingSelect = useLibrary((s) => s.pendingSelect)
   const shelves = useMemo(() => new Map(data.shelves.map((s) => [s.index, s])), [data])
   const setOrder = useSelection((s) => s.setOrder)
 
@@ -351,6 +351,16 @@ export function BookShelf() {
       return () => clearTimeout(t)
     }
   }, [layout, data, setOrder])
+
+  // a book just created comes to the hand once it stands on the shelf
+  useEffect(() => {
+    if (!pendingSelect || !layout.books.some((b) => b.id === pendingSelect)) return
+    const t = setTimeout(() => {
+      useSelection.getState().select(pendingSelect)
+      useLibrary.getState().clearPending()
+    }, 400)
+    return () => clearTimeout(t)
+  }, [pendingSelect, layout])
 
   useLayoutEffect(() => invalidateShadows(), [layout])
 

@@ -6,6 +6,8 @@ import { CameraRig } from '../navigation/CameraRig'
 import { LookControls } from '../navigation/LookControls'
 import { BookShelf } from '../book/BookShelf'
 import { SelectionPanel } from '../book/SelectionPanel'
+import { LibraryUI } from '../ui/LibraryUI'
+import { LoadingScreen } from '../ui/LoadingScreen'
 import { useSelection } from '../book/useSelection'
 import { NavigationUI } from '../navigation/NavigationUI'
 import { NodeMarkers } from '../navigation/NodeMarkers'
@@ -55,6 +57,8 @@ export function SceneRoot() {
       </Canvas>
       <NavigationUI />
       <SelectionPanel />
+      <LibraryUI />
+      <LoadingScreen />
     </>
   )
 }

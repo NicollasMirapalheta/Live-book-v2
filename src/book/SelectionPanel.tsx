@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { params } from '../app/params'
 import { useNavigation } from '../navigation/useNavigation'
-import { displayBook, useBookContent } from './pdf/content'
+import { useBookContent } from './pdf/content'
+import { editBook, removeBook } from '../ui/creator'
 import { bookToc, currentEntry } from './reader/toc'
 import { currentSpread, useReader } from './reader/useReader'
 import { shelfBooks } from './shelfData'
@@ -10,39 +11,6 @@ import { SELECTION_NODE, useSelection } from './useSelection'
 import './selection.css'
 
 const WHEEL_GAP_MS = 350
-
-/**
- * Keyboard for the bookcase node: ←/→ move the focus between the books, Enter selects, Esc goes back.
- * While reading: ←/→ turn the pages, Esc closes the book. Registered in the capture phase so the look
- * controls don't also turn the camera.
- */
-/**
- * Testing with your own PDF (Fase 5, until persistence in Fase 6): dropping a PDF on the window while a
- * book is in the hand composes it into that book for this session.
- */
-function usePdfDrop(bookId: string | null) {
-  useEffect(() => {
-    if (!bookId) return
-    const book = shelfBooks().find((b) => b.id === bookId)
-    if (!book) return
-    const isPdf = (f: File) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name)
-    const over = (e: DragEvent) => {
-      if (e.dataTransfer?.types.includes('Files')) e.preventDefault()
-    }
-    const drop = (e: DragEvent) => {
-      const file = [...(e.dataTransfer?.files ?? [])].find(isPdf)
-      if (!file) return
-      e.preventDefault()
-      useBookContent.getState().useFile(book, file)
-    }
-    window.addEventListener('dragover', over)
-    window.addEventListener('drop', drop)
-    return () => {
-      window.removeEventListener('dragover', over)
-      window.removeEventListener('drop', drop)
-    }
-  }, [bookId])
-}
 
 /** Progress of a PDF being read, shown only when it is slow enough to notice (fast ones just flip to "Abrir"). */
 function PreparingBar({ progress, startedAt }: { progress: number; startedAt: number }) {
@@ -63,11 +31,16 @@ function PreparingBar({ progress, startedAt }: { progress: number; startedAt: nu
 
 const SLOW_MS = 600
 
+/**
+ * Keyboard for the bookcase node: ←/→ move the focus between the books, Enter selects, Esc goes back.
+ * While reading: ←/→ turn the pages, Esc closes the book. Registered in the capture phase so the look
+ * controls don't also turn the camera.
+ */
 function useSelectionKeys() {
   useEffect(() => {
     let lastWheel = 0
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select')) return
+      if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select, [role="dialog"][aria-modal="true"]')) return
       const nav = useNavigation.getState()
       const sel = useSelection.getState()
       if (sel.selected) {
@@ -120,7 +93,9 @@ export function SelectionPanel() {
   const openRef = useRef<HTMLButtonElement>(null)
   const inHand = phase === 'hand'
   const content = useBookContent((s) => (selected ? s.byId[selected] : undefined))
-  usePdfDrop(inHand ? selected : null)
+  // the book whose removal is being confirmed (another book in the hand starts unconfirmed)
+  const [confirmId, setConfirmId] = useState<string | null>(null)
+  const confirming = confirmId !== null && confirmId === selected
 
   useEffect(() => {
     if (inHand) openRef.current?.focus()
@@ -137,15 +112,16 @@ export function SelectionPanel() {
   }
   // the panel shows only once the book is in the reader's hand (spec Fase 3)
   if (!inHand) return null
-  const found = shelfBooks().find((b) => b.id === selected)
-  const book = found && displayBook(found, content)
+  const book = shelfBooks().find((b) => b.id === selected)
   if (!book) return null
+  const own = !book.example
 
   return (
     <>
       {/* clicking outside the book goes back (Canvas onPointerMissed); clicking the book opens it */}
       <aside className="sel-panel" role="dialog" aria-modal="false" aria-labelledby="sel-title">
         <p className="sel-kicker">
+          {book.example ? 'Exemplo · ' : ''}
           {SPINE_COLOR_LABELS[book.color]} · {book.coverMaterial === 'leather' ? 'couro' : 'tecido'} · {content?.layout?.pageCount ?? book.pageCount} páginas
         </p>
         <h2 id="sel-title" className="sel-title">
@@ -153,9 +129,8 @@ export function SelectionPanel() {
         </h2>
         {book.subtitle && <p className="sel-subtitle">{book.subtitle}</p>}
         {book.description && <p className="sel-description">{book.description}</p>}
-        {content?.status === 'error' && <p className="sel-hint sel-hint-error">Não consegui ler esse PDF ({content.error}). O livro abre com as páginas de exemplo.</p>}
-        {content?.source === 'file' && content.status === 'ready' && <p className="sel-hint">Mostrando o PDF que você soltou (até recarregar a página).</p>}
-        <p className="sel-hint">Solte um PDF na janela para ver este livro com o seu conteúdo.</p>
+        {content?.status === 'error' && <p className="sel-hint sel-hint-error">Não consegui ler o PDF deste livro ({content.error}).</p>}
+        {book.example && <p className="sel-hint">Livro de exemplo. Os seus livros entram no lugar dos exemplos: crie o primeiro em “Novo livro”.</p>}
         {content?.status === 'loading' && <PreparingBar progress={content.progress ?? 0} startedAt={content.startedAt ?? 0} />}
         <div className="sel-actions">
           <button type="button" className="sel-btn sel-btn-primary" ref={openRef} onClick={requestOpen} disabled={content?.status === 'loading'}>
@@ -165,6 +140,29 @@ export function SelectionPanel() {
             Voltar
           </button>
         </div>
+        {own && !confirming && (
+          <div className="sel-links">
+            <button type="button" className="sel-link" onClick={() => editBook(book.id)}>
+              Editar
+            </button>
+            <button type="button" className="sel-link" onClick={() => setConfirmId(book.id)}>
+              Remover
+            </button>
+          </div>
+        )}
+        {own && confirming && (
+          <div className="sel-confirm" role="alertdialog" aria-labelledby="sel-confirm-text">
+            <p id="sel-confirm-text">Remover “{book.title}” da estante? O PDF guardado também sai.</p>
+            <div className="sel-actions">
+              <button type="button" className="sel-btn sel-btn-danger" onClick={() => removeBook(book.id)}>
+                Remover
+              </button>
+              <button type="button" className="sel-btn" onClick={() => setConfirmId(null)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
       </aside>
     </>
   )
