@@ -4,14 +4,13 @@ import { useNavigation } from '../navigation/useNavigation'
 import { useBookContent } from './pdf/content'
 import { editBook, removeBook } from '../ui/creator'
 import { bookToc, currentEntry } from './reader/toc'
+import { MAX_ZOOM, useReadingZoom } from './reader/readingZoom'
 import { currentSpread, useReader } from './reader/useReader'
 import { shelfBooks } from './shelfData'
 import { SPINE_COLOR_LABELS } from './palette'
 import { SELECTION_NODE, useSelection } from './useSelection'
 import '../ui/ui.css'
 import './selection.css'
-
-const WHEEL_GAP_MS = 350
 
 /** Progress of a PDF being read, shown only when it is slow enough to notice (fast ones just flip to "Abrir"). */
 function PreparingBar({ progress, startedAt }: { progress: number; startedAt: number }) {
@@ -39,7 +38,6 @@ const SLOW_MS = 600
  */
 function useSelectionKeys() {
   useEffect(() => {
-    let lastWheel = 0
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLElement && e.target.closest('input, textarea, select, [role="dialog"][aria-modal="true"]')) return
       const nav = useNavigation.getState()
@@ -67,20 +65,9 @@ function useSelectionKeys() {
         sel.select(sel.focused)
       }
     }
-    // mouse wheel turns the pages while reading (down = forward)
-    const onWheel = (e: WheelEvent) => {
-      if (useSelection.getState().phase !== 'open' || Math.abs(e.deltaY) < 4) return
-      const now = performance.now()
-      if (now - lastWheel < WHEEL_GAP_MS) return
-      lastWheel = now
-      useReader.getState().turnPage(e.deltaY > 0 ? 1 : -1)
-    }
+    // (the mouse wheel zooms while reading: book/reader/ReadingZoomControls.tsx)
     window.addEventListener('keydown', onKey, { capture: true })
-    window.addEventListener('wheel', onWheel, { passive: true })
-    return () => {
-      window.removeEventListener('keydown', onKey, { capture: true })
-      window.removeEventListener('wheel', onWheel)
-    }
+    return () => window.removeEventListener('keydown', onKey, { capture: true })
   }, [])
 }
 
@@ -185,9 +172,11 @@ function ReaderToc({ bookId }: { bookId: string }) {
   const busy = useReader((s) => s.turn !== null || s.riffle !== null)
   const goTo = useReader((s) => s.goTo)
   const current = currentEntry(toc, shownPage)
+  const zoomed = useReadingZoom((z) => z.zoom > 1.02)
   if (!book) return null
   return (
-    <nav className="sel-toc" aria-label="Sumário">
+    // zoomed in, the list steps back from the page it covers (back on hover or focus)
+    <nav className="sel-toc" aria-label="Sumário" data-zoomed={zoomed || undefined}>
       <h3 className="sel-toc-title">Sumário</h3>
       <ol>
         {toc.map((e) => (
@@ -218,8 +207,17 @@ function ReaderBar() {
   const atEnd = useReader((s) => s.turned === s.sheets && !s.turn)
   const close = useSelection((s) => s.close)
   const turnPage = useReader((s) => s.turnPage)
+  const zoom = useReadingZoom((s) => s.zoom)
+  const stepZoom = useReadingZoom((s) => s.step)
   return (
     <nav className="sel-reader" aria-label="Leitura">
+      <button type="button" className="sel-btn sel-icon" aria-label="Afastar" title="Afastar (−)" disabled={zoom <= 1} onClick={() => stepZoom(-1)}>
+        −
+      </button>
+      <button type="button" className="sel-btn sel-icon" aria-label="Aproximar" title="Aproximar (+, roda do mouse)" disabled={zoom >= MAX_ZOOM - 0.01} onClick={() => stepZoom(1)}>
+        +
+      </button>
+      <span className="sel-reader-gap" aria-hidden="true" />
       <button type="button" className="sel-btn sel-icon" aria-label="Página anterior" disabled={atStart} onClick={() => turnPage(-1)}>
         ‹
       </button>

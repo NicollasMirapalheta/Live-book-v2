@@ -1,5 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import type { PerspectiveCamera } from 'three'
+import { useReadingZoom } from '../book/reader/readingZoom'
 import { applyLensShift, DEG } from '../scene/Camera'
 import { useNavigation } from './useNavigation'
 
@@ -15,6 +16,15 @@ export function CameraRig() {
     if (camera.fov !== fov) camera.fov = fov
     camera.updateProjectionMatrix()
     applyLensShift(camera, lensShiftY)
+    // reading zoom (book/reader/readingZoom.ts): screen = (unzoomed − pan) · zoom, on the projection's x and y rows
+    const { zoom, panX, panY } = useReadingZoom.getState()
+    if (zoom !== 1 || panX !== 0 || panY !== 0) {
+      const e = camera.projectionMatrix.elements
+      for (const [row, pan] of [[0, panX], [1, panY]] as const) {
+        for (let c = 0; c < 4; c++) e[c * 4 + row] = zoom * (e[c * 4 + row] - pan * e[c * 4 + 3])
+      }
+      camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert()
+    }
   }, -100)
 
   return null

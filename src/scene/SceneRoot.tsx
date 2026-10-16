@@ -4,11 +4,12 @@ import { NoToneMapping } from 'three'
 import { params } from '../app/params'
 import { CameraRig } from '../navigation/CameraRig'
 import { LookControls } from '../navigation/LookControls'
+import { ReadingZoomControls } from '../book/reader/ReadingZoomControls'
 import { BookShelf } from '../book/BookShelf'
 import { SelectionPanel } from '../book/SelectionPanel'
 import { LibraryUI } from '../ui/LibraryUI'
 import { LoadingScreen } from '../ui/LoadingScreen'
-import { useSelection } from '../book/useSelection'
+import { isReading, useSelection } from '../book/useSelection'
 import { NavigationUI } from '../navigation/NavigationUI'
 import { NodeMarkers } from '../navigation/NodeMarkers'
 import { useQuality } from '../state/quality'
@@ -26,6 +27,7 @@ export function SceneRoot() {
   const quality = useQuality((s) => s.quality)
   const resolved = useQuality((s) => s.resolved)
   const relief = useQuality((s) => s.relief)
+  const reading = useSelection((s) => isReading(s.phase))
   // behind the book form the room is blurred and still: it stops rendering until the form closes
   const formOpen = useCreator((s) => s.mode !== null)
   return (
@@ -33,7 +35,8 @@ export function SceneRoot() {
       <Canvas
         // Tone mapping happens once, in the post-processing chain (AgX).
         gl={{ antialias: false, toneMapping: NoToneMapping, preserveDrawingBuffer: params.shot }}
-        dpr={quality === 'high' && relief === 0 ? [1, 2] : 1}
+        // reading keeps the screen's full pixel ratio in every tier: text drawn at 1× and stretched blurs
+        dpr={reading || (quality === 'high' && relief === 0) ? [1, 2] : 1}
         frameloop={formOpen && !params.shot ? 'demand' : 'always'}
         shadows={quality === 'high' ? 'soft' : false}
         onCreated={({ gl }) => {
@@ -50,6 +53,7 @@ export function SceneRoot() {
       >
         <CameraRig />
         {!params.shot && <LookControls />}
+        {!params.shot && <ReadingZoomControls />}
         {/* the tier is decided before anything loads (src/state/quality.ts): one set of models, not two */}
         {resolved && (
           <Suspense fallback={null}>

@@ -167,3 +167,26 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 
 ### K2
 - Cor da estante em UASTC; normal do tapete em 512 para compensar o peso. O zoom do N2 volta a mostrar as estrias claras como no WebP (`shots/ktx2-review/N2_estante_zoom.jpg`: antes · ETC1S · UASTC).
+
+## Leitura no notebook (feedback do usuário, 16/10)
+
+### L1
+- Feedback: no notebook o texto ficava ilegível. O livro era pequeno (62% da altura) e o alívio de desempenho baixava o pixel ratio para 1, o que borra o texto numa tela a 125%.
+- O que mudou:
+  - enquadramento por tamanho de tela: 62% num monitor grande e 80% num notebook;
+  - zoom (roda, pinça, − e +, arrastar);
+  - textura da página no tamanho da tela (até 2048 px);
+  - pixel ratio cheio durante a leitura;
+  - a roda do mouse deixou de folhear.
+- **art-reviewer:** legibilidade 4, composição 3, barra 3, zoom 3, monitor 4. Veredito: "iterar". Pontos: verso nítido demais no zoom, livro encostado na barra, sumário cobrindo a página no zoom, glifos ‹ › finos, tokens na barra.
+
+### L2
+- O que mudou:
+  - verso transparecendo difuso (blur) e a 2% de opacidade;
+  - notebook a 78% da altura, com 124 px livres para a barra;
+  - sumário esmaecido (25%) durante o zoom;
+  - barra com `--lb-pill` e `--lb-text`;
+  - ícones em 24 px;
+  - sumário até 80% da altura.
+- O papel mais frio que no shot antigo do N2 vem do ajuste de luz dos livros da Fase 6, já aprovado.
+- Shots: `shots/leitura/notebook_aberto.png`, `notebook_zoom.png`, `monitor_aberto.png`.

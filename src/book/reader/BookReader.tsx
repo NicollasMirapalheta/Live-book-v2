@@ -1,7 +1,8 @@
-import { useFrame, type ThreeEvent } from '@react-three/fiber'
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
 import { DoubleSide, Mesh, MeshBasicMaterial, Quaternion, Vector3, type BufferGeometry, type Group, type Material, type MeshPhysicalMaterial, type MeshStandardMaterial } from 'three'
 import { reducedMotion } from '../../app/motion'
+import { isZoomed, useReadingZoom } from './readingZoom'
 import { invalidateShadows } from '../../scene/shadows'
 import { useQuality } from '../../state/quality'
 import { useBookContent } from '../pdf/content'
@@ -9,7 +10,8 @@ import { BOARD, HINGE_OFFSET, SQUARE, type BookDimensions } from '../geometry'
 import { setCoverOpen } from '../materials'
 import { useSelection } from '../useSelection'
 import { layoutPages, layoutRiffle, stackSplit } from './pages'
-import { PAGE_TEX_HEIGHT, PageTextures, type PageBook } from './pageContent'
+import { pageTextureHeight, pageTextureKeep } from './framing'
+import { PageTextures, type PageBook } from './pageContent'
 import { pageMaterial, pagePlaneGeometry, SHEET_SEGMENTS, sheetMaterial, type PageUniforms, type SheetUniforms } from './sheetMaterial'
 import { useReader } from './useReader'
 
@@ -100,7 +102,14 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     () => (content?.status === 'ready' && content.layout ? { ...book, pageCount: content.layout.pageCount, layout: content.layout, images: content.images } : book),
     [book, content],
   )
-  const textures = useMemo(() => new PageTextures(pages, W / H, PAGE_TEX_HEIGHT[quality]), [pages, W, H, quality])
+  // drawn at the size the page shows on screen (framing.ts): sharp on a laptop, zoomed in or not
+  const viewH = useThree((st) => st.size.height)
+  const dpr = useThree((st) => st.viewport.dpr)
+  const texHeight = useReadingZoom((z) => pageTextureHeight(viewH, dpr, z.zoom))
+  const textures = useMemo(
+    () => new PageTextures(pages, W / H, texHeight, pageTextureKeep(texHeight, quality)),
+    [pages, W, H, texHeight, quality],
+  )
   // while riffling, every page is seen for a few frames in motion: small textures, drawn fast
   const quick = useMemo(() => new PageTextures(pages, W / H, RIFFLE_TEX[quality].height, RIFFLE_TEX[quality].keep), [pages, W, H, quality])
   const mats = useMemo(() => {
@@ -298,6 +307,19 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
     if (useSelection.getState().phase !== 'open') return
     e.stopPropagation()
     const reader = useReader.getState()
+    if (isZoomed()) {
+      // zoomed in: dragging moves the view (ReadingZoomControls); a plain click still turns the page
+      const x0 = e.nativeEvent.clientX
+      const y0 = e.nativeEvent.clientY
+      const up = (ev: PointerEvent) => {
+        window.removeEventListener('pointerup', up)
+        window.removeEventListener('pointercancel', up)
+        if (ev.type === 'pointerup' && Math.hypot(ev.clientX - x0, ev.clientY - y0) < DRAG_CLICK_PX) useReader.getState().turnPage(dir)
+      }
+      window.addEventListener('pointerup', up)
+      window.addEventListener('pointercancel', up)
+      return
+    }
     if (!reader.beginDrag(dir)) {
       // a turn is already running: a click queues the next one
       reader.turnPage(dir)

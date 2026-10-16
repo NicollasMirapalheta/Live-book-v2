@@ -164,3 +164,36 @@ test('na última folha, clicar na página direita vira (não fecha o livro)', as
   await page.waitForFunction((n) => window.__READER__!.turned === n && !window.__READER__!.turning, sheets)
   expect(await page.evaluate(() => window.__SEL__!.phase)).toBe('open')
 })
+
+type Zoom = { zoom: number; panX: number; panY: number }
+const zoomState = (page: Page) => page.evaluate(() => (window as unknown as { __ZOOM__: Zoom }).__ZOOM__ && { ...(window as unknown as { __ZOOM__: Zoom }).__ZOOM__ })
+
+test('zoom na leitura: roda aproxima, arrastar move a vista, clique ainda vira, fechar volta ao enquadramento', async ({ page }) => {
+  await bookInHand(page)
+  await page.getByRole('button', { name: 'Abrir' }).click()
+  await settled(page)
+  const vp = page.viewportSize()!
+  // the wheel over the right page zooms around it
+  await page.mouse.move(vp.width * 0.68, vp.height * 0.5)
+  await page.mouse.wheel(0, -600)
+  await expect.poll(async () => (await zoomState(page)).zoom).toBeGreaterThan(1.5)
+  // a drag moves the view (no page turns)
+  const before = await zoomState(page)
+  await page.mouse.move(vp.width * 0.6, vp.height * 0.5)
+  await page.mouse.down()
+  await page.mouse.move(vp.width * 0.45, vp.height * 0.55, { steps: 8 })
+  await page.mouse.up()
+  const after = await zoomState(page)
+  expect(after.panX).not.toBeCloseTo(before.panX, 3)
+  expect(await page.evaluate(() => window.__READER__!.turned)).toBe(0)
+  // a plain click on the right page still turns it (the zoomed projection still picks the page)
+  await page.mouse.click(vp.width * 0.55, vp.height * 0.5)
+  await page.waitForFunction(() => window.__READER__!.turned === 1 && !window.__READER__!.turning)
+  // the bar's − steps back out; closing resets the zoom
+  await page.getByRole('button', { name: 'Afastar' }).click()
+  expect((await zoomState(page)).zoom).toBeLessThan(after.zoom)
+  await page.getByRole('navigation', { name: 'Leitura' }).getByRole('button', { name: 'Fechar' }).click()
+  await page.waitForFunction(() => window.__SEL__!.phase === 'hand')
+  expect((await zoomState(page)).zoom).toBe(1)
+})
+

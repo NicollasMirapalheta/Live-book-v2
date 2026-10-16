@@ -4,6 +4,7 @@ import { use, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Box3, Color, Euler, Quaternion, Vector3, type Group, type Mesh, type PerspectiveCamera, type MeshPhysicalMaterial, type MeshStandardMaterial } from 'three'
 import { params } from '../app/params'
 import { reducedMotion } from '../app/motion'
+import { readFillH, readLift } from './reader/framing'
 import { invalidateShadows } from '../scene/shadows'
 import { Book } from './Book'
 import { OPEN_ANGLE, type OpenState } from './reader/BookReader'
@@ -48,13 +49,11 @@ const HAND_EXPOSURE = 0.5
  */
 const OPEN_S = 1.2
 const READ_FILL_W = 0.6
-const READ_FILL_H = 0.62
 const READ_TILT = (14 * Math.PI) / 180 // top back: the head of the block and the cover's squares show
 // no turn of its own (user feedback): only the tilt toward the shelf. This just splits the open book's V
 // evenly, so neither half leans toward the reader more than the other
 const READ_TURN = -(Math.PI - OPEN_ANGLE) / 2
 const OPEN_BACKOFF = 0.07 // m
-const READ_DROP = -0.008 // negative: a little above the view center, clear of the reading bar
 
 
 /** Exponential approach with time constant tau (s). */
@@ -143,7 +142,9 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
       const halfH = Math.tan(((cam.fov ?? 50) * Math.PI) / 360)
       const halfW = halfH * (cam.aspect ?? 16 / 9)
       const openW = 2 * d.coverWidth + 0.02
-      const readDist = Math.max(openW / (2 * halfW * READ_FILL_W), d.coverHeight / (2 * halfH * READ_FILL_H))
+      // the height share grows on a small view (reader/framing.ts): readable on a laptop without zooming
+      const viewH = window.innerHeight // the canvas fills the window
+      const readDist = Math.max(openW / (2 * halfW * READ_FILL_W), d.coverHeight / (2 * halfH * readFillH(viewH)))
       readFocus.distance = readDist
       const readQuat = camera.quaternion
         .clone()
@@ -153,7 +154,7 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
       const readPos = camera.position
         .clone()
         .addScaledVector(k.fwd, readDist)
-        .addScaledVector(k.up, -READ_DROP)
+        .addScaledVector(k.up, readLift(viewH, readDist, halfH))
         .sub(gutter.applyQuaternion(readQuat))
       flight.current = { handPos, handQuat, readPos, readQuat, fwd: k.fwd.clone() }
     }
@@ -284,7 +285,8 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
         // …but not the click that just lifted a page: turning the last sheet (or the first, backwards) uncovers
         // the endpaper under the pointer, and that click used to land on it and close the book
         const reader = useReader.getState()
-        if (st.phase === 'open' && e.object.userData.closesBook && !reader.turn && !reader.riffle) st.close()
+        // (nor the end of a drag that moved the zoomed view)
+        if (st.phase === 'open' && e.object.userData.closesBook && !reader.turn && !reader.riffle && e.delta < 6) st.close()
       }}
     >
       <group ref={inner} position={[-place.thickness / 2, 0, 0]}>

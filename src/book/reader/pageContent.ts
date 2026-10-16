@@ -204,8 +204,10 @@ export function drawPage(book: PageBook, page: number, aspect: number, H: number
     const off = scratchCanvas(W, H)
     drawContent(off.getContext('2d')!, book, back, H * aspect, H)
     ctx.save()
-    // faint, and half a line off: the two sides never print on exactly the same baselines
-    ctx.globalAlpha = 0.03
+    // faint, diffuse (it comes through the paper, not printed on it: sharp, it read as a misprint when
+    // zoomed in) and half a line off: the two sides never print on exactly the same baselines
+    ctx.globalAlpha = 0.02
+    ctx.filter = `blur(${Math.max(1, H * 0.0012)}px)`
     ctx.translate(W, 0)
     ctx.scale(-1, 1)
     ctx.drawImage(off, 0, Math.round(H * 0.015))
