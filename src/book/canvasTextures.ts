@@ -257,7 +257,7 @@ export function laidPaperTexture(seed = 7): Texture {
   }
   // chain lines ~2.5 cm apart
   for (let x = 0; x < N; x += 320) {
-    ctx.fillStyle = 'rgba(120,95,60,0.08)'
+    ctx.fillStyle = 'rgba(120,95,60,0.04)'
     ctx.fillRect(x + 40, 0, 4, N)
   }
   for (let i = 0; i < 3000; i++) {

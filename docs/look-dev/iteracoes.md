@@ -101,3 +101,7 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 - **art-reviewer:** 4 · 4 · 4 · 4 — "iterar" só pelos traços claros perto da calha. A causa eram letras do dourado da lombada atravessando a margem esquerda; o dourado agora some com o livro aberto e a lombada recua mais. Transparência do verso a 4%, meia linha deslocada.
 - Pendências: serrilhado das bordas no tier low (sem AA), sulco da dobradiça, corte do bloco visível na borda de baixo, sombra projetada real da folha (o sol vem de trás do livro).
 - **Conferência pós-correção (art-reviewer):** traços sumiram, nada regrediu — **4 · 4 · 4 · 4, "pronto para o usuário"**.
+
+### R4 — 2026-10-15 (ajustes do teste do usuário)
+- Livro na mão centralizado e de frente (12° para trás); a primeira folha não mostra mais papel no lugar da guarda; a folha no ar parte da mesma ondulação das páginas (sem letras misturadas); tinta e cabeço mais escuros, páginas a 1,5K.
+- **art-reviewer:** nada regrediu — "pronto para o usuário". Acabamento aplicado: transparência do verso 3%, linhas-corrente do vergê com metade do contraste. Opção para o usuário: 2–3° de giro no livro na mão devolve a lombada à vista.

@@ -109,7 +109,7 @@ export function drawPage(book: PageBook, page: number, aspect: number, H: number
     drawContent(off.getContext('2d')!, book, back, W, H)
     ctx.save()
     // faint, and half a line off: the two sides never print on exactly the same baselines
-    ctx.globalAlpha = 0.04
+    ctx.globalAlpha = 0.03
     ctx.translate(W, 0)
     ctx.scale(-1, 1)
     ctx.drawImage(off, 0, Math.round(H * 0.015))
