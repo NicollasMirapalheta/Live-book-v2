@@ -8,6 +8,7 @@ import { currentSpread, useReader } from './reader/useReader'
 import { shelfBooks } from './shelfData'
 import { SPINE_COLOR_LABELS } from './palette'
 import { SELECTION_NODE, useSelection } from './useSelection'
+import '../ui/ui.css'
 import './selection.css'
 
 const WHEEL_GAP_MS = 350
@@ -142,10 +143,10 @@ export function SelectionPanel() {
         </div>
         {own && !confirming && (
           <div className="sel-links">
-            <button type="button" className="sel-link" onClick={() => editBook(book.id)}>
+            <button type="button" className="ui-btn ui-btn-small" onClick={() => editBook(book.id)}>
               Editar
             </button>
-            <button type="button" className="sel-link" onClick={() => setConfirmId(book.id)}>
+            <button type="button" className="ui-btn ui-btn-small ui-btn-danger" onClick={() => setConfirmId(book.id)}>
               Remover
             </button>
           </div>

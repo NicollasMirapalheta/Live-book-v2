@@ -39,7 +39,8 @@
 .nav-fade {
   position: fixed;
   inset: 0;
-  background: #000;
+  /* the same dark as the loading screen, never pure black */
+  background: #120c08;
   pointer-events: none;
   z-index: 20;
 }

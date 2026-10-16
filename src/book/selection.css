@@ -59,15 +59,15 @@
 
 .sel-kicker {
   margin: 0 0 6px;
-  font-size: 12px;
-  letter-spacing: 0.06em;
+  font-size: var(--lb-label);
+  letter-spacing: var(--lb-label-tracking);
   text-transform: uppercase;
   color: var(--lb-gold);
 }
 
 .sel-title {
   margin: 0;
-  font-size: 26px;
+  font-size: var(--lb-title);
   font-weight: 400;
   line-height: 1.15;
 }
@@ -91,6 +91,7 @@
 }
 
 .sel-btn {
+  min-height: var(--lb-touch);
   padding: 9px 18px;
   border-radius: 999px;
   border: 1px solid var(--lb-glass-line-strong);
@@ -101,8 +102,8 @@
 }
 
 .sel-btn-primary {
-  background: var(--lb-gold-deep);
-  border-color: var(--lb-gold);
+  background: var(--lb-gold);
+  border-color: var(--lb-gold-light);
   color: var(--lb-on-gold);
 }
 
@@ -137,8 +138,8 @@
 }
 
 .sel-icon {
-  width: 34px;
-  height: 34px;
+  width: var(--lb-touch);
+  height: var(--lb-touch);
   padding: 0 !important;
   font-size: 20px;
   line-height: 1;
@@ -179,9 +180,9 @@
 
 .sel-toc-title {
   margin: 0 8px 8px;
-  font-size: 12px;
+  font-size: var(--lb-label);
   font-weight: 400;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--lb-label-tracking);
   text-transform: uppercase;
   color: var(--lb-gold);
 }
@@ -197,7 +198,8 @@
   align-items: baseline;
   gap: 8px;
   width: 100%;
-  padding: 7px 8px;
+  min-height: var(--lb-touch);
+  padding: 12px 8px 8px;
   border: 0;
   border-left: 2px solid transparent;
   border-radius: 6px;
@@ -284,8 +286,14 @@
 /* the user's own book (Fase 6): Editar / Remover, with a confirmation */
 .sel-links {
   display: flex;
-  gap: 18px;
-  margin-top: 14px;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--lb-glass-line);
+}
+
+.sel-btn-primary:hover:not(:disabled) {
+  background: var(--lb-gold-light);
 }
 
 .sel-link {

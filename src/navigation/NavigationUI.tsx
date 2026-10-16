@@ -34,12 +34,17 @@ export function NavigationUI() {
   return (
     <>
       <nav className="nav-ui" aria-label="Navegação pela sala">
-        <button type="button" className="nav-btn" aria-label="Voltar" disabled={!canBack || busy} onClick={() => void step(-1)}>
-          <Arrow dir="down" />
-        </button>
-        <button type="button" className="nav-btn" aria-label="Avançar" disabled={!canForward || busy} onClick={() => void step(1)}>
-          <Arrow dir="up" />
-        </button>
+        {/* an arrow with nowhere to go is not shown (a faded one read as broken over the wood) */}
+        {canBack && (
+          <button type="button" className="nav-btn" aria-label="Voltar" disabled={busy} onClick={() => void step(-1)}>
+            <Arrow dir="down" />
+          </button>
+        )}
+        {canForward && (
+          <button type="button" className="nav-btn" aria-label="Avançar" disabled={busy} onClick={() => void step(1)}>
+            <Arrow dir="up" />
+          </button>
+        )}
       </nav>
       {fade > 0 && <div className="nav-fade" style={{ opacity: fade }} />}
     </>

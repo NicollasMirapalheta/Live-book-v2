@@ -128,3 +128,12 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 - Frases sorteadas sem reposição por capítulo (bancos maiores); hífen nunca em palavra com menos de 6 letras nem na 1ª linha do parágrafo, penalidade maior; parágrafo que terminaria a página com hífen é recomposto sem hifenização; colofão com o título do PDF ou nome legível, omitido quando repete o título do livro.
 - Os livros de teste ficaram com 28 e 58 páginas compostas (fixtures e e2e atualizados).
 - Pendências: viúva absorvida por recomposição do parágrafo (hoje a página fica 1 linha mais curta); poesia (quebras de verso); tabelas e notas; PDF só de imagens.
+
+## Fase 6 — interface
+
+### I1 — 2026-10-16
+- Tokens da interface, formulário Novo livro com prévia 3D, painel com Editar/Remover, tela de abertura, dica de primeira visita.
+- **art-reviewer:** coerência 4 · legibilidade 3 · consistência 3 · formulário 3 — "iterar": prévia de frente e com outra cor (azul na prévia, verde-oliva na sala), dourado turvo no primário, versalete fraco, tamanhos soltos fora dos tokens, alvos < 44 px, Editar/Remover sumindo.
+
+### I2
+- Prévia a 32°/8° com a luz quente do sol da sala; primário em ouro; rótulos 12 px com 0,14 em; título 26 px em token; foto como zona com miniatura; obrigatórios marcados; overlay mais leve; alvos ≥ 44 px; nome da cor visível; seta sem destino escondida; fade de navegação no mesmo escuro da abertura.

@@ -28,8 +28,10 @@
   --lb-serif: Georgia, 'Times New Roman', serif;
   --lb-text: 15px;
   --lb-small: 13px;
-  --lb-label: 11.5px;
-  --lb-label-tracking: 0.08em;
+  --lb-label: 12px;
+  /* small spaced capitals: spaced enough to read as a label, not as shouting */
+  --lb-label-tracking: 0.14em;
+  --lb-title: 26px;
 
   /* shape and motion */
   --lb-radius: 10px;

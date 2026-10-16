@@ -12,6 +12,10 @@ import { isPdf, useCreator } from './creator'
 import './ui.css'
 
 const COLORS = Object.keys(SPINE_COLORS) as SpineColor[]
+const PREVIEW_YAW = (32 * Math.PI) / 180
+const PREVIEW_PITCH = (8 * Math.PI) / 180
+/** the room's sun (config/room.json, 3200 K): the colour picked here is the colour on the shelf */
+const WARM = '#FFBB78'
 /** thickness of the preview before the PDF is composed */
 const DRAFT_PAGES = 120
 
@@ -164,14 +168,22 @@ function BookFormOpen() {
   )
 
   const loading = content?.status === 'loading'
+  // thumbnail of the chosen photo
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
+  useEffect(() => {
+    if (!d.coverPhoto) return setPhotoUrl(null)
+    const url = URL.createObjectURL(d.coverPhoto)
+    setPhotoUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [d.coverPhoto])
   return (
     <div className="ui-overlay" onDragOver={(e) => e.preventDefault()} onDrop={(e) => (e.preventDefault(), pickPdf([...e.dataTransfer.files].find(isPdf)))}>
       <form className="ui-card bf" role="dialog" aria-modal="true" aria-labelledby={`${ids}-h`} onSubmit={submit}>
         <div className="bf-preview" aria-hidden="true">
           <Canvas dpr={[1, 2]} camera={{ fov: 30, position: [0.62, 0.05, 0] }} gl={{ antialias: true, toneMapping: AgXToneMapping, toneMappingExposure: 1.1 }}>
             <Suspense fallback={null}>
-              <RoomEnvironment background={false} intensity={1.1} />
-              <directionalLight position={[0.8, 1, 0.6]} intensity={1.6} />
+              <RoomEnvironment background={false} intensity={1} />
+              <directionalLight position={[0.8, 1, 0.6]} intensity={2.2} color={WARM} />
               <PreviewBook book={preview} />
             </Suspense>
           </Canvas>
@@ -186,7 +198,15 @@ function BookFormOpen() {
 
           <label className="bf-drop" data-filled={d.pdf ? '' : undefined}>
             <input type="file" accept="application/pdf,.pdf" onChange={(e) => pickPdf(e.target.files?.[0])} />
-            <span className="bf-drop-main">{d.pdf ? d.pdfName : 'Escolha ou arraste o PDF do conteúdo'}</span>
+            <span className="bf-drop-main">
+              {d.pdf ? (
+                d.pdfName
+              ) : (
+                <>
+                  Escolha ou arraste o PDF do conteúdo <Req />
+                </>
+              )}
+            </span>
             <span className="bf-drop-sub">{d.pdf ? 'trocar arquivo' : 'o texto e as imagens viram as páginas do livro'}</span>
           </label>
           {loading && (
@@ -196,7 +216,9 @@ function BookFormOpen() {
           )}
 
           <label className="ui-field">
-            <span>Título</span>
+            <span>
+              Título <Req />
+            </span>
             <input ref={titleRef} value={d.title} onChange={(e) => set({ title: e.target.value })} maxLength={80} required />
           </label>
           <label className="ui-field">
@@ -209,7 +231,9 @@ function BookFormOpen() {
           </label>
 
           <fieldset className="ui-field">
-            <legend>Cor da capa</legend>
+            <legend>
+              Cor da capa <span className="bf-color-name">· {SPINE_COLOR_LABELS[d.color]}</span>
+            </legend>
             <div className="bf-swatches" role="radiogroup" aria-label="Cor da capa">
               {COLORS.map((c) => (
                 <button
@@ -262,17 +286,19 @@ function BookFormOpen() {
 
           <div className="ui-field">
             <span>Foto da capa</span>
-            <div className="bf-photo">
-              <label className="ui-btn ui-btn-secondary ui-btn-small">
-                <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && set({ coverPhoto: e.target.files[0] })} />
-                {d.coverPhoto ? 'Trocar foto' : 'Escolher foto'}
-              </label>
-              {d.coverPhoto && (
-                <button type="button" className="ui-link" onClick={() => set({ coverPhoto: null })}>
-                  sem foto
-                </button>
-              )}
-            </div>
+            <label className="bf-drop bf-drop-photo" data-filled={d.coverPhoto ? '' : undefined}>
+              <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && set({ coverPhoto: e.target.files[0] })} />
+              {photoUrl && <img className="bf-thumb" src={photoUrl} alt="" />}
+              <span>
+                <span className="bf-drop-main">{d.coverPhoto ? 'Trocar a foto' : 'Escolha uma foto (opcional)'}</span>
+                <span className="bf-drop-sub">vira a polaroid na capa</span>
+              </span>
+            </label>
+            {d.coverPhoto && (
+              <button type="button" className="ui-link" onClick={() => set({ coverPhoto: null })}>
+                tirar a foto
+              </button>
+            )}
           </div>
 
           {error && (
@@ -296,17 +322,27 @@ function BookFormOpen() {
   )
 }
 
+/** Required field mark. */
+function Req() {
+  return (
+    <abbr className="ui-req" title="obrigatório">
+      *
+    </abbr>
+  )
+}
+
 /** The book standing in front of the camera, turning a little to show its spine. */
 function PreviewBook({ book }: { book: Parameters<typeof Book>[0]['book'] }) {
   const g = useRef<Group>(null)
   const d = bookDimensions(book.pageCount, book.trim)
   useFrame(({ clock, camera, size }) => {
-    if (g.current) g.current.rotation.y = -0.45 + Math.sin(clock.elapsedTime * 0.45) * 0.18
-    // framed by whichever is tighter: the column is tall and narrow on desktop, short and wide on phones
+    // three-quarter view: spine and cover together, swaying a little
+    if (g.current) g.current.rotation.y = -PREVIEW_YAW + Math.sin(clock.elapsedTime * 0.45) * 0.1
+    // the book fills ~65% of the column's height, or its width when the column is short and wide (phones)
     const cam = camera as PerspectiveCamera
     const half = Math.tan((cam.fov * Math.PI) / 360)
-    const dist = 1.12 * Math.max(d.coverHeight / 2 / half, (d.coverWidth * 0.75) / (half * (size.width / size.height)))
-    cam.position.set(dist, dist * 0.08, 0)
+    const dist = Math.max(d.coverHeight / (2 * half * 0.65), (d.coverWidth * 0.62) / (half * (size.width / size.height)))
+    cam.position.set(dist * Math.cos(PREVIEW_PITCH), dist * Math.sin(PREVIEW_PITCH), 0)
     cam.lookAt(0, 0, 0)
   })
   return (
