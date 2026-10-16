@@ -6,6 +6,7 @@ declare global {
     __NAV__?: { readonly currentNode: string; readonly isTransitioning: boolean; readonly yaw: number; readonly pitch: number; readonly fov: number }
     __SEL__?: {
       readonly selected: string | null
+      readonly phase: string | null
       readonly focused: string | null
       readonly openRequested: string | null
       readonly order: string[]
@@ -37,7 +38,10 @@ test('teclado: ← → percorre os livros, Enter abre a descrição, Esc volta',
 
   await page.keyboard.press('Enter')
   expect(await page.evaluate(() => window.__SEL__!.selected)).toBe(order[0])
+  // the panel waits for the book to reach the hand
   const panel = page.getByRole('dialog')
+  await expect(panel).toHaveCount(0)
+  await page.waitForFunction(() => window.__SEL__!.phase === 'hand')
   await expect(panel).toBeVisible()
   await expect(panel.getByRole('heading')).toHaveText('Cartas de Verão')
   // navigation is locked while a book is out
@@ -50,7 +54,8 @@ test('teclado: ← → percorre os livros, Enter abre a descrição, Esc volta',
 
   await page.keyboard.press('Escape')
   await expect(panel).toHaveCount(0)
-  expect(await page.evaluate(() => window.__SEL__!.selected)).toBeNull()
+  // the book flies back to the shelf before the selection is released
+  await page.waitForFunction(() => window.__SEL__!.selected === null)
   await expect(page.getByRole('button', { name: 'Voltar' })).toBeVisible()
 })
 
@@ -65,6 +70,17 @@ test('clicar num livro abre a seleção; clicar fora fecha', async ({ page }) =>
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.mouse.click(box.x + box.width * 0.1, box.y + box.height * 0.5)
   await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.waitForFunction(() => window.__SEL__!.selected === null)
+})
+
+test('passar o mouse mostra o título do livro', async ({ page }) => {
+  await atBookcase(page)
+  const id = await page.evaluate(() => window.__SEL__!.order[1])
+  const pos = (await page.evaluate((bookId) => window.__SEL__!.screenPos!(bookId), id))!
+  await page.mouse.move(pos.x, pos.y)
+  await expect(page.getByRole('tooltip')).toHaveText('Diário de Campo')
+  await page.mouse.move(5, 5)
+  await expect(page.getByRole('tooltip')).toHaveCount(0)
 })
 
 test('fora da estante (N0) não há seleção', async ({ page }) => {

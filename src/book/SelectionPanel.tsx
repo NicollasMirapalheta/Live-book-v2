@@ -44,16 +44,18 @@ function useSelectionKeys() {
 export function SelectionPanel() {
   useSelectionKeys()
   const selected = useSelection((s) => s.selected)
+  const inHand = useSelection((s) => s.phase === 'hand')
   const openRequested = useSelection((s) => s.openRequested)
   const clear = useSelection((s) => s.clear)
   const requestOpen = useSelection((s) => s.requestOpen)
   const openRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    if (selected) openRef.current?.focus()
-  }, [selected])
+    if (inHand) openRef.current?.focus()
+  }, [inHand])
 
-  if (params.shot || !selected) return null
+  // the panel shows only once the book is in the reader's hand (spec Fase 3)
+  if (params.shot || !selected || !inHand) return null
   const book = shelfBooks().find((b) => b.id === selected)
   if (!book) return null
 

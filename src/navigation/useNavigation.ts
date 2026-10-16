@@ -8,7 +8,7 @@ export const PITCH_LIMIT = 60
 export const FOV_MIN = 40
 export const FOV_MAX = 70
 const TRANSITION_S = 1.4
-const REDUCED_MOTION_S = 0.3
+const REDUCED_MOTION_S = 0.9
 /** Orientation is only tweened back to the node default when the user looks this far away. */
 const REORIENT_THRESHOLD = 60
 /** The bookcase node always faces the bookcase on arrival (spec Fase 1). */
@@ -98,11 +98,11 @@ export const useNavigation = create<NavigationState>((set, get) => ({
       })
 
     if (prefersReducedMotion()) {
-      const fade = { v: 0 }
-      await gsap.to(fade, { v: 1, duration: REDUCED_MOTION_S / 2, onUpdate: () => set({ fade: fade.v }) })
-      Object.assign(tweened, end)
-      apply()
-      await gsap.to(fade, { v: 0, duration: REDUCED_MOTION_S / 2, onUpdate: () => set({ fade: fade.v }) })
+      // reduced motion still walks (the user asked to move, not to teleport): shorter, and the view
+      // turns instantly instead of rotating during the move
+      tweened.yaw = end.yaw
+      tweened.pitch = end.pitch
+      await gsap.to(tweened, { ...end, duration: REDUCED_MOTION_S, ease: 'power1.inOut', onUpdate: apply })
     } else {
       await gsap.to(tweened, { ...end, duration: TRANSITION_S, ease: 'power2.inOut', onUpdate: apply })
     }

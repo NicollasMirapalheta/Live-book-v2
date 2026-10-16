@@ -4,6 +4,27 @@
   z-index: 11;
 }
 
+/* title on hover: the same card look as the description panel, just the title */
+.sel-popover {
+  white-space: nowrap;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(232, 200, 143, 0.28);
+  background: rgba(28, 18, 12, 0.8);
+  color: #f3e6cf;
+  font: 15px Georgia, 'Times New Roman', serif;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-50%);
+  animation: sel-pop 0.15s ease-out;
+}
+
+@keyframes sel-pop {
+  from {
+    opacity: 0;
+  }
+}
+
 .sel-panel {
   position: fixed;
   right: 32px;

@@ -39,6 +39,13 @@ report = {"quality": args.quality, "samples": samples, "device": device, "atlase
 
 # Static room objects only (no lights, cameras, props, glass)
 room_coll = bpy.data.collections["room"]
+
+# shelf props are dynamic (they move when books arrive): they must not cast shadows into the lightmaps;
+# the app gives each one a real-time contact shadow instead
+props_coll = bpy.data.collections.get("props")
+if props_coll:
+    for o in props_coll.all_objects:
+        o.hide_render = True
 room_objs = [o for o in room_coll.all_objects if o.type == "MESH"]
 
 

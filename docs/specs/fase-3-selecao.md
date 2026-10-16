@@ -9,19 +9,19 @@ Derivada do CLAUDE.md ("Na estante, escolhe um livro, que desliza para fora com 
 - Livros são dinâmicos: PBR em tempo real com o env da sala, sol e lustre, sombra do sol (shadow map sob demanda: `invalidateShadows()` ao mover).
 - Fonte dos livros: fixtures (`src/book/fixtures.ts`) até a Fase 6 (IndexedDB).
 
-## Seleção (só no nó da estante, N2)
+## Seleção (só no nó da estante, N2) — revisada após o teste do usuário (15/10)
 
-- **Hover** (ponteiro): o livro sob o cursor avança 12 mm e ganha um leve realce (rim/emissivo quente ~6%), 0,2 s. Cursor `pointer`.
-- **Clique/toque**: o livro desliza para fora da prateleira (avança ~0,6× a largura do livro, 0,6 s, `power2.out`) e gira ~20° mostrando a capa; aparece o painel de descrição (título, subtítulo, descrição, nº de páginas) e os botões **Abrir** (confirma — Fase 4; nesta fase só registra a intenção) e **Voltar**.
-- **Voltar**, `Esc` ou clique fora: o livro volta à posição (0,5 s) e o painel some.
-- Teclado: com o painel fechado, `←/→` percorre os livros no N2 (foco visível pelo destaque) e `Enter` seleciona.
-- Fora do N2 não há seleção; ir ao N2 é o caminho. Durante a seleção a navegação e o olhar ficam bloqueados.
-- `prefers-reduced-motion`: deslizar vira fade curto.
-- `?shot=1` esconde o painel; `?select=<id>` abre a seleção daquele livro (usado pelo `npm run shot`).
+- **Hover** (ponteiro) ou foco de teclado: o livro avança 12 mm, ganha realce quente leve e aparece um **popover com o título** (mesmo estilo do painel lateral), ancorado acima da lombada. Só o título — sem mais dados.
+- **Clique/toque ou `Enter`:** o livro **sai reto da fileira** (desliza para fora no eixo da prateleira, sem tocar vizinhos nem apoios, ~0,35 s) e **voa até a mão do usuário** (~0,9 s, `power2.inOut`, arco suave): ≈0,45 m à frente da câmera, um pouco abaixo do centro, de pé, **capa fechada voltada para o usuário**, leve inclinação para trás. A navegação trava.
+- **Só quando o livro chega à mão** aparece o painel à direita (cor · material · páginas, título, subtítulo, descrição, **Abrir** e **Voltar**).
+- **Voltar**, `Esc` ou clique fora: o painel some, o livro faz o caminho inverso e entra na fileira.
+- **Abrir:** Fase 4 (abre a capa na mão e permite folhear).
+- `prefers-reduced-motion`: mesma trajetória em ~60% do tempo, sem arco.
+- `?shot=1` esconde painel e popover; `?select=<id>` leva o livro direto à mão (screenshots).
 
 ## Estado
 
-`src/book/useSelection.ts` (zustand): `hovered`, `selected`, `select(id)`, `clear()`, `focusNext(dir)`. Exposto em `window.__SEL__` com `?e2e=1`.
+`src/book/useSelection.ts` (zustand): `hovered`, `focused`, `selected`, `phase` (`out` → `hand` → `back`), `select(id)`, `arrived()`, `clear()`, `returned()`, `focusNext(dir)`. Exposto em `window.__SEL__` com `?e2e=1`.
 
 ## Verificação
 

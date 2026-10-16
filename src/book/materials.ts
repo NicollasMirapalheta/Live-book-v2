@@ -112,7 +112,9 @@ export function foilMaterial(mask: Texture, normal: Texture) {
     metalness: 1,
     roughness: 0.34,
     alphaMap: mask,
-    alphaTest: 0.5,
+    alphaTest: 0.35,
+    // smooth thin rules under MSAA instead of the shimmering of a hard alpha cut
+    alphaToCoverage: true,
     normalMap: normal,
     normalScale: new Vector2(0.6, 0.6),
     polygonOffset: true,

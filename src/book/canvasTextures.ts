@@ -101,9 +101,9 @@ export function frontFoilMask(widthM: number, heightM: number): HTMLCanvasElemen
   ctx.strokeStyle = '#fff'
   const inset = (m: number) => m * pxPerM
   // double fillet (a thick and a thin rule), solid strokes wide enough not to alias into "stitches"
-  ctx.lineWidth = 4
+  ctx.lineWidth = 7
   ctx.strokeRect(inset(0.006), inset(0.006), w - 2 * inset(0.006), h - 2 * inset(0.006))
-  ctx.lineWidth = 2.2
+  ctx.lineWidth = 4
   ctx.strokeRect(inset(0.0092), inset(0.0092), w - 2 * inset(0.0092), h - 2 * inset(0.0092))
   // small corner fleurons joining the two rules
   ctx.lineWidth = 2.2

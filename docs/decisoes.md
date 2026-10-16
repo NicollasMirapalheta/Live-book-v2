@@ -207,3 +207,12 @@ Formato de cada entrada:
 - Escolha: apoios só aparecem nas prateleiras com livros (o par da fileira vem para a frente, junto das lombadas); seleção avança 0,7× a largura do livro e gira 28° (spec: ~0,6× e ~20°); realce 3–4%.
 - Como reverter: `src/scene/ShelfProps.tsx`, constantes em `src/book/BookShelf.tsx`.
 - Precisa do usuário? não.
+
+## 2026-10-15 — Feedback do usuário após testar (navegação e seleção)
+- Contexto: o usuário testou no Windows com "efeitos de animação" desligados, o que o navegador expõe como `prefers-reduced-motion: reduce` (conferido no painel do app). Nesse modo a caminhada entre nós virava um fade de 0,3 s ("teletransporte") e a seleção do livro pulava sem animar (sobrepondo objetos).
+- Pedidos: (1) andar até o próximo ponto em vez de teleportar; (2) passar o mouse mostra o título num popover no estilo do painel; (3) ao clicar, o livro sai da estante e vem para a mão do usuário, de capa fechada voltada para ele; só então aparece o painel com material/páginas/descrição; (4) seguir as fases.
+- Escolha:
+  - Caminhada: mantida em todos os casos; com movimento reduzido ela fica mais curta (0,9 s), sem giro da câmera, em vez do fade. Entra **agora** (é parâmetro). Uma caminhada com passos intermediários/ponto livre fica registrada em `docs/specs/fase-1-navegacao.md` como evolução.
+  - Seleção redesenhada na Fase 3 (spec atualizada): popover de título no hover; clique → o livro sai reto da fileira (sem tocar os vizinhos) e voa até a "mão" (≈0,45 m à frente da câmera, um pouco abaixo do centro, capa de frente); painel aparece quando ele chega; Voltar/Esc faz o caminho inverso. Com movimento reduzido: a mesma trajetória em ~60% do tempo.
+  - A Fase 4 passa a começar da "mão": **Abrir** abre a capa ali mesmo e permite folhear.
+- Precisa do usuário? não.

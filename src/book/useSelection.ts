@@ -12,13 +12,23 @@ interface SelectionState {
   /** keyboard focus (highlight without the pointer) */
   focused: string | null
   selected: string | null
-  /** set when the user confirms "Abrir" (the flight itself is Fase 4) */
+  /**
+   * Where the selected book is: `out` flying from the shelf to the reader's hand, `hand` held in front of
+   * the camera (the description panel shows), `back` returning to the shelf. null when nothing is selected.
+   */
+  phase: 'out' | 'hand' | 'back' | null
+  /** set when the user confirms "Abrir" (opening the book is Fase 4) */
   openRequested: string | null
   setOrder: (ids: string[]) => void
   hover: (id: string | null) => void
   focusNext: (dir: 1 | -1) => void
   select: (id: string) => void
+  /** the flying book reached the hand */
+  arrived: () => void
+  /** start the return flight */
   clear: () => void
+  /** the book is back on the shelf */
+  returned: () => void
   requestOpen: () => void
 }
 
@@ -32,6 +42,7 @@ export const useSelection = create<SelectionState>((set, get) => ({
   hovered: null,
   focused: null,
   selected: null,
+  phase: null,
   openRequested: null,
 
   setOrder: (ids) => set({ order: ids }),
@@ -50,19 +61,28 @@ export const useSelection = create<SelectionState>((set, get) => ({
   },
 
   select: (id) => {
-    if (!canSelect() || !get().order.includes(id)) return
+    if (get().selected || !canSelect() || !get().order.includes(id)) return
     useNavigation.getState().setLocked(true)
-    set({ selected: id, focused: id, hovered: null, openRequested: null })
+    set({ selected: id, phase: 'out', focused: id, hovered: null, openRequested: null })
+  },
+
+  arrived: () => {
+    if (get().phase === 'out') set({ phase: 'hand' })
   },
 
   clear: () => {
+    const { phase } = get()
+    if (phase === 'out' || phase === 'hand') set({ phase: 'back', openRequested: null })
+  },
+
+  returned: () => {
     useNavigation.getState().setLocked(false)
-    set({ selected: null, openRequested: null })
+    set({ selected: null, phase: null, openRequested: null })
   },
 
   requestOpen: () => {
-    const { selected } = get()
-    if (selected) set({ openRequested: selected })
+    const { selected, phase } = get()
+    if (selected && phase === 'hand') set({ openRequested: selected })
   },
 }))
 
@@ -77,6 +97,7 @@ declare global {
   interface Window {
     __SEL__?: {
       readonly selected: string | null
+      readonly phase: SelectionState['phase']
       readonly focused: string | null
       readonly openRequested: string | null
       readonly order: string[]
@@ -92,6 +113,9 @@ if (params.e2e) {
   window.__SEL__ = {
     get selected() {
       return useSelection.getState().selected
+    },
+    get phase() {
+      return useSelection.getState().phase
     },
     get focused() {
       return useSelection.getState().focused

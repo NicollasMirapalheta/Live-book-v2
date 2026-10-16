@@ -9,7 +9,8 @@ Não altera o visual da sala, por isso pode ser desenvolvida em paralelo ao look
 - **Teclado:** setas ←/→ giram, ↑ avança, ↓ volta. W/S também avançam/voltam.
 - **Avançar/voltar:** botões de seta na parte de baixo da tela e um marcador clicável no piso (anel discreto, estilo Street View) na direção de cada vizinho. Clicar no marcador vai para aquele nó.
 - **Transição:** tween de posição com GSAP, 1,4 s, `power2.inOut`. A orientação faz um tween suave para o yaw/pitch padrão do nó de destino apenas se a diferença for grande (> 60°); senão mantém o olhar do usuário. Entrada bloqueada durante o tween.
-- **Movimento reduzido:** com `prefers-reduced-motion`, a transição vira um fade curto (0,3 s).
+- **Movimento reduzido:** com `prefers-reduced-motion`, a caminhada continua (o usuário pediu "andar até o ponto"), mais curta (0,9 s) e sem girar a câmera. (Antes: fade de 0,3 s — lia como teletransporte.)
+- **Evolução registrada (pedido do usuário, 15/10):** caminhada mais "física" entre os nós — leve balanço de passo opcional, desaceleração natural e, no futuro, parar em pontos intermediários do trajeto (clicar no piso entre dois nós). Momento: depois da Fase 4, junto com a revisão de UX da Fase 6.
 - **N2:** ao chegar, a câmera se orienta para a estante (yaw do nó) — é o ponto de interação com os livros (Fase 3).
 - **URL:** `?node=N1&yaw=10&pitch=-5&fov=55` define o estado inicial (usado pelo `npm run shot`). O estado atual **não** é escrito na URL a cada movimento.
 

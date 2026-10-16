@@ -1,6 +1,7 @@
+import { Html } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { use, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Box3, Color, Vector3, type Group, type Mesh, type MeshStandardMaterial } from 'three'
+import { Box3, Color, Euler, Quaternion, Vector3, type Group, type Mesh, type MeshStandardMaterial } from 'three'
 import { params } from '../app/params'
 import { invalidateShadows } from '../scene/shadows'
 import { Book } from './Book'
@@ -10,21 +11,35 @@ import { bookDimensions } from './geometry'
 import { loadBookcase, shelfBooks, shelfLayoutFor, shelfOrder } from './shelfData'
 import type { PlacedBook, Shelf } from './shelfLayout'
 import { useSelection } from './useSelection'
+import './selection.css'
 
 const HOVER_PULL = 0.012
-const SELECT_TURN = (-28 * Math.PI) / 180
-const SELECT_LIFT = 0
 const BOOKEND_PLATE = 0.1
 const PLATE_THICKNESS = 0.004
 const HIGHLIGHT = new Color('#FFB46A')
 
+/** Flight timings (s): straight out of the row, then to the hand. Reduced motion: same path, faster. */
+const EXTRACT_S = 0.35
+const FLY_S = 0.9
+const RETURN_FACTOR = 0.85
+const REDUCED_FACTOR = 0.6
+
+/** Hand pose relative to the camera: the distance scales with the book so it fills ~60% of the view height. */
+const HAND_DISTANCE_PER_HEIGHT = 2.2
+const HAND_DROP = 0.035 // below the view center (m)
+const HAND_TILT = (-7 * Math.PI) / 180 // top leaning back, like a book held to read the cover
+const HAND_TURN = (5 * Math.PI) / 180
+const HAND_LEFT = 0.08 // fraction of the distance
+
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
-/** Exponential approach with time constant tau (s); instant with reduced motion. */
+/** Exponential approach with time constant tau (s). */
 function approach(current: number, target: number, dt: number, tau: number) {
-  if (reducedMotion()) return target
   return target + (current - target) * Math.exp(-dt / tau)
 }
+
+const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2)
+const easeOut = (t: number) => 1 - (1 - t) * (1 - t)
 
 interface ShelfBookProps {
   book: FixtureBook
@@ -34,50 +49,106 @@ interface ShelfBookProps {
   lift: number
 }
 
+const IDENTITY = new Quaternion()
+
 /**
- * One book standing on the shelf, spine toward the room. Hover pulls it a little; selection slides it out
- * and turns the front cover toward the reader (spec Fase 3).
+ * One book standing on the shelf, spine toward the room. Hover pulls it a little; selection slides it
+ * straight out of the row and flies it to the reader's hand, front cover facing the camera (spec Fase 3).
  */
 function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
   const d = useMemo(() => bookDimensions(book.pageCount, book.trim), [book.pageCount, book.trim])
   const outer = useRef<Group>(null)
   const inner = useRef<Group>(null)
-  const anim = useRef({ pull: 0, turn: 0, glow: 0, lean: place.lean, lift: 0 })
-  const hover = useSelection((s) => s.hover)
-  const isSelected = useSelection((s) => s.selected === book.id)
-  const select = useSelection((s) => s.select)
+  const anim = useRef({ hover: 0, glow: 0, s: 0 })
+  const flight = useRef<{ handPos: Vector3; handQuat: Quaternion } | null>(null)
+  const scratch = useMemo(() => ({ pos: new Vector3(), quat: new Quaternion(), euler: new Euler(), fwd: new Vector3(), up: new Vector3() }), [])
+  const camera = useThree((st) => st.camera)
+  const hover = useSelection((st) => st.hover)
+  const isSelected = useSelection((st) => st.selected === book.id)
+  const select = useSelection((st) => st.select)
 
-  // pivot at the bottom corner toward the lean (the corner that stays on the shelf)
+  // shelf pose: pivot at the bottom corner toward the lean (the corner that stays on the shelf)
   const pivotX = place.x + place.thickness / 2
   const z = shelf.zFront - 0.01 - d.spineBulge + place.dz
+  const shelfY = shelf.y + lift
+  // straight out of the row: the whole book clears the shelf front plus a margin
+  const extract = d.coverWidth + d.spineBulge + 0.05
+  // book center in the outer group's frame (inner offset + half the book; the fore-edge is toward −Z)
+  const center = useMemo(() => new Vector3(-place.thickness / 2, d.coverHeight / 2, -d.coverWidth / 2), [place.thickness, d])
 
   useFrame((_, delta) => {
-    const s = useSelection.getState()
+    const st = useSelection.getState()
     const dt = Math.min(delta, 0.1)
-    const isSel = s.selected === book.id
-    const isHot = !s.selected && (s.hovered === book.id || s.focused === book.id)
+    const isSel = st.selected === book.id
+    const isHot = !st.selected && (st.hovered === book.id || st.focused === book.id)
     const a = anim.current
-    // the base stays on the board: the book never comes out further than ~70% of its depth
-    const pullTarget = isSel ? d.coverWidth * 0.7 : isHot ? HOVER_PULL : 0
-    const before = a.pull + a.turn
-    a.pull = approach(a.pull, pullTarget, dt, isSel ? 0.18 : 0.07)
-    a.turn = approach(a.turn, isSel ? SELECT_TURN : 0, dt, 0.2)
-    a.lean = approach(a.lean, isSel ? 0 : place.lean, dt, 0.15)
-    a.glow = approach(a.glow, isHot || isSel ? 1 : 0, dt, 0.08)
-    a.lift = approach(a.lift, isSel ? SELECT_LIFT : 0, dt, 0.15)
-    if (outer.current && inner.current) {
-      outer.current.position.set(pivotX, shelf.y + lift + a.lift, z + a.pull)
-      outer.current.rotation.set(0, a.turn, -a.lean)
-      inner.current.position.set(-place.thickness / 2, 0, 0)
+    const speed = reducedMotion() ? 1 / REDUCED_FACTOR : 1
+    const total = EXTRACT_S + FLY_S
+    const k = scratch
+
+    if (isSel && !flight.current) {
+      // capture the hand pose once: the camera is locked while a book is out
+      camera.updateMatrixWorld()
+      const dist = d.coverHeight * HAND_DISTANCE_PER_HEIGHT
+      camera.getWorldDirection(k.fwd)
+      k.up.set(0, 1, 0).applyQuaternion(camera.quaternion)
+      const right = new Vector3(1, 0, 0).applyQuaternion(camera.quaternion)
+      // slightly left of center: the description panel sits on the right
+      const handCenter = camera.position
+        .clone()
+        .addScaledVector(k.fwd, dist)
+        .addScaledVector(k.up, -HAND_DROP)
+        .addScaledVector(right, -HAND_LEFT * dist)
+      // camera frame, then tilt the top back around the camera's horizontal axis, then turn the book so its
+      // front cover (local +X) faces the camera with the spine on the left
+      const handQuat = camera.quaternion
+        .clone()
+        .multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), HAND_TILT))
+        .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2 + HAND_TURN))
+      const handPos = handCenter.sub(center.clone().applyQuaternion(handQuat))
+      flight.current = { handPos, handQuat }
     }
-    if (Math.abs(a.pull + a.turn - before) > 1e-5) invalidateShadows()
+
+    const before = a.s + a.hover
+    if (isSel && (st.phase === 'out' || st.phase === 'hand')) {
+      a.s = Math.min(total, a.s + dt * speed)
+      if (a.s >= total && st.phase === 'out') st.arrived()
+    } else if (isSel && st.phase === 'back') {
+      a.s = Math.max(0, a.s - (dt * speed) / RETURN_FACTOR)
+      if (a.s <= 0) {
+        flight.current = null
+        st.returned()
+      }
+    }
+    a.hover = approach(a.hover, isHot ? HOVER_PULL : 0, dt, 0.07)
+    a.glow = approach(a.glow, isHot ? 1 : 0, dt, 0.08)
+
+    const o = outer.current
+    if (o) {
+      const shelfQuat = k.quat.setFromEuler(k.euler.set(0, 0, -place.lean))
+      if (a.s <= 0 || !flight.current) {
+        o.position.set(pivotX, shelfY, z + a.hover)
+        o.quaternion.copy(shelfQuat)
+      } else if (a.s <= EXTRACT_S) {
+        // phase 1: straighten up and slide out along the shelf depth (never sideways: no collisions)
+        const u = easeOut(a.s / EXTRACT_S)
+        o.position.set(pivotX, shelfY + 0.004 * u, z + a.hover + extract * u)
+        o.quaternion.copy(shelfQuat).slerp(IDENTITY, u)
+      } else {
+        // phase 2: fly to the hand on a gentle arc
+        const u = easeInOut((a.s - EXTRACT_S) / FLY_S)
+        k.pos.set(pivotX, shelfY + 0.004, z + extract)
+        o.position.lerpVectors(k.pos, flight.current.handPos, u)
+        if (!reducedMotion()) o.position.y += Math.sin(Math.PI * u) * 0.06
+        o.quaternion.copy(IDENTITY).slerp(flight.current.handQuat, u)
+      }
+    }
+    if (Math.abs(a.s + a.hover - before) > 1e-5) invalidateShadows()
     if (inner.current && Math.abs(a.glow - (inner.current.userData.glow ?? -1)) > 0.002) {
       inner.current.userData.glow = a.glow
-      inner.current.traverse((o) => {
-        const m = (o as Mesh).material as MeshStandardMaterial | undefined
-        if (m && 'emissive' in m && m.emissive) {
-          m.emissive.copy(HIGHLIGHT).multiplyScalar((isSel ? 0.04 : 0.03) * a.glow)
-        }
+      inner.current.traverse((obj) => {
+        const m = (obj as Mesh).material as MeshStandardMaterial | undefined
+        if (m && 'emissive' in m && m.emissive) m.emissive.copy(HIGHLIGHT).multiplyScalar(0.03 * a.glow)
       })
     }
   })
@@ -86,7 +157,7 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
     <group
       ref={outer}
       name={`shelf_book_${book.id}`}
-      position={[pivotX, shelf.y + lift, z]}
+      position={[pivotX, shelfY, z]}
       rotation={[0, 0, -place.lean]}
       onPointerOver={(e) => {
         e.stopPropagation()
@@ -105,7 +176,21 @@ function ShelfBook({ book, place, shelf, lift }: ShelfBookProps) {
       <group ref={inner} position={[-place.thickness / 2, 0, 0]}>
         <Book book={book} detail={isSelected ? 'full' : 'shelf'} />
       </group>
+      <TitlePopover book={book} anchor={[-place.thickness / 2, d.coverHeight + 0.03, 0]} />
     </group>
+  )
+}
+
+/** Title above the spine while hovered or focused (same look as the description panel). */
+function TitlePopover({ book, anchor }: { book: FixtureBook; anchor: [number, number, number] }) {
+  const visible = useSelection((st) => !st.selected && (st.hovered === book.id || st.focused === book.id))
+  if (params.shot || !visible) return null
+  return (
+    <Html position={anchor} center zIndexRange={[10, 0]} style={{ pointerEvents: 'none' }}>
+      <div className="sel-popover" role="tooltip">
+        {book.title}
+      </div>
+    </Html>
   )
 }
 
@@ -143,7 +228,7 @@ export function BookShelf() {
 
   useEffect(() => {
     setOrder(shelfOrder(layout, data.shelves))
-    // ?select=<id> opens the selection right away (screenshots); waits for the order to be set
+    // ?select=<id> brings the book to the hand right away (screenshots); waits for the order to be set
     if (params.select) {
       const id = params.select
       const t = setTimeout(() => useSelection.getState().select(id), 50)

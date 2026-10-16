@@ -1,6 +1,7 @@
 import { useGLTF } from '@react-three/drei'
-import { use, useLayoutEffect } from 'react'
-import type { Mesh, MeshStandardMaterial } from 'three'
+import { use, useLayoutEffect, useMemo } from 'react'
+import { Box3, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3, type MeshStandardMaterial, type Object3D } from 'three'
+import { contactShadowTexture } from '../book/canvasTextures'
 import { loadBookcase, shelfBooks, shelfLayoutFor } from '../book/shelfData'
 import { useQuality } from '../state/quality'
 import { invalidateShadows } from './shadows'
@@ -34,8 +35,21 @@ export function ShelfProps() {
     })
   }, [scene, quality])
 
+  const blobTex = useMemo(() => contactShadowTexture(), [])
+
   useLayoutEffect(() => {
     const layout = shelfLayoutFor(data, shelfBooks())
+    // contact shadow under every visible prop (the props are not in the bake): a soft blob on the board
+    const blobs: Mesh[] = []
+    const addBlob = (parent: Object3D, w: number, depth: number) => {
+      const blob = new Mesh(new PlaneGeometry(w, depth), new MeshBasicMaterial({ color: '#000', alphaMap: blobTex, transparent: true, opacity: 0.55, depthWrite: false }))
+      blob.name = 'prop_contact_shadow'
+      blob.rotation.x = -Math.PI / 2
+      blob.position.y = 0.0008
+      blob.renderOrder = 1
+      parent.add(blob)
+      blobs.push(blob)
+    }
     const shelves = new Map(data.shelves.map((s) => [s.index, s]))
     const counts: Record<string, number> = {}
     for (const p of layout.props) {
@@ -50,14 +64,29 @@ export function ShelfProps() {
         // empty pairs read as forgotten on a bare shelf; the pair holding a row comes forward with the books
         node.visible = holdsBooks
         node.position.set(center, shelf.y, holdsBooks ? shelf.zFront - 0.07 : node.position.z)
-        node.getObjectByName(`prop_${p.kind}_${i}_l`)?.position.setX(p.x - center)
-        node.getObjectByName(`prop_${p.kind}_${i}_r`)?.position.setX(end - center)
+        for (const side of ['l', 'r'] as const) {
+          const upright = node.getObjectByName(`prop_${p.kind}_${i}_${side}`)
+          if (!upright) continue
+          upright.position.setX((side === 'l' ? p.x : end) - center)
+          if (holdsBooks) addBlob(upright, 0.14, 0.15)
+        }
       } else {
         node.position.set(p.x, shelf.y, (shelf.zFront + shelf.zBack) / 2)
+        // footprint from the prop's bounds (in its own frame)
+        const box = new Box3().setFromObject(node)
+        const size = box.getSize(new Vector3())
+        addBlob(node, (size.x / node.scale.x) * 1.5, (size.z / node.scale.z) * 1.5)
       }
     }
     invalidateShadows()
-  }, [scene, data])
+    return () => {
+      for (const b of blobs) {
+        b.removeFromParent()
+        b.geometry.dispose()
+        ;(b.material as MeshBasicMaterial).dispose()
+      }
+    }
+  }, [scene, data, blobTex])
 
   return <primitive object={scene} />
 }
