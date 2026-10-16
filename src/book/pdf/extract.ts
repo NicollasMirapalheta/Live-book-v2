@@ -30,13 +30,19 @@ interface ImageObject {
 /** pdf.js image data → our own canvas (pdf.js closes its ImageBitmaps when the document is released). */
 function toDrawable(img: ImageObject): HTMLCanvasElement | null {
   const c = document.createElement('canvas')
+  if (img.bitmap) {
+    // drawn straight at the final size: no full-resolution copy of a large scan
+    const k = Math.min(1, MAX_SIDE / Math.max(img.width, img.height))
+    c.width = Math.round(img.width * k)
+    c.height = Math.round(img.height * k)
+    const ctx = c.getContext('2d')!
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(img.bitmap, 0, 0, c.width, c.height)
+    return c
+  }
   c.width = img.width
   c.height = img.height
   const ctx = c.getContext('2d')!
-  if (img.bitmap) {
-    ctx.drawImage(img.bitmap, 0, 0)
-    return fit(c)
-  }
   if (!img.data) return null
   const out = ctx.createImageData(img.width, img.height)
   const n = img.width * img.height

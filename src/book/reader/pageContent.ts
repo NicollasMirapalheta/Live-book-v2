@@ -158,6 +158,25 @@ function drawPlan(ctx: CanvasRenderingContext2D, book: PageBook, layout: BookLay
   }
 }
 
+let scratch: HTMLCanvasElement | null = null
+
+/** One reusable canvas for the show-through pass (a new one per page was ~7 MB of garbage each time). */
+function scratchCanvas(W: number, H: number): HTMLCanvasElement {
+  scratch ??= document.createElement('canvas')
+  if (scratch.width !== W || scratch.height !== H) {
+    // resizing also clears it and resets the context state
+    scratch.width = W
+    scratch.height = H
+  } else {
+    const ctx = scratch.getContext('2d')!
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+    ctx.globalAlpha = 1
+    ctx.globalCompositeOperation = 'source-over'
+    ctx.clearRect(0, 0, W, H)
+  }
+  return scratch
+}
+
 /**
  * Draws page `page` (1-based) of the book. Odd pages are rectos (binding on the left of the image),
  * even pages versos (binding on the right). Pages past pageCount are blank paper.
@@ -182,9 +201,7 @@ export function drawPage(book: PageBook, page: number, aspect: number, H: number
   // show-through: the print on the other side of the sheet, mirrored and faint (paper is not card)
   const back = recto ? page + 1 : page - 1
   if (back >= 1 && back <= book.pageCount) {
-    const off = document.createElement('canvas')
-    off.width = W
-    off.height = H
+    const off = scratchCanvas(W, H)
     drawContent(off.getContext('2d')!, book, back, H * aspect, H)
     ctx.save()
     // faint, and half a line off: the two sides never print on exactly the same baselines

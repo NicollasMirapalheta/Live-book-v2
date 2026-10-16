@@ -202,10 +202,12 @@ function BookFormOpen() {
     close()
   }
 
+  // the spine lettering is redrawn (canvases, normal map) for every new title: wait for a pause in the typing
+  const previewTitle = useSettled(d.title, 350)
   const preview = useMemo(
     () => ({
       id: d.id,
-      title: d.title || 'Sem título',
+      title: previewTitle || 'Sem título',
       description: '',
       color: d.color,
       coverMaterial: d.coverMaterial,
@@ -214,7 +216,7 @@ function BookFormOpen() {
       createdAt: d.createdAt,
       coverPhoto: d.coverPhoto ?? undefined,
     }),
-    [d.id, d.title, d.color, d.coverMaterial, d.trim, d.pageCount, d.createdAt, d.coverPhoto],
+    [d.id, previewTitle, d.color, d.coverMaterial, d.trim, d.pageCount, d.createdAt, d.coverPhoto],
   )
 
   const loading = content?.status === 'loading'
@@ -377,6 +379,16 @@ function Req() {
 }
 
 /** The book standing in front of the camera, turning a little to show its spine. */
+/** `value` once it stopped changing for `ms`. */
+function useSettled<T>(value: T, ms: number): T {
+  const [settled, setSettled] = useState(value)
+  useEffect(() => {
+    const t = setTimeout(() => setSettled(value), ms)
+    return () => clearTimeout(t)
+  }, [value, ms])
+  return settled
+}
+
 function PreviewBook({ book }: { book: Parameters<typeof Book>[0]['book'] }) {
   const g = useRef<Group>(null)
   const d = bookDimensions(book.pageCount, book.trim)

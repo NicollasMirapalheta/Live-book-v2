@@ -7,13 +7,14 @@ export default defineConfig({
   workers: 1,
   reporter: [['list']],
   use: {
-    baseURL: 'http://localhost:4173',
+    baseURL: 'http://localhost:4174',
     viewport: { width: 1280, height: 720 },
     launchOptions: { args: ['--use-angle=default', '--enable-gpu', '--ignore-gpu-blocklist'] },
   },
   webServer: {
-    command: 'npx vite build --logLevel warn && npx vite preview --port 4173 --strictPort',
-    url: 'http://localhost:4173',
+    command: 'npx vite build --logLevel warn && npx vite preview --port 4174 --strictPort',
+    url: 'http://localhost:4174',
+    // its own port: `npm run shot` leaves its preview (built with .env.local, cloud on) running on 4173
     reuseExistingServer: true,
     timeout: 180_000,
     // the tests cover the local mode (Fase 6): "off" keeps the cloud of .env.local out of this build

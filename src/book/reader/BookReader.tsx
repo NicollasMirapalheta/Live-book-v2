@@ -19,8 +19,8 @@ const PIVOT_Z = 0
 const EPS = 0.0002
 /** sheets that can be in the air at once (riffle: flight time / launch gap, rounded up) */
 const SHEET_POOL = 7
-/** page textures while riffling (px high) */
-const RIFFLE_TEX_HEIGHT = 768
+/** page textures while riffling: px high and how many are kept (a low-tier machine keeps fewer, smaller) */
+const RIFFLE_TEX = { high: { height: 768, keep: 32 }, low: { height: 512, keep: 16 } } as const
 
 interface Flight {
   front: number
@@ -102,7 +102,7 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
   )
   const textures = useMemo(() => new PageTextures(pages, W / H, PAGE_TEX_HEIGHT[quality]), [pages, W, H, quality])
   // while riffling, every page is seen for a few frames in motion: small textures, drawn fast
-  const quick = useMemo(() => new PageTextures(pages, W / H, RIFFLE_TEX_HEIGHT, 32), [pages, W, H])
+  const quick = useMemo(() => new PageTextures(pages, W / H, RIFFLE_TEX[quality].height, RIFFLE_TEX[quality].keep), [pages, W, H, quality])
   const mats = useMemo(() => {
     const blank = textures.get(pages.pageCount + 1000)
     const right = pageMaterial(0)
