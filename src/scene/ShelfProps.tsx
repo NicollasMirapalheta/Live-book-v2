@@ -2,19 +2,21 @@ import { use, useLayoutEffect } from 'react'
 import { Box3, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3, type MeshStandardMaterial, type Object3D } from 'three'
 import { contactShadowTexture, shared } from '../book/canvasTextures'
 import { loadBookcase, shelfLayoutFor, useShelfBooks } from '../book/shelfData'
-import { useQuality } from '../state/quality'
+import type { Quality } from '../state/quality'
 import { releaseAfterUpload, texturesOf } from './releaseImages'
 import { invalidateShadows } from './shadows'
-import { useModel } from './models'
+import { useTierModel } from './models'
 
 /**
  * Shelf props (public/models/props.glb): real-time PBR with the room env, sun and chandelier, shadows.
  * Positions follow the shelf layout: the bookend pairs hug the rows of books and a prop that does not fit
  * moves to the next shelf (src/book/shelfLayout.ts). Props are named prop_<kind>_<i> in slot order.
  */
+const propsUrl = (tier: Quality) => (tier === 'low' ? '/models/props.low.glb' : '/models/props.glb')
+
 export function ShelfProps() {
-  const quality = useQuality((s) => s.quality)
-  const { scene } = useModel(quality === 'low' ? '/models/props.low.glb' : '/models/props.glb')
+  const { gltf, tier: quality } = useTierModel(propsUrl)
+  const scene = gltf.scene
   const data = use(loadBookcase())
 
   useLayoutEffect(() => {

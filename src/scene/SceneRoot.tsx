@@ -12,7 +12,7 @@ import { LoadingScreen } from '../ui/LoadingScreen'
 import { isReading, useSelection } from '../book/useSelection'
 import { NavigationUI } from '../navigation/NavigationUI'
 import { NodeMarkers } from '../navigation/NodeMarkers'
-import { useQuality } from '../state/quality'
+import { LEVELS, useQuality } from '../state/quality'
 import { useCreator } from '../ui/creator'
 import { AdaptiveQuality } from './AdaptiveQuality'
 import { DynamicLights } from './DynamicLights'
@@ -26,7 +26,7 @@ import { Sky } from './Sky'
 export function SceneRoot() {
   const quality = useQuality((s) => s.quality)
   const resolved = useQuality((s) => s.resolved)
-  const relief = useQuality((s) => s.relief)
+  const maxDpr = useQuality((s) => LEVELS[s.level].dpr)
   const reading = useSelection((s) => isReading(s.phase))
   // behind the book form the room is blurred and still: it stops rendering until the form closes
   const formOpen = useCreator((s) => s.mode !== null)
@@ -35,8 +35,8 @@ export function SceneRoot() {
       <Canvas
         // Tone mapping happens once, in the post-processing chain (AgX).
         gl={{ antialias: false, toneMapping: NoToneMapping, preserveDrawingBuffer: params.shot }}
-        // reading keeps the screen's full pixel ratio in every tier: text drawn at 1× and stretched blurs
-        dpr={reading || (quality === 'high' && relief === 0) ? [1, 2] : 1}
+        // the graphics level caps the pixel ratio; reading keeps the screen's (text drawn at 1× and stretched blurs)
+        dpr={[1, reading ? 2 : maxDpr]}
         frameloop={formOpen && !params.shot ? 'demand' : 'always'}
         shadows={quality === 'high' ? 'soft' : false}
         onCreated={({ gl }) => {

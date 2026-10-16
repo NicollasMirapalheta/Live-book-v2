@@ -630,6 +630,152 @@
 }
 
 /* bottom right, level with "Novo livro": off the books it talks about */
+/* full screen and settings: round icon buttons inside the signed-in pill */
+.acc-icon {
+  display: grid;
+  place-items: center;
+  width: var(--lb-touch);
+  height: var(--lb-touch);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--lb-ink-soft);
+  cursor: pointer;
+  transition: color var(--lb-fast), background var(--lb-fast);
+}
+
+.acc-icon:hover,
+.acc-icon[aria-expanded='true'] {
+  color: var(--lb-gold);
+  background: var(--lb-glass-light);
+}
+
+.acc-icon:focus-visible {
+  outline: 2px solid var(--lb-gold-light);
+  outline-offset: 1px;
+}
+
+/* settings: under the pill, right-aligned with it */
+.acc-settings {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(340px, calc(100vw - 32px));
+  padding: 18px 20px 20px;
+}
+
+.acc-settings p {
+  margin: 0;
+}
+
+.acc-set-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.acc-set-label {
+  font: var(--lb-text) var(--lb-serif);
+  color: var(--lb-ink);
+}
+
+.acc-set-value {
+  font: var(--lb-small) var(--lb-serif);
+  color: var(--lb-gold);
+}
+
+/* five fixed steps: a gold track up to the thumb, ticks under it */
+.acc-range {
+  width: 100%;
+  height: var(--lb-touch);
+  margin: 4px 0 0;
+  appearance: none;
+  background: none;
+  cursor: pointer;
+}
+
+.acc-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--lb-gold) var(--fill), var(--lb-glass-line) var(--fill));
+}
+
+.acc-range::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--lb-gold) var(--fill), var(--lb-glass-line) var(--fill));
+}
+
+.acc-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -8px;
+  border-radius: 50%;
+  border: 2px solid var(--lb-gold);
+  background: var(--lb-on-gold);
+  box-shadow: var(--lb-shadow-small);
+}
+
+.acc-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--lb-gold);
+  background: var(--lb-on-gold);
+}
+
+.acc-range:focus-visible {
+  outline: 2px solid var(--lb-gold-light);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.acc-range:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* the five steps, under the track (inset by the thumb's radius) */
+.acc-range-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin: -12px 8px 8px;
+  pointer-events: none;
+}
+
+.acc-range-ticks span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--lb-glass-line);
+}
+
+.acc-range-ticks span[data-on] {
+  background: var(--lb-gold);
+}
+
+.acc-range-ends {
+  display: flex;
+  justify-content: space-between;
+  font: var(--lb-small) var(--lb-serif);
+  color: var(--lb-ink-soft);
+}
+
+.acc-set-note {
+  margin: 12px 0 0 !important;
+  font: var(--lb-small) var(--lb-serif);
+  line-height: 1.45;
+  color: var(--lb-ink-soft);
+}
+
+.acc-settings .ui-btn {
+  margin-top: 14px;
+}
+
 .acc-offer {
   position: fixed;
   right: 24px;

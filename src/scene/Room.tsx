@@ -1,16 +1,16 @@
 import { useThree } from '@react-three/fiber'
-import { use, useLayoutEffect, useMemo } from 'react'
+import { use, useCallback, useLayoutEffect, useMemo } from 'react'
 import { EquirectangularReflectionMapping, PMREMGenerator, type Mesh, type Texture } from 'three'
 import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js'
 import { params } from '../app/params'
-import { useQuality } from '../state/quality'
+import type { Quality } from '../state/quality'
 import { applyLightmaps, loadAtlasTexture, loadManifest, type LightmapManifest } from './Lightmaps'
 import { PlaceholderRoom } from './PlaceholderRoom'
 import { releaseAfterUpload, texturesOf } from './releaseImages'
 import { FloorReflection } from './FloorReflection'
 import { invalidateShadows } from './shadows'
 import { CandleBulbs, FloorJoints, Flames, WindowGlass } from './RoomExtras'
-import { useModel } from './models'
+import { useTierModel } from './models'
 
 interface RoomAssets {
   manifest: LightmapManifest
@@ -34,9 +34,13 @@ function loadRoomAssets(): Promise<RoomAssets | null> {
   return assetsPromise
 }
 
+const roomUrl = (tier: Quality) => (tier === 'low' ? '/models/room.low.glb' : '/models/room.glb')
+
 function BakedRoom({ assets }: { assets: RoomAssets }) {
-  const quality = useQuality((s) => s.quality)
-  const { scene: room } = useModel(quality === 'low' ? '/models/room.low.glb' : '/models/room.glb')
+  // the lightmap atlases and the env are shared by both tiers' models: they survive a switch
+  const keep = useCallback(() => new Set<Texture>([...Object.values(assets.atlases), assets.env]), [assets])
+  const { gltf, tier: quality } = useTierModel(roomUrl, keep)
+  const room = gltf.scene
   const gl = useThree((s) => s.gl)
   const scene = useThree((s) => s.scene)
 

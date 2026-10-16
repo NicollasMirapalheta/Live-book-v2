@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { params } from '../app/params'
 import { cloudConfigured, useAccount } from '../data/cloud'
 import { useLibrary } from '../data/library'
+import { FullscreenButton, SettingsButton, SettingsPanel } from './Settings'
 import './ui.css'
 
 /**
- * The account (spec Fase 7), top right: "Entrar com Google", or who is signed in and "Sair". Nothing at
- * all without the Supabase keys (the books stay in this browser, as in Fase 6). `visible` false (a book in
- * the hand or open, the form) hides it, except while the offer to move local books is waiting.
+ * The account (spec Fase 7), top right: "Entrar com Google", or who is signed in, full screen, settings and
+ * "Sair". Nothing at all without the Supabase keys (the books stay in this browser, as in Fase 6). `visible`
+ * false (a book in the hand or open, the form) hides it, except while the offer to move local books is waiting.
  */
 export function AccountUI({ visible }: { visible: boolean }) {
   const status = useAccount((s) => s.status)
@@ -15,6 +16,8 @@ export function AccountUI({ visible }: { visible: boolean }) {
   const signIn = useAccount((s) => s.signIn)
   const signOut = useAccount((s) => s.signOut)
   const offering = useLibrary((s) => s.localPending.length > 0) && status === 'in'
+  const [settings, setSettings] = useState(false)
+  const closeSettings = useCallback(() => setSettings(false), [])
   if (!cloudConfigured || params.shot || status === 'loading' || status === 'off' || (!visible && !offering)) return null
   return (
     <div className="acc">
@@ -26,6 +29,9 @@ export function AccountUI({ visible }: { visible: boolean }) {
             <span className="acc-avatar acc-initial">{account.name.slice(0, 1).toUpperCase()}</span>
           )}
           <span className="acc-name">{account.name}</span>
+          {/* signed-in extras (pedido do usuário, 16/10): full screen and the graphics settings */}
+          <FullscreenButton />
+          <SettingsButton open={settings} onToggle={() => setSettings((v) => !v)} />
           <button type="button" className="acc-out" onClick={() => void signOut()}>
             Sair
           </button>
@@ -35,6 +41,7 @@ export function AccountUI({ visible }: { visible: boolean }) {
           Entrar com Google
         </button>
       )}
+      {settings && status === 'in' && <SettingsPanel onClose={closeSettings} />}
       <MigrationOffer />
     </div>
   )

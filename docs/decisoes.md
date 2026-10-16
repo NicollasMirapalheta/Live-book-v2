@@ -366,3 +366,21 @@ Formato de cada entrada:
   - lightmaps em KTX2: RGBM com perda.
 - Como reverter: desinstalar o `ktx`, ou forçar `ktx = false` em `optimize.ts`, e rodar `npm run optimize`. O `useModel` lê WebP e KTX2.
 - Precisa do usuário? sim: aceitar o download de ~33 MB, ou pedir para cortar resoluções e voltar a < 30 MB.
+
+## 2026-10-16 — Tela cheia e níveis de qualidade gráfica (pedido do usuário)
+- Contexto: o usuário aprovou o desempenho e a leitura no notebook e pediu duas coisas para quem está logado: um botão de tela cheia e uma configuração de qualidade em 4 ou 5 passos, de "desempenho" a "qualidade". A avaliação automática nem sempre acerta o aparelho.
+- Escolha:
+  - Na pílula da conta (logado): ícone de tela cheia (Fullscreen API; some onde a página não pode usá-la, como no iPhone) e ícone de configurações. O painel tem uma régua de 5 passos e o botão "Voltar ao automático".
+  - Os níveis (`src/state/quality.ts` `LEVELS`):
+    1. Desempenho máximo: modelos leves, pixel ratio 1.
+    2. Desempenho: modelos leves, pixel ratio até 1,5.
+    3. Equilibrado: modelos completos, pixel ratio 1, sem MSAA nem AO.
+    4. Qualidade: pixel ratio até 1,5, MSAA 2×, AO.
+    5. Qualidade máxima: o aprovado.
+  - No automático, a detecção escolhe 5 ou 1 e o monitor de desempenho desce 5 → 4 → 3.
+  - A escolha manual fica guardada no aparelho (localStorage) e desliga o alívio automático.
+  - Trocar entre modelos leves e completos não recarrega a página: o conjunto novo carrega por trás (`src/scene/models.ts`, carregador próprio em vez do `useGLTF`) e o antigo é liberado da memória.
+  - A leitura continua com o pixel ratio da tela em qualquer nível.
+- Alternativa: guardar o nível na conta (Supabase). Descartada porque o nível depende do aparelho, não da pessoa.
+- Como reverter: tirar `FullscreenButton`, `SettingsButton` e `SettingsPanel` de `AccountUI.tsx`. O modo automático continua sozinho.
+- Precisa do usuário? não.
