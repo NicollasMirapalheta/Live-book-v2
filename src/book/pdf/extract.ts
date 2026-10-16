@@ -28,7 +28,7 @@ interface ImageObject {
 }
 
 /** pdf.js image data → our own canvas (pdf.js closes its ImageBitmaps when the document is released). */
-function toDrawable(img: ImageObject): (CanvasImageSource & { width: number; height: number }) | null {
+function toDrawable(img: ImageObject): HTMLCanvasElement | null {
   const c = document.createElement('canvas')
   c.width = img.width
   c.height = img.height
@@ -62,6 +62,55 @@ function toDrawable(img: ImageObject): (CanvasImageSource & { width: number; hei
   }
   ctx.putImageData(out, 0, 0)
   return c
+}
+
+/**
+ * Drawings on a plain light background: crop the empty margins and bring the background to white, so the
+ * image prints on the book's paper (multiply) instead of sitting there as a pasted box. Photos (a busy or
+ * dark background) are left as they are. Returns the crop as fractions of the original.
+ */
+export function trimBackground(c: HTMLCanvasElement): { canvas: HTMLCanvasElement; x: number; y: number; w: number; h: number } {
+  const ctx = c.getContext('2d')!
+  const { width: W, height: H } = c
+  const img = ctx.getImageData(0, 0, W, H)
+  const d = img.data
+  const px = (x: number, y: number) => {
+    const i = (y * W + x) * 4
+    return [d[i], d[i + 1], d[i + 2]]
+  }
+  const corners = [px(0, 0), px(W - 1, 0), px(0, H - 1), px(W - 1, H - 1)]
+  const bg = [0, 1, 2].map((k) => corners.reduce((a, c2) => a + c2[k], 0) / 4)
+  const uniform = corners.every((c2) => c2.every((v, k) => Math.abs(v - bg[k]) < 14))
+  const light = 0.299 * bg[0] + 0.587 * bg[1] + 0.114 * bg[2] > 170
+  if (!uniform || !light) return { canvas: c, x: 0, y: 0, w: 1, h: 1 }
+  let x0 = W
+  let y0 = H
+  let x1 = -1
+  let y1 = -1
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4
+      if (Math.max(Math.abs(d[i] - bg[0]), Math.abs(d[i + 1] - bg[1]), Math.abs(d[i + 2] - bg[2])) > 24) {
+        if (x < x0) x0 = x
+        if (x > x1) x1 = x
+        if (y < y0) y0 = y
+        if (y > y1) y1 = y
+      }
+    }
+  if (x1 < 0) return { canvas: c, x: 0, y: 0, w: 1, h: 1 }
+  const pad = Math.round(Math.max(W, H) * 0.02)
+  x0 = Math.max(0, x0 - pad)
+  y0 = Math.max(0, y0 - pad)
+  x1 = Math.min(W - 1, x1 + pad)
+  y1 = Math.min(H - 1, y1 + pad)
+  // background → white (per channel), so multiply leaves the paper untouched there
+  for (let i = 0; i < d.length; i += 4) for (let k = 0; k < 3; k++) d[i + k] = Math.min(255, (d[i + k] * 255) / Math.max(1, bg[k]))
+  ctx.putImageData(img, 0, 0)
+  const out = document.createElement('canvas')
+  out.width = x1 - x0 + 1
+  out.height = y1 - y0 + 1
+  out.getContext('2d')!.drawImage(c, x0, y0, out.width, out.height, 0, 0, out.width, out.height)
+  return { canvas: out, x: x0 / W, y: y0 / H, w: out.width / W, h: out.height / H }
 }
 
 export async function extractPdf(data: ArrayBuffer): Promise<Extracted> {
@@ -127,17 +176,21 @@ export async function extractPdf(data: ArrayBuffer): Promise<Extracted> {
               resolve(null)
             }
           })
-          const drawable = obj && toDrawable(obj)
+          const raw = obj && toDrawable(obj)
+          if (!raw) continue
+          const trim = trimBackground(raw)
           timing.images += performance.now() - ti
-          if (!drawable) continue
           const id = `${n}:${objId}`
-          images.set(id, drawable)
+          images.set(id, trim.canvas)
           // the image fills the unit square under the current transform
           const xs = [ctm[4], ctm[4] + ctm[0], ctm[4] + ctm[2], ctm[4] + ctm[0] + ctm[2]]
           const ys = [ctm[5], ctm[5] + ctm[1], ctm[5] + ctm[3], ctm[5] + ctm[1] + ctm[3]]
           const x = Math.min(...xs)
           const y = Math.min(...ys)
-          pageImages.push({ id, x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y })
+          const w = Math.max(...xs) - x
+          const h = Math.max(...ys) - y
+          // the crop, in PDF units (y up: the canvas top is the box top)
+          pageImages.push({ id, x: x + w * trim.x, y: y + h * (1 - trim.y - trim.h), w: w * trim.w, h: h * trim.h })
         }
       }
       pages.push({ width: view.width, height: view.height, items, images: pageImages })

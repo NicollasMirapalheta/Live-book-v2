@@ -46,6 +46,20 @@ const LETTERS = [
   'Seu primo passou de ano com notas boas e ganhou uma bicicleta vermelha de presente.',
   'Mandei junto com esta carta um ramo de alecrim seco, para a gaveta das suas roupas.',
   'Não esqueça de levar o casaco de lã na próxima viagem, porque as noites aqui continuam geladas.',
+  'A professora de piano mudou para a cidade, e agora as tardes de quinta ficaram compridas demais.',
+  'Encontrei no sótão a mala de couro do seu bisavô, ainda com as etiquetas dos navios.',
+  'O rio subiu com as chuvas e levou a pinguela, então voltamos a atravessar pela estrada.',
+  'Sua mãe ligou no domingo e a ligação caiu três vezes antes de conseguirmos rir juntas.',
+  'As jabuticabas deram tanto que distribuímos baldes para a rua inteira.',
+  'Ganhei de presente um caderno de capa verde e resolvi copiar nele as cartas mais bonitas.',
+  'O padeiro novo faz um pão de milho que lembra o da sua avó, mas ninguém tem coragem de dizer a ela.',
+  'Quando a luz acaba, acendemos o lampião e as paredes parecem mais perto umas das outras.',
+  'Aprendi a fazer crochê com a vizinha e já comecei uma colcha de quadrados coloridos.',
+  'O trem das cinco agora só passa às terças, e o apito faz falta no fim da tarde.',
+  'Seu irmão mandou um desenho do castelo de areia que vocês construíram, com bandeira e tudo.',
+  'Guardei o jornal do dia em que você nasceu; está amarelado, mas as letras ainda se leem bem.',
+  'Na festa da colheita dançamos até tarde, e seu avô tirou para dançar até a dona Cida.',
+  'As cartas que você escreve têm um cheiro de lápis que me faz lembrar da escola.',
 ]
 
 const FIELD = [
@@ -75,6 +89,20 @@ const FIELD = [
   'Na volta, a lua nasceu enorme e vermelha sobre o mar, e o caminho ficou claro como de dia.',
   'Registrei a temperatura da água em cinco pontos da lagoa; o mais frio fica junto à nascente.',
   'Uma família de quatis atravessou a trilha em fila, sem pressa, olhando para mim de lado.',
+  'A ponte de cordas balança mais do que parece, e o melhor é atravessar olhando para a outra margem.',
+  'Achei uma garrafa antiga enterrada na areia, de vidro verde, com bolhas presas dentro.',
+  'Os liquens nas pedras do costão formam manchas laranja que parecem tinta derramada.',
+  'O vigia da fazenda velha me deixou subir na caixa d’água para ver a planície inteira.',
+  'Contei vinte e três canoas puxadas para a areia, todas pintadas com nomes de santas.',
+  'A chuva fina da madrugada deixou as teias de aranha bordadas de gotas na beira da trilha.',
+  'Medi o passo com uma corda de dez metros e refiz as distâncias do primeiro mapa.',
+  'As formigas cortadeiras abriram uma estrada própria no meio do capim, larga como uma mão.',
+  'O sol nasce atrás da ilha grande nesta época, e a sombra dela alcança a praia por um minuto.',
+  'Perdi o lápis no mangue e terminei as anotações do dia com um carvão da fogueira.',
+  'Um velho pescador desenhou na areia os canais que só aparecem na maré de lua.',
+  'O musgo cresce do lado sul dos troncos, mas nesta mata isso não serve para se orientar.',
+  'Ouvi o canto do inhambu ao entardecer, três notas descendentes que se repetem sem pressa.',
+  'Encontrei um ninho abandonado feito de crina de cavalo e fios de rede de pesca.',
 ]
 
 const LETTER_TITLES = [
@@ -107,14 +135,18 @@ const FIELD_TITLES = [
   'Inverno no litoral',
 ]
 
+/**
+ * A chapter's paragraphs (3–5 sentences each), dealt from a shuffled deck of the pool: no sentence repeats
+ * within a chapter (the deck must be larger than a chapter).
+ */
 function paragraphs(pool: string[], r: () => number, count: number): string[] {
-  const out: string[] = []
-  for (let i = 0; i < count; i++) {
-    const n = 3 + Math.floor(r() * 4)
-    const s: string[] = []
-    for (let j = 0; j < n; j++) s.push(pool[Math.floor(r() * pool.length)])
-    out.push(s.join(' '))
+  const deck = [...pool]
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(r() * (i + 1))
+    ;[deck[i], deck[j]] = [deck[j], deck[i]]
   }
+  const out: string[] = []
+  for (let i = 0; i < count && deck.length; i++) out.push(deck.splice(0, 3 + Math.floor(r() * 3)).join(' '))
   return out
 }
 
@@ -267,7 +299,7 @@ mkdirSync(OUT, { recursive: true })
     subtitle: 'Correspondência, 1998–2004',
     header: 'Cartas de Verão — transcrição',
     indent: true,
-    chapters: LETTER_TITLES.map((title) => ({ title, paragraphs: paragraphs(LETTERS, r, 9 + Math.floor(r() * 4)) })),
+    chapters: LETTER_TITLES.map((title) => ({ title, paragraphs: paragraphs(LETTERS, r, 5 + Math.floor(r() * 3)) })),
   })
 }
 
@@ -276,7 +308,7 @@ mkdirSync(OUT, { recursive: true })
   const chapters = []
   for (let i = 0; i < FIELD_TITLES.length; i++) {
     const image = i % 3 === 0 ? await drawing((['map', 'leaf', 'coast'] as const)[(i / 3) % 3], 100 + i) : undefined
-    chapters.push({ title: FIELD_TITLES[i], paragraphs: paragraphs(FIELD, r, 34 + Math.floor(r() * 12)), image })
+    chapters.push({ title: FIELD_TITLES[i], paragraphs: paragraphs(FIELD, r, 7 + Math.floor(r() * 3)), image })
   }
   await writeDoc({
     file: 'fx-verde.pdf',

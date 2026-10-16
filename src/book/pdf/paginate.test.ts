@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { breakLines, paginate, PAGE, type Measure, type PlanItem } from './paginate'
+import { breakLines, paginate, PAGE, SHRINK, STRETCH, type Measure, type PlanItem } from './paginate'
 import type { Block } from './types'
 
 // every character half the font size wide: deterministic, close enough to a serif
@@ -87,8 +87,43 @@ describe('composição em páginas', () => {
     expect(img.w).toBeLessThanOrEqual(ASPECT * (1 - PAGE.inner - PAGE.outer) + 1e-9)
   })
 
-  it('quebra de linha: cada linha cabe na largura; o recuo vale só para a primeira', () => {
-    const ls = breakLines(words(200), 0.5, 0.05, measure, { size: 0.02 })
-    ls.forEach((l, i) => expect(measure(l.join(' '), { size: 0.02 })).toBeLessThanOrEqual(0.5 - (i === 0 ? 0.05 : 0)))
+  it('quebra de linha: cada linha cabe com espaços de no mínimo 80%; o recuo vale só para a primeira', () => {
+    const font = { size: 0.02 }
+    const ls = breakLines(words(200), 0.5, 0.05, measure, font)
+    const space = measure(' ', font)
+    ls.forEach((l, i) => {
+      const ink = l.reduce((acc, w) => acc + measure(w, font), 0)
+      expect(ink + (l.length - 1) * space * (1 - SHRINK)).toBeLessThanOrEqual(0.5 - (i === 0 ? 0.05 : 0) + 1e-9)
+    })
+  })
+
+  it('quebra por parágrafo: espaçamento mais regular que a gulosa, com hifenização', () => {
+    const font = { size: 0.02 }
+    const text = 'Recolhi sementes de pitanga, de araçá e de uma palmeira que ainda não consegui identificar. No fim da tarde a luz entra rasante pela mata e cada folha parece acesa por dentro, enquanto os pescadores contavam que a última grande ressaca levou metade da restinga.'
+    const width = 0.42
+    const space = measure(' ', font)
+    const spread = (ls: string[][]) => {
+      // worst word-space ratio over the justified lines
+      let worst = 0
+      ls.slice(0, -1).forEach((l) => {
+        const ink = l.reduce((acc, w) => acc + measure(w, font), 0)
+        worst = Math.max(worst, Math.abs((width - ink) / ((l.length - 1) * space) - 1))
+      })
+      return worst
+    }
+    const kp = breakLines(text, width, 0, measure, font)
+    expect(spread(kp)).toBeLessThanOrEqual(STRETCH + 1e-9)
+    expect(kp.flat().some((w) => w.endsWith('-'))).toBe(true)
+    // the words survive the hyphenation, in order
+    expect(kp.flat().join(' ').replace(/- /g, '')).toBe(text)
+  })
+
+  it('nunca deixa um pedaço de palavra sozinho numa linha justificada', () => {
+    const font = { size: 0.02 }
+    const text = 'Choveu à noite e a manhã trouxe cogumelos alaranjados em todos os troncos podres do caminho e vi rastros de um animal pequeno.'
+    for (const width of [0.3, 0.35, 0.42, 0.5]) {
+      const ls = breakLines(text, width, 0, measure, font)
+      ls.slice(0, -1).forEach((l) => expect(l.length).toBeGreaterThan(1))
+    }
   })
 })

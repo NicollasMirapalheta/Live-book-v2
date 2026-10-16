@@ -136,10 +136,11 @@ function drawPlan(ctx: CanvasRenderingContext2D, book: PageBook, layout: BookLay
     } else if (it.kind === 'image') {
       const img = book.images?.get(it.id)
       if (!img) continue
-      // printed on the page: a touch of the paper's warmth over the photo
+      // printed on the paper, not pasted on it: ink multiplies (white leaves the paper as it is)
+      ctx.save()
+      ctx.globalCompositeOperation = 'multiply'
       ctx.drawImage(img, left + it.x * H, it.y * H, it.w * H, it.h * H)
-      ctx.fillStyle = 'rgba(221,208,180,0.12)'
-      ctx.fillRect(left + it.x * H, it.y * H, it.w * H, it.h * H)
+      ctx.restore()
     } else {
       ctx.strokeStyle = '#A5824B'
       ctx.lineWidth = Math.max(1, H / 600)

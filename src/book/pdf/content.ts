@@ -14,6 +14,7 @@ export interface ContentBook {
   trim: Trim
   /** sample PDF of a test book (Fase 5); a user's PDF arrives as a Blob in Fase 6 */
   pdfUrl?: string
+  createdAt?: number
 }
 
 export interface BookContent {
@@ -34,13 +35,17 @@ interface ContentState {
 }
 
 /** PDF → structure → pages, timed for the console (the budget is < 1 s for a 300-page book). */
-async function compose(book: ContentBook, data: ArrayBuffer): Promise<Pick<BookContent, 'layout' | 'images'>> {
+async function compose(book: ContentBook, data: ArrayBuffer, source: string): Promise<Pick<BookContent, 'layout' | 'images'>> {
   const t0 = performance.now()
   const { raw, images } = await extractPdf(data)
   const t1 = performance.now()
   const structure = buildStructure(raw)
   const { width, height } = TRIM_SIZES[book.trim]
-  const layout = paginate(structure, { title: book.title, subtitle: book.subtitle }, width / height, canvasMeasure())
+  const year = book.createdAt ? new Date(book.createdAt).getFullYear() : undefined
+  // colophon: the PDF's own title, else a readable file name; nothing when it just repeats the book's title
+  const origin = raw.title || source.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').trim()
+  const from = origin && origin.toLowerCase() !== book.title.toLowerCase() ? origin : undefined
+  const layout = paginate(structure, { title: book.title, subtitle: book.subtitle, source: from, year }, width / height, canvasMeasure())
   const t2 = performance.now()
   if (import.meta.env.DEV || params.e2e)
     console.info(`[pdf] ${book.id}: ${raw.pages.length} páginas no PDF → ${layout.pageCount} no livro (leitura ${Math.round(t1 - t0)} ms, composição ${Math.round(t2 - t1)} ms)`)
@@ -48,10 +53,10 @@ async function compose(book: ContentBook, data: ArrayBuffer): Promise<Pick<BookC
 }
 
 export const useBookContent = create<ContentState>((set, get) => {
-  const load = (book: ContentBook, source: BookContent['source'], read: () => Promise<ArrayBuffer>) => {
+  const load = (book: ContentBook, source: BookContent['source'], name: string, read: () => Promise<ArrayBuffer>) => {
     set((s) => ({ byId: { ...s.byId, [book.id]: { status: 'loading', source } } }))
     read()
-      .then((data) => compose(book, data))
+      .then((data) => compose(book, data, name))
       .then((done) => {
         // a newer file may have replaced this one meanwhile
         if (get().byId[book.id]?.source !== source) return
@@ -67,9 +72,9 @@ export const useBookContent = create<ContentState>((set, get) => {
     ensure: (book) => {
       if (!book.pdfUrl || get().byId[book.id]) return
       const url = book.pdfUrl
-      load(book, 'book', () => fetch(url).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${url}: ${r.status}`)))))
+      load(book, 'book', url.split('/').pop() ?? url, () => fetch(url).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${url}: ${r.status}`)))))
     },
-    useFile: (book, file) => load(book, 'file', () => file.arrayBuffer()),
+    useFile: (book, file) => load(book, 'file', file instanceof File ? file.name : 'PDF', () => file.arrayBuffer()),
   }
 })
 

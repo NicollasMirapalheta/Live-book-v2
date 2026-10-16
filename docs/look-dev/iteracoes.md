@@ -113,3 +113,18 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 ### R6 — 2026-10-16 (teste do usuário: contracapa e folhear rápido)
 - Virando a última folha, a direita mostrava papel no lugar da guarda de trás: a folha no ar ainda contava na pilha direita. Agora ela não conta em nenhuma das duas (a dobradiça fica onde estava, as páginas de baixo não pulam).
 - No folhear rápido o texto "mudava de estilo" e voltava ao parar: os tamanhos de fonte eram arredondados por resolução, e a textura pequena quebrava as linhas em outros lugares. Tamanhos e margens agora são frações exatas da página (mesmas quebras em qualquer resolução, conferido lado a lado a 768 e 1536 px); texturas do voo a 768 px; a página de destino é desenhada em tamanho cheio quando o folhear começa.
+
+## Fase 5 — PDF → páginas rediagramadas
+
+### P1 — 2026-10-16
+- Extração (pdf.js), estrutura e composição na tipografia do livro; PDFs de exemplo com texto próprio.
+- **art-reviewer:** texto 3 · capítulo/imagem 3 · "não parece PDF" 3 · integração 4 — "iterar": linhas frouxas e rios (quebra gulosa, sem hifenização), imagem como caixa colada, recuo depois da imagem, espaço entre parágrafos somado ao recuo, colofão pobre, texto de teste repetido.
+
+### P2
+- Hifenização em português por sílabas + quebra por parágrafo inteiro (Knuth–Plass simplificado, espaços 80–133%); imagem recortada, fundo levado ao branco e impressa com multiply; sem recuo depois da imagem; só recuo entre parágrafos; grade de linhas; colofão completo. Corrigido um pedaço de palavra sozinho numa linha ("to-").
+- **art-reviewer:** 4 · 4 · 4 · 4 — "pronto para o usuário" quanto à composição; pediu antes: texto de teste sem repetição, menos hífens, nenhum hífen no pé da página, colofão sem nome de arquivo.
+
+### P3
+- Frases sorteadas sem reposição por capítulo (bancos maiores); hífen nunca em palavra com menos de 6 letras nem na 1ª linha do parágrafo, penalidade maior; parágrafo que terminaria a página com hífen é recomposto sem hifenização; colofão com o título do PDF ou nome legível, omitido quando repete o título do livro.
+- Os livros de teste ficaram com 28 e 58 páginas compostas (fixtures e e2e atualizados).
+- Pendências: viúva absorvida por recomposição do parágrafo (hoje a página fica 1 linha mais curta); poesia (quebras de verso); tabelas e notas; PDF só de imagens.

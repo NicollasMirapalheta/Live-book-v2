@@ -6,7 +6,7 @@ declare global {
   }
 }
 
-const FIXTURE_PAGES: Record<string, number> = { 'fx-bordo': 48, 'fx-verde': 208 }
+const FIXTURE_PAGES: Record<string, number> = { 'fx-bordo': 28, 'fx-verde': 58 }
 
 async function inHand(page: Page, id: string) {
   await page.goto('/?e2e=1&node=N2')

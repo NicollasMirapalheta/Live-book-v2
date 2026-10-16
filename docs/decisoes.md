@@ -278,7 +278,8 @@ Formato de cada entrada:
   - Cabeçalho e rodapé repetidos, números de página e hifenização de fim de linha são removidos na extração.
   - O título do livro (do usuário) vale mais que o título do PDF.
   - pdf.js só carrega quando um livro com PDF é selecionado (chunk separado); a composição roda enquanto o livro voa até a mão (0,4–0,6 s nos exemplos) e o "Abrir" espera por ela ("Preparando páginas…").
-  - Livros de teste: PDFs de exemplo gerados por nós (texto próprio); "Cartas de Verão" compõe em 48 páginas, "Diário de Campo" em 208 (era 220 no fixture; ajustado). Os outros 4 seguem com páginas provisórias.
+  - Livros de teste: PDFs de exemplo gerados por nós (texto próprio, sem repetir frase dentro do capítulo); "Cartas de Verão" compõe em 28 páginas e "Diário de Campo" em 58 (eram 48 e 220 nos fixtures; ajustados, ficaram mais finos na estante). Os outros 4 seguem com páginas provisórias.
+  - Composição: hifenização em português por sílabas e quebra por parágrafo inteiro (espaços entre 80% e 133%); nenhum hífen no pé da página; imagens impressas no papel (multiply, margens recortadas).
   - Testar com um PDF próprio: soltar o arquivo na janela com o livro na mão troca o conteúdo daquele livro até recarregar (persistência é da Fase 6).
 - Alternativa: rasterizar as páginas do PDF como texturas — fiel ao original, mas não parece livro e contradiz o CLAUDE.md.
 - Pendências conhecidas: PDF escaneado (só imagem, sem texto) vira um livro só de imagens; poesia perde as quebras de verso (vira parágrafo); tabelas e notas de rodapé não são tratadas; fonte do sistema (Georgia) pode compor um pouco diferente em outra máquina.
