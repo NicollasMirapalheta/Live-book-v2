@@ -6,9 +6,29 @@ import { create } from 'zustand'
 import type { BookRow, CloudDb } from './cloudBooks'
 import { getCachedFile, putCachedFile } from './db'
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
-const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
+const SUPABASE_URL = projectUrl(import.meta.env.VITE_SUPABASE_URL)
+const KEY = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim()
 export const cloudConfigured = !!(SUPABASE_URL && KEY)
+if (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_URL !== 'off' && !SUPABASE_URL) {
+  console.error('[nuvem] VITE_SUPABASE_URL inválida (use https://<projeto>.supabase.co); os livros ficam só neste navegador')
+}
+
+/**
+ * The project URL from the env value: a full http(s) URL, or just the project ref (what the Supabase
+ * dashboard shows first, and an easy paste by mistake). "off" (the e2e build) or anything else: undefined
+ * (cloud off, app still runs).
+ */
+export function projectUrl(raw: string | undefined): string | undefined {
+  const value = raw?.trim().replace(/^["']|["']$/g, '').replace(/\/+$/, '')
+  if (!value) return undefined
+  if (/^[a-z0-9]{20}$/.test(value)) return `https://${value}.supabase.co`
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.origin : undefined
+  } catch {
+    return undefined
+  }
+}
 
 let clientPromise: Promise<SupabaseClient> | null = null
 export function getClient(): Promise<SupabaseClient> {

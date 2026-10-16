@@ -16,5 +16,8 @@ export default defineConfig({
     url: 'http://localhost:4173',
     reuseExistingServer: true,
     timeout: 180_000,
+    // the tests cover the local mode (Fase 6): "off" keeps the cloud of .env.local out of this build
+    // (an empty value would not override the file)
+    env: { VITE_SUPABASE_URL: 'off' },
   },
 })

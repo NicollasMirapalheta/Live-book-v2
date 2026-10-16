@@ -65,7 +65,16 @@ export const useLibrary = create<LibraryState>((set, get) => ({
 
   load: async () => {
     if (cloudConfigured) {
-      await startAccount()
+      let started = true
+      try {
+        await startAccount()
+      } catch (err) {
+        // the cloud misconfigured or unreachable must not hold the room behind the loading screen: the
+        // books of this browser, as without the keys (Fase 6)
+        console.error('[biblioteca] a nuvem não respondeu; livros só neste navegador', err)
+        useAccount.setState({ status: 'off', account: null })
+        started = false
+      }
       const { status } = useAccount.getState()
       if (status === 'in') {
         try {
@@ -76,9 +85,11 @@ export const useLibrary = create<LibraryState>((set, get) => ({
         }
         return
       }
-      // signed out: the samples (a book needs an owner before it is made)
-      set({ user: [], mode: 'cloud', loaded: true })
-      return
+      if (started) {
+        // signed out: the samples (a book needs an owner before it is made)
+        set({ user: [], mode: 'cloud', loaded: true })
+        return
+      }
     }
     try {
       const stored = await listBooks()

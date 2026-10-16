@@ -15,7 +15,7 @@ export function AccountUI({ visible }: { visible: boolean }) {
   const signIn = useAccount((s) => s.signIn)
   const signOut = useAccount((s) => s.signOut)
   const offering = useLibrary((s) => s.localPending.length > 0) && status === 'in'
-  if (!cloudConfigured || params.shot || status === 'loading' || (!visible && !offering)) return null
+  if (!cloudConfigured || params.shot || status === 'loading' || status === 'off' || (!visible && !offering)) return null
   return (
     <div className="acc">
       {status === 'in' && account ? (
