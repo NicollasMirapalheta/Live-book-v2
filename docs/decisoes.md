@@ -320,7 +320,7 @@ Formato de cada entrada:
   - Interface: tokens únicos (vidro esfumado, Georgia, rótulos em versalete espaçado, dourado), tela de abertura com progresso, dica de primeira visita.
 - Alternativas: manter exemplos sempre na estante junto dos livros do usuário (mistura conteúdo de teste com o real); criar livro numa escrivaninha 3D da sala (mais bonito, muito mais trabalho — fica como evolução).
 - Como reverter: `shelfBooksOf` em `library.ts` (regra dos exemplos); `LibraryUI` em `SceneRoot.tsx`.
-- Precisa do usuário? sim: confirmar se os exemplos devem sumir quando ele cria o primeiro livro.
+- Precisa do usuário? respondido em 16/10: sim, os exemplos somem quando o usuário cria o primeiro livro.
 
 ## 2026-10-16 — Luz dos livros um pouco menos quente que a da sala
 - Contexto: `art-reviewer` (interface, rodada 2) — o azul-petróleo escolhido no formulário virava verde-oliva na estante. O lustre em tempo real (#FF9E40, 2400 K) quase não tem azul em linear.

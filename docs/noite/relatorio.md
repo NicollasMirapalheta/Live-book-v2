@@ -48,7 +48,7 @@ Screenshots: `npm run shot` (sala) e `npm run shot -- --dev book` (livro).
 - No painel de um livro seu: **Editar** e **Remover** (com confirmação).
 - Interface unificada (vidro esfumado, Georgia, rótulos em versalete, dourado), tela de abertura com progresso, dica de primeira visita, alvos de toque ≥ 44 px.
 - `art-reviewer`: 3 rodadas, terminou em 5 · 4 · 4 · 4, "pronto para o usuário". Testes: 75 unitários, 23 e2e.
-- Decisão pendente sua: os exemplos devem sumir quando você cria o primeiro livro (como está) ou ficar junto?
+- Exemplos somem com o primeiro livro seu (confirmado por você em 16/10).
 
 ## Fase 5 — PDF → páginas rediagramadas
 
