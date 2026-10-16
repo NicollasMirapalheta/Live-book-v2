@@ -341,8 +341,10 @@
 /* remove the photo: a round 44 px button inside the filled zone, top right */
 .bf-clear {
   position: absolute;
-  right: 4px;
-  bottom: 4px;
+  right: 8px;
+  /* centred on the zone below the label (label ~22 px) */
+  top: calc(50% + 11px);
+  transform: translateY(-50%);
   width: var(--lb-touch);
   height: var(--lb-touch);
   border-radius: 50%;

@@ -324,13 +324,15 @@
 }
 
 .sel-confirm p {
-  margin: 0;
+  margin: 0 0 10px;
   font-size: var(--lb-small);
+  line-height: 1.45;
   color: var(--lb-ink-soft);
 }
 
 .sel-btn-danger {
   border-color: var(--lb-danger);
+  background: rgba(232, 160, 122, 0.14);
   color: var(--lb-danger);
 }
 

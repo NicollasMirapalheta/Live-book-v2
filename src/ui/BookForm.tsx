@@ -350,7 +350,8 @@ function PreviewBook({ book }: { book: Parameters<typeof Book>[0]['book'] }) {
   return (
     <group ref={g}>
       {/* centered: the Book's origin is the foot of the spine, the fore-edge toward −Z */}
-      <Book book={book} position={[0, -d.coverHeight / 2, d.coverWidth / 2]} />
+      {/* (−Z is screen-right: a touch to the right centres the turned book, spine included, in the column) */}
+      <Book book={book} position={[0, -d.coverHeight / 2, d.coverWidth / 2 - 0.006]} />
     </group>
   )
 }

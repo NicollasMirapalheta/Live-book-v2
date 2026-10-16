@@ -41,6 +41,19 @@ Screenshots: `npm run shot` (sala) e `npm run shot -- --dev book` (livro).
 - `assets_contact.png`: folha de contato dos assets
 - `blender_N0.png`, `blender_N2.png`: prévias do Cycles
 
+## Fase 6 — interface e livros do usuário
+
+- **Novo livro** na estante (ou soltar um PDF em qualquer lugar da sala): formulário com título, subtítulo, descrição, PDF, foto da capa (vira a polaroid), cor, material e formato, com o próprio livro girando ao lado na cor escolhida. Ao guardar, o PDF é composto, o livro entra na estante e vem para a mão.
+- Os livros ficam guardados neste navegador (IndexedDB): continuam lá depois de recarregar. Enquanto você não tem nenhum, a estante mostra os 6 de exemplo; o primeiro livro seu os substitui.
+- No painel de um livro seu: **Editar** e **Remover** (com confirmação).
+- Interface unificada (vidro esfumado, Georgia, rótulos em versalete, dourado), tela de abertura com progresso, dica de primeira visita, alvos de toque ≥ 44 px.
+- `art-reviewer`: 3 rodadas, terminou em 5 · 4 · 4 · 4, "pronto para o usuário". Testes: 75 unitários, 23 e2e.
+- Decisão pendente sua: os exemplos devem sumir quando você cria o primeiro livro (como está) ou ficar junto?
+
+## Fase 5 — PDF → páginas rediagramadas
+
+- O conteúdo do PDF (títulos, parágrafos, imagens) é extraído e recomposto como livro impresso: hifenização em português, capítulos em página ímpar com o número do PDF, cabeço e fólio, sumário pelos títulos do PDF, colunas e texto espaçado tratados. Aprovada pelo usuário em 16/10.
+
 ## Fase 4 — abrir e folhear (com o livro na mão)
 
 - Clique no livro → ele sai reto da fileira e vem até a mão, de capa fechada; o painel aparece quando ele chega. **Abrir** → o livro centraliza, a capa gira na dobradiça e mostra a guarda e a página de rosto; o fundo desfoca.
