@@ -41,6 +41,15 @@ Screenshots: `npm run shot` (sala) e `npm run shot -- --dev book` (livro).
 - `assets_contact.png`: folha de contato dos assets
 - `blender_N0.png`, `blender_N2.png`: prévias do Cycles
 
+## Fase 7 — nuvem (login Google, Supabase, Vercel)
+
+- Com as chaves do Supabase, canto superior direito: **Entrar com Google**. Logado, a estante é só sua (nome/foto e **Sair**); em outro navegador, entrando com a mesma conta, os livros estão lá. Deslogado, "Novo livro" pede para entrar primeiro.
+- Primeiro login com livros criados neste navegador: aviso para **levar para a sua conta**.
+- O PDF de cada livro desce na primeira abertura e fica guardado no navegador; abrir de novo não baixa.
+- Avisos novos no formulário: arquivo acima de 50 MB (limite do plano grátis) e **estante cheia** (o livro não caberia).
+- Sem as chaves, tudo continua como na Fase 6. Testes: 82 unitários, 23 e2e.
+- Para publicar: `docs/deploy/passo-a-passo.md` (GitHub → Supabase → Google Cloud → Vercel → testar com duas contas).
+
 ## Fase 6 — interface e livros do usuário
 
 - **Novo livro** na estante (ou soltar um PDF em qualquer lugar da sala): formulário com título, subtítulo, descrição, PDF, foto da capa (vira a polaroid), cor, material e formato, com o próprio livro girando ao lado na cor escolhida. Ao guardar, o PDF é composto, o livro entra na estante e vem para a mão.

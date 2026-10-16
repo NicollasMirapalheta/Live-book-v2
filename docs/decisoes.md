@@ -328,3 +328,15 @@ Formato de cada entrada:
 - Alternativa: mudar a cor das amostras para "como fica na sala" (pior: a amostra mentiria fora da sala).
 - Como reverter: `SUN_TO_WHITE`/`CHANDELIER_TO_WHITE` = 0.
 - Precisa do usuário? não (aprovação visual segue com o usuário).
+
+## 2026-10-16 — Fase 7: nuvem (Supabase + login Google + Vercel)
+- Contexto: o usuário quer publicar o projeto para outra pessoa usar, com os livros em qualquer navegador. Decisões dele no chat: cada pessoa com a sua estante, login com conta Google, Supabase gerenciado (projeto novo na conta dele), Vercel com o domínio gerado por ela, tudo no git (saídas do pipeline incluídas), acesso agendado contra a pausa de 7 dias só depois.
+- Escolha (spec `docs/specs/fase-7-nuvem.md`):
+  - `@supabase/supabase-js` 2.117.2 (MIT), carregado sob demanda e só quando `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` existem. Sem as chaves, o app é o da Fase 6 (IndexedDB), e os testes e2e rodam assim.
+  - Login Google por OAuth com PKCE (`redirectTo` = a própria página). Tabela `books` com Row Level Security e bucket privado `books` (`<uid>/<livro>/livro.pdf` e `/foto`), regras em `supabase/schema.sql`.
+  - O PDF desce na primeira abertura e fica em cache no IndexedDB (store `files`, banco versão 2); as fotos das capas descem ao carregar a estante.
+  - Deslogado com a nuvem ligada: estante com os exemplos e "Novo livro" (ou PDF solto) pede para entrar primeiro. Primeiro login com livros locais: oferta de levar para a conta.
+  - Limite de 50 MB por arquivo (plano grátis), avisado no formulário. Estante cheia: o formulário não deixa criar um livro que não caberia (antes ele sumia calado).
+- Alternativas: Google Drive do usuário como armazenamento (sem banco, mas exigiria verificação do Google para o escopo de arquivos); Supabase auto-hospedado (mais trabalho, sem pausa); Firebase (equivalente, menos SQL).
+- Como reverter: tirar as variáveis de ambiente volta ao modo só-local, sem mudar código; `library.ts` concentra a escolha do armazenamento.
+- Precisa do usuário? sim: criar as contas e colar as chaves (`docs/deploy/passo-a-passo.md`); push para o GitHub só quando pedir; aprovar a Fase 7 depois de testar com duas contas.

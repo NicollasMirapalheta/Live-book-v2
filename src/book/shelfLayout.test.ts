@@ -75,4 +75,14 @@ describe('layoutShelves', () => {
     for (const p of moved) expect(p.shelf).toBeLessThan(bookcase.propSlots[layout.props.indexOf(p)].shelf)
     expect(overlaps(layout)).toEqual([])
   })
+
+  it('estante cheia: o que não cabe são os livros mais novos (o formulário avisa com isso)', () => {
+    const many = Array.from({ length: 400 }, (_, i) => ({ ...FIXTURE_BOOKS[i % 6], id: `b${i}`, createdAt: i }))
+    const layout = layoutShelves(many, bookcase.shelves, bookcase.propSlots.map((p) => ({ ...p })))
+    expect(layout.overflow.length).toBeGreaterThan(0)
+    expect(layout.overflow).toContain('b399')
+    const placed = layout.books.length
+    expect(layout.overflow).toEqual(many.slice(placed).map((b) => b.id))
+    expect(overlaps(layout)).toEqual([])
+  })
 })

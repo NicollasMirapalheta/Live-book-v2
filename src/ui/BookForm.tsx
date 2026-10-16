@@ -7,7 +7,9 @@ import { bookDimensions } from '../book/geometry'
 import { SPINE_COLOR_LABELS, SPINE_COLORS, type SpineColor } from '../book/palette'
 import { titleFromFile, useBookContent } from '../book/pdf/content'
 import type { CoverMaterial, Trim } from '../book/types'
+import { MAX_FILE_BYTES } from '../data/cloudBooks'
 import { newBookId, useLibrary, type LibraryBook } from '../data/library'
+import { loadBookcase, shelfBooks, shelfLayoutFor } from '../book/shelfData'
 import { isPdf, useCreator } from './creator'
 import './ui.css'
 
@@ -91,6 +93,26 @@ function BookFormOpen() {
   const set = (patch: Partial<Draft>) => setD((prev) => ({ ...prev, ...patch }))
 
   useEffect(() => titleRef.current?.focus(), [])
+  const cloud = useLibrary((s) => s.mode === 'cloud')
+  // what the user changed: unchanged files are not sent again (Fase 7)
+  const [changed, setChanged] = useState({ pdf: false, photo: false })
+  // editing a cloud book whose PDF was never opened here: fetch it (cached afterwards)
+  const [fetchingPdf, setFetchingPdf] = useState(false)
+  useEffect(() => {
+    const load = editing?.loadPdf
+    if (mode !== 'edit' || d.pdf || !load) return
+    let alive = true
+    setFetchingPdf(true)
+    load()
+      .then((pdf) => alive && setD((prev) => ({ ...prev, pdf })))
+      .catch((err: unknown) => alive && setError(`Não consegui baixar o PDF (${err instanceof Error ? err.message : String(err)}).`))
+      .finally(() => alive && setFetchingPdf(false))
+    return () => {
+      alive = false
+    }
+    // once, when the form opens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !busy) close()
@@ -123,14 +145,21 @@ function BookFormOpen() {
   const pickPdf = (f: File | undefined) => {
     if (!f) return
     if (!isPdf(f)) return setError('Escolha um arquivo PDF.')
+    if (cloud && f.size > MAX_FILE_BYTES) return setError('Esse PDF passa de 50 MB, o limite do plano grátis do Supabase.')
+    setChanged((c) => ({ ...c, pdf: true }))
     set({ pdf: f, pdfName: f.name, pageCount: null, title: d.title || titleFromFile(f.name) })
+  }
+  const pickPhoto = (f: File | null) => {
+    if (f && cloud && f.size > MAX_FILE_BYTES) return setError('Essa foto passa de 50 MB.')
+    setChanged((c) => ({ ...c, photo: true }))
+    set({ coverPhoto: f })
   }
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     const title = d.title.trim()
     if (!title) return setError('Dê um título ao livro.')
-    if (!d.pdf) return setError('Escolha o PDF com o conteúdo do livro.')
+    if (!d.pdf) return setError(fetchingPdf ? 'Ainda baixando o PDF deste livro…' : 'Escolha o PDF com o conteúdo do livro.')
     setBusy(true)
     setError(null)
     // compose with the final title (title page and running heads), which also gives the page count
@@ -139,7 +168,17 @@ function BookFormOpen() {
       setBusy(false)
       return setError(`Não consegui ler esse PDF (${c.error ?? 'erro desconhecido'}).`)
     }
-    await useLibrary.getState().save({
+    // the bookcase has room for it? (a new book, or one that got thicker)
+    const others = shelfBooks().filter((b) => b.id !== d.id && !b.example)
+    const probe: LibraryBook = { id: d.id, title, description: '', color: d.color, coverMaterial: d.coverMaterial, trim: d.trim, pageCount: c.layout.pageCount, createdAt: d.createdAt }
+    const layout = shelfLayoutFor(await loadBookcase(), [...others, probe])
+    if (layout.overflow.includes(d.id)) {
+      setBusy(false)
+      return setError('A estante está cheia: esse livro não cabe. Remova algum livro para abrir espaço.')
+    }
+    try {
+      await useLibrary.getState().save(
+        {
       id: d.id,
       title,
       subtitle: d.subtitle.trim() || undefined,
@@ -152,7 +191,13 @@ function BookFormOpen() {
       pdf: d.pdf,
       pdfName: d.pdfName,
       coverPhoto: d.coverPhoto ?? undefined,
-    })
+        },
+        { pdf: mode === 'new' || changed.pdf, photo: mode === 'new' || changed.photo },
+      )
+    } catch (err) {
+      setBusy(false)
+      return setError(`Não consegui guardar o livro (${err instanceof Error ? err.message : String(err)}).`)
+    }
     setBusy(false)
     close()
   }
@@ -287,7 +332,7 @@ function BookFormOpen() {
           <div className="ui-field bf-photo-field">
             <span>Foto da capa</span>
             <label className="bf-drop bf-drop-photo" data-filled={d.coverPhoto ? '' : undefined}>
-              <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && set({ coverPhoto: e.target.files[0] })} />
+              <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && pickPhoto(e.target.files[0])} />
               {photoUrl && <img className="bf-thumb" src={photoUrl} alt="" />}
               <span>
                 <span className="bf-drop-main">{d.coverPhoto ? 'Trocar a foto' : 'Escolha uma foto (opcional)'}</span>
@@ -295,7 +340,7 @@ function BookFormOpen() {
               </span>
             </label>
             {d.coverPhoto && (
-              <button type="button" className="bf-clear" aria-label="Tirar a foto" title="Tirar a foto" onClick={() => set({ coverPhoto: null })}>
+              <button type="button" className="bf-clear" aria-label="Tirar a foto" title="Tirar a foto" onClick={() => pickPhoto(null)}>
                 ×
               </button>
             )}

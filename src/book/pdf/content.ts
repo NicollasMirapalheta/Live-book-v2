@@ -17,6 +17,8 @@ export interface ContentBook {
   /** a user's PDF (Fase 6), with its file name */
   pdf?: Blob
   pdfName?: string
+  /** a cloud book's PDF, fetched (and cached) when first opened (Fase 7) */
+  loadPdf?: () => Promise<Blob>
   createdAt?: number
 }
 
@@ -76,6 +78,7 @@ export const useBookContent = create<ContentState>((set, get) => {
     const name = book.pdfName ?? book.pdfUrl?.split('/').pop() ?? 'livro.pdf'
     const read = (): Promise<ArrayBuffer> => {
       if (book.pdf) return book.pdf.arrayBuffer()
+      if (book.loadPdf) return book.loadPdf().then((b) => b.arrayBuffer())
       const url = book.pdfUrl!
       return fetch(url).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${url}: ${r.status}`))))
     }
@@ -98,7 +101,7 @@ export const useBookContent = create<ContentState>((set, get) => {
   return {
     byId: {},
     ensure: (book) => {
-      if ((!book.pdf && !book.pdfUrl) || get().byId[book.id]) return
+      if ((!book.pdf && !book.loadPdf && !book.pdfUrl) || get().byId[book.id]) return
       void load(book)
     },
     prepare: (book) => load(book),

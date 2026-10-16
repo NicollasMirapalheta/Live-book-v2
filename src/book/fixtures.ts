@@ -9,6 +9,8 @@ export interface FixtureBook extends BookData {
   /** a user's book (Fase 6): the PDF they gave, as a Blob, and its file name */
   pdf?: Blob
   pdfName?: string
+  /** a cloud book (Fase 7): its PDF is downloaded on demand */
+  loadPdf?: () => Promise<Blob>
   /** a sample book, shown while the user has none of their own */
   example?: boolean
 }

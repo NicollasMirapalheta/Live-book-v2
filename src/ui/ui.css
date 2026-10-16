@@ -530,3 +530,66 @@
     transition: none;
   }
 }
+
+/* account (Fase 7): top right */
+.acc {
+  position: fixed;
+  top: 16px;
+  right: 18px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px;
+  border-radius: var(--lb-pill);
+  background: var(--lb-glass-light);
+  border: 1px solid var(--lb-glass-line);
+  color: var(--lb-ink);
+  font: var(--lb-small) var(--lb-serif);
+  backdrop-filter: var(--lb-blur);
+}
+
+.acc-avatar {
+  width: 32px;
+  height: 32px;
+  margin-left: 6px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.acc-initial {
+  display: grid;
+  place-items: center;
+  background: var(--lb-gold);
+  color: var(--lb-on-gold);
+}
+
+.acc-name {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acc-offer {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(340px, calc(100vw - 32px));
+  padding: 16px 18px;
+}
+
+.acc-offer p {
+  margin: 0;
+}
+
+.acc-first {
+  width: min(420px, 100%);
+  padding: 24px 26px 22px;
+}
+
+.acc-first-text {
+  margin: 0;
+  color: var(--lb-ink-soft);
+  line-height: 1.5;
+}
