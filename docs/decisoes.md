@@ -346,3 +346,23 @@ Formato de cada entrada:
 - Escolha: aprovada no chat ("Testei e funcionou"); segue para desempenho numa branch própria (`perf-01`).
 - Como reverter: n/a (marco).
 - Precisa do usuário? não.
+
+## 2026-10-16 — Texturas da sala em KTX2 (plano de desempenho, Etapa 2)
+- Contexto: em WebP, cada textura 2K virava RGBA cheio na GPU (~22 MB); o room.glb ocupava ~770 MB de vídeo. O usuário instalou o KTX-Software 4.4.2 (x64), o que encerra o fallback WebP de 15/10.
+- Escolha:
+  - `scripts/optimize.ts` chama o `ktx create` por textura. O `toktx` do gltf-transform saiu ~2,7× maior com os mesmos parâmetros.
+  - UASTC nos normal maps e na cor da estante; ETC1S (qualidade 255 nas superfícies próximas, 200 no resto) nas demais cores e no ARM.
+  - Resolução por textura:
+    - cor 2K em piso, estante, pedra, lambri e tapete; o resto em 1K;
+    - normal 2K em piso e estante, 1K em pedra e lambri, 512 no resto (tapete incluído);
+    - ARM 1K;
+    - mapas planos (desvio < 1,5) em 256.
+  - O app carrega com o `KTX2Loader` (`src/scene/models.ts`). O transcodificador Basis (MIT) é o do three, copiado para `public/basis/`.
+  - Os lightmaps continuam em WebP sem perdas: RGBM não tolera compressão com perda.
+- Custo: o download inicial vai de ~29 para ~33 MB (room.glb 12,0 → 16,4 MB), acima do orçamento de 30 MB do CLAUDE.md. Em troca, ~0,7 GB a menos de vídeo e ~1 GB a menos de RAM no high.
+- Alternativas:
+  - todas as cores em ETC1S (~31 MB): o `art-reviewer` viu o veio da estante "manchado" no N2;
+  - normais em 1K também no piso e na estante: perde o grão no ângulo rasante;
+  - lightmaps em KTX2: RGBM com perda.
+- Como reverter: desinstalar o `ktx`, ou forçar `ktx = false` em `optimize.ts`, e rodar `npm run optimize`. O `useModel` lê WebP e KTX2.
+- Precisa do usuário? sim: aceitar o download de ~33 MB, ou pedir para cortar resoluções e voltar a < 30 MB.

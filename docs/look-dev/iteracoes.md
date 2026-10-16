@@ -158,3 +158,12 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
 - Aviso de migração embaixo à direita (na altura do "Novo livro"); filete entre o nome e "Sair"; `:focus-visible` dourado; texto do aviso em ink-soft; kicker "Sua conta"; pílula escondida atrás do modal de login.
 - Decisão: a conta fica visível pela sala toda (não só na estante), para entrar logo na chegada; o revisor sugeriu só na estante.
 - Shots: `shots/latest/ui_conta_estante.jpg`, `ui_conta_logado_levar.jpg` (conta simulada), `ui_conta_entrar_primeiro.jpg`. O estado logado real (foto do Google) só com as chaves.
+
+## Desempenho — texturas KTX2 (Etapa 2)
+
+### K1 — 2026-10-16
+- room.glb e props.glb em KTX2 (UASTC nos normais, ETC1S no resto), resoluções por textura. Diferença de pixels contra o WebP: média de 0,6 a 1,2 níveis, p99 de 6 a 8.
+- **art-reviewer:** aprovar. Notas 5 · 5 · 5 · 4 · 4. Único ponto: o veio da estante ficou mais mole e "manchado" em ETC1S no N2. Sugestão: cor da estante em UASTC.
+
+### K2
+- Cor da estante em UASTC; normal do tapete em 512 para compensar o peso. O zoom do N2 volta a mostrar as estrias claras como no WebP (`shots/ktx2-review/N2_estante_zoom.jpg`: antes · ETC1S · UASTC).

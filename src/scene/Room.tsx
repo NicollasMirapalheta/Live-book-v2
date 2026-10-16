@@ -1,4 +1,3 @@
-import { useGLTF } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { use, useLayoutEffect, useMemo } from 'react'
 import { EquirectangularReflectionMapping, PMREMGenerator, type Mesh, type Texture } from 'three'
@@ -11,6 +10,7 @@ import { releaseAfterUpload, texturesOf } from './releaseImages'
 import { FloorReflection } from './FloorReflection'
 import { invalidateShadows } from './shadows'
 import { CandleBulbs, FloorJoints, Flames, WindowGlass } from './RoomExtras'
+import { useModel } from './models'
 
 interface RoomAssets {
   manifest: LightmapManifest
@@ -36,7 +36,7 @@ function loadRoomAssets(): Promise<RoomAssets | null> {
 
 function BakedRoom({ assets }: { assets: RoomAssets }) {
   const quality = useQuality((s) => s.quality)
-  const { scene: room } = useGLTF(quality === 'low' ? '/models/room.low.glb' : '/models/room.glb')
+  const { scene: room } = useModel(quality === 'low' ? '/models/room.low.glb' : '/models/room.glb')
   const gl = useThree((s) => s.gl)
   const scene = useThree((s) => s.scene)
 

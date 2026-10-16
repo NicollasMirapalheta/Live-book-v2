@@ -1,4 +1,3 @@
-import { useGLTF } from '@react-three/drei'
 import { use, useLayoutEffect } from 'react'
 import { Box3, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3, type MeshStandardMaterial, type Object3D } from 'three'
 import { contactShadowTexture, shared } from '../book/canvasTextures'
@@ -6,6 +5,7 @@ import { loadBookcase, shelfLayoutFor, useShelfBooks } from '../book/shelfData'
 import { useQuality } from '../state/quality'
 import { releaseAfterUpload, texturesOf } from './releaseImages'
 import { invalidateShadows } from './shadows'
+import { useModel } from './models'
 
 /**
  * Shelf props (public/models/props.glb): real-time PBR with the room env, sun and chandelier, shadows.
@@ -14,7 +14,7 @@ import { invalidateShadows } from './shadows'
  */
 export function ShelfProps() {
   const quality = useQuality((s) => s.quality)
-  const { scene } = useGLTF(quality === 'low' ? '/models/props.low.glb' : '/models/props.glb')
+  const { scene } = useModel(quality === 'low' ? '/models/props.low.glb' : '/models/props.glb')
   const data = use(loadBookcase())
 
   useLayoutEffect(() => {

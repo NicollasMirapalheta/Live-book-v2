@@ -105,3 +105,14 @@ Esses mudam a imagem e precisam de aprovação:
 - N8AO só nos objetos dinâmicos (a sala já tem AO no bake);
 - livros da estante agrupados (página e lombada num material só, ou BatchedMesh);
 - reflexo do piso em ¼ da tela.
+
+## Etapa 2 — texturas KTX2 (16/10)
+
+A sala e os objetos usam KTX2, com resolução por textura (`docs/decisoes.md`). A imagem foi aprovada pelo `art-reviewer`.
+
+| Cenário | Tier | N0 | Pior ponto | Base (pior ponto) |
+|---|---|---|---|---|
+| 30 livros com foto | high | RAM 2,1 GB · vídeo 1,1 GB | RAM 2,35 GB · vídeo 1,3 GB | 6,2 GB · 2,5 GB |
+| 30 livros com foto | low | RAM 1,3 GB · vídeo 0,6 GB | RAM 1,4 GB · vídeo 0,7 GB | 3,9 GB · 1,4 GB |
+
+O download inicial vai de ~29 para ~33 MB (room.glb 12,0 → 16,4 MB).
