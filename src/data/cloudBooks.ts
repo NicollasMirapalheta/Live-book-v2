@@ -29,10 +29,55 @@ export interface CloudDb {
   removeFiles: (paths: string[]) => Promise<void>
 }
 
-/** Free plan: 50 MB per file (the bucket rejects bigger ones; the form says so first). */
+/** Free plan: 50 MB per file (the bucket rejects bigger ones; the form says so first for a photo). */
 export const MAX_FILE_BYTES = 50 * 1024 * 1024
+/**
+ * A PDF over the limit goes up in parts of this size (docs/decisoes.md, 18/10/2026): `livro.pdf.1`, `.2`…,
+ * the row's `pdf_path` saying how many (`…/livro.pdf#3`). Downloaded, the parts are joined back into the
+ * same bytes. No schema change; a single file keeps the plain path.
+ */
+export const PART_BYTES = 45 * 1024 * 1024
 
 export const pdfPath = (userId: string, bookId: string) => `${userId}/${bookId}/livro.pdf`
+
+/** The bucket paths behind a row's `pdf_path`: the file itself, or its parts. */
+export function pdfFiles(pdfPathValue: string): string[] {
+  const m = /^(.*)#(\d+)$/.exec(pdfPathValue)
+  if (!m) return [pdfPathValue]
+  return Array.from({ length: Number(m[2]) }, (_, i) => `${m[1]}.${i + 1}`)
+}
+
+/** The row's `pdf_path` for this PDF: the plain path, or the path and its number of parts. */
+export const pdfPathFor = (path: string, pdf: Blob) => (pdf.size <= MAX_FILE_BYTES ? path : `${path}#${Math.ceil(pdf.size / PART_BYTES)}`)
+
+/** The files a PDF is stored as: bucket path → bytes (one whole file, or its parts in order). */
+export function pdfPieces(pdfPathValue: string, pdf: Blob): [string, Blob][] {
+  const files = pdfFiles(pdfPathValue)
+  if (files.length === 1) return [[files[0], pdf]]
+  return files.map((f, i) => [f, pdf.slice(i * PART_BYTES, (i + 1) * PART_BYTES, 'application/octet-stream')])
+}
+
+/** Uploads a PDF whole or in parts; returns the value for the row's `pdf_path`. */
+async function uploadPdf(db: CloudDb, path: string, pdf: Blob, onPart?: (done: number, count: number) => void): Promise<string> {
+  const value = pdfPathFor(path, pdf)
+  const pieces = pdfPieces(value, pdf)
+  for (const [i, [file, bytes]] of pieces.entries()) {
+    onPart?.(i, pieces.length)
+    await db.upload(file, bytes)
+  }
+  onPart?.(pieces.length, pieces.length)
+  return value
+}
+
+/** Downloads a row's PDF, joining its parts back together. */
+async function downloadPdf(download: (path: string) => Promise<Blob>, pdfPathValue: string): Promise<Blob> {
+  const files = pdfFiles(pdfPathValue)
+  if (files.length === 1) return download(files[0])
+  const parts: Blob[] = []
+  // one at a time: each part is cached as it arrives, and a failure does not leave the others running
+  for (const f of files) parts.push(await download(f))
+  return new Blob(parts, { type: 'application/pdf' })
+}
 export const photoPath = (userId: string, bookId: string) => `${userId}/${bookId}/foto`
 
 /** A book as the app holds it when it comes from the cloud: its files are fetched on demand. */
@@ -56,7 +101,7 @@ export function fromRow(row: BookRow, download: (path: string) => Promise<Blob>)
     pageCount: row.page_count,
     pdfName: row.pdf_name,
     createdAt: row.created_at,
-    loadPdf: () => download(row.pdf_path),
+    loadPdf: () => downloadPdf(download, row.pdf_path),
     photoPath: row.photo_path ?? undefined,
   }
 }
@@ -72,12 +117,16 @@ export interface SaveChanges {
  * Saves a book: uploads what changed, then writes the row (so a row never points to a missing file).
  * A removed photo is deleted from the bucket.
  */
-export async function saveBook(db: CloudDb, userId: string, book: StoredBook, changes: SaveChanges, previous?: BookRow): Promise<BookRow> {
-  if (changes.pdf && book.pdf.size > MAX_FILE_BYTES) throw new Error('o PDF passa de 50 MB (limite do plano grátis)')
+export async function saveBook(db: CloudDb, userId: string, book: StoredBook, changes: SaveChanges, previous?: BookRow, onPart?: (done: number, count: number) => void): Promise<BookRow> {
   if (changes.photo && book.coverPhoto && book.coverPhoto.size > MAX_FILE_BYTES) throw new Error('a foto passa de 50 MB')
-  const pdf = pdfPath(userId, book.id)
   const photo = photoPath(userId, book.id)
-  if (changes.pdf || !previous) await db.upload(pdf, book.pdf)
+  let pdf = previous?.pdf_path ?? pdfPath(userId, book.id)
+  if (changes.pdf || !previous) {
+    pdf = await uploadPdf(db, pdfPath(userId, book.id), book.pdf, onPart)
+    // the old PDF's files that the new one did not overwrite (parts it no longer has, or the whole file)
+    const stale = previous ? pdfFiles(previous.pdf_path).filter((f) => !pdfFiles(pdf).includes(f)) : []
+    if (stale.length) await db.removeFiles(stale)
+  }
   let photoKey = previous?.photo_path ?? null
   if (changes.photo) {
     if (book.coverPhoto) {
@@ -110,7 +159,7 @@ export async function saveBook(db: CloudDb, userId: string, book: StoredBook, ch
 /** Removes a book: the row first (it disappears from the shelf), then its files. */
 export async function removeBook(db: CloudDb, row: BookRow) {
   await db.deleteRow(row.id)
-  await db.removeFiles([row.pdf_path, ...(row.photo_path ? [row.photo_path] : [])])
+  await db.removeFiles([...pdfFiles(row.pdf_path), ...(row.photo_path ? [row.photo_path] : [])])
 }
 
 /** Takes the books made in this browser before signing in to the account; returns the ids that made it. */

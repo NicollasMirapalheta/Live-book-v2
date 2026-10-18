@@ -86,6 +86,8 @@ function BookFormOpen() {
   const persistent = useLibrary((s) => s.persistent)
   const [d, setD] = useState<Draft>(() => draftFrom(mode === 'edit' ? editing : undefined, file))
   const [busy, setBusy] = useState(false)
+  /** a large PDF going up in parts: "2 de 4" */
+  const [sending, setSending] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const content = useBookContent((s) => s.byId[d.id])
   const ids = useId()
@@ -145,7 +147,6 @@ function BookFormOpen() {
   const pickPdf = (f: File | undefined) => {
     if (!f) return
     if (!isPdf(f)) return setError('Escolha um arquivo PDF.')
-    if (cloud && f.size > MAX_FILE_BYTES) return setError('Esse PDF passa de 50 MB, o limite do plano grátis do Supabase.')
     setChanged((c) => ({ ...c, pdf: true }))
     set({ pdf: f, pdfName: f.name, pageCount: null, title: d.title || titleFromFile(f.name) })
   }
@@ -193,9 +194,11 @@ function BookFormOpen() {
       coverPhoto: d.coverPhoto ?? undefined,
         },
         { pdf: mode === 'new' || changed.pdf, photo: mode === 'new' || changed.photo },
+        (done, count) => setSending(count > 1 && done < count ? `${done + 1} de ${count}` : null),
       )
     } catch (err) {
       setBusy(false)
+      setSending(null)
       return setError(`Não consegui guardar o livro (${err instanceof Error ? err.message : String(err)}).`)
     }
     setBusy(false)
@@ -357,7 +360,7 @@ function BookFormOpen() {
 
           <div className="ui-actions">
             <button type="submit" className="ui-btn ui-btn-primary" disabled={busy || loading}>
-              {busy ? 'Guardando…' : mode === 'edit' ? 'Salvar' : 'Pôr na estante'}
+              {sending ? `Enviando ${sending}…` : busy ? 'Guardando…' : mode === 'edit' ? 'Salvar' : 'Pôr na estante'}
             </button>
             <button type="button" className="ui-btn ui-btn-secondary" onClick={close} disabled={busy}>
               Cancelar

@@ -415,7 +415,7 @@ Formato de cada entrada:
 - Contradiz em parte o CLAUDE.md ("conteúdo rediagramado na identidade visual"). O rediagramar continua para texto corrido; quando o PDF já é um livro (escaneado ou diagramado), ele é impresso como é, no papel, na luz e na encadernação da sala.
 - Como reverter: `classifyPages` devolvendo sempre `'reflow'` volta ao comportamento anterior.
 - Ferramenta: `npm run pdf:probe -- <arquivo.pdf> [--src 1-6] [--book 1-12] [--lines 9]` roda o pipeline real no Chromium e grava, em `shots/pdf-probe/`, as páginas originais, as compostas e o sumário.
-- Limite conhecido: logado (nuvem), o plano grátis do Supabase aceita PDFs de até 50 MB. O RPG (179 MB) só entra no modo local.
+- Limite da nuvem (plano grátis, 50 MB por arquivo): resolvido com o envio em partes (decisão abaixo).
 - Precisa do usuário? sim: testar os dois PDFs e aprovar o resultado.
 
 ## 2026-10-18 — N3: um passo mais perto da estante
@@ -430,3 +430,17 @@ Formato de cada entrada:
 - Alternativa: aproximar só pelo FOV (a roda já faz isso, de 70° a 40°): sem o passo, é menos descoberto no trackpad e não dá a sensação de chegar perto.
 - Como reverter: tirar N3 e a aresta da `config/room.json`.
 - Precisa do usuário? sim: aprovar o enquadramento no notebook.
+
+## 2026-10-18 — PDF acima de 50 MB vai para a nuvem em partes
+- Contexto: logado, o livro de regras de Ordem Paranormal (179 MB) não era guardado, porque o plano grátis do Supabase aceita até 50 MB por arquivo. O usuário pediu para avaliar a compressão dentro do app.
+- Avaliação da compressão: dos 188 MB, 154 MB são imagens (já em ~1216×1630 px, perto do tamanho em que as páginas são desenhadas) e 34 MB são arte vetorial e conteúdo das páginas, que não comprimem. Reencodando as imagens em JPEG (estimativa com sharp), o arquivo ficaria em ~100 MB (lado ≤ 1400 px, q72) ou ~86 MB (lado ≤ 1100 px, q60). Para chegar a 50 MB, só com imagens bem degradadas. Os sites de compressão (ilovepdf, smallpdf) usam Ghostscript no servidor: mesmo piso de vetor, e o Ghostscript em wasm é AGPL.
+- Escolha (do usuário: "envio em partes"):
+  - PDF acima de 50 MB sobe em partes de 45 MB (`livro.pdf.1`, `.2`…). O `pdf_path` da linha diz quantas são (`…/livro.pdf#4`); não muda o schema.
+  - Ao abrir, as partes descem uma a uma (cada uma vai para o cache do navegador) e são juntadas nos mesmos bytes.
+  - Trocar o PDF apaga as partes que sobraram; remover o livro apaga todas.
+  - O formulário mostra "Enviando 2 de 4…".
+  - Sem perda de qualidade.
+- Custo: a cota do plano grátis é de 1 GB no total (o RPG ocupa ~19%), e cada aparelho baixa o livro inteiro uma vez.
+- Alternativas: compressão no app (não chega a 50 MB sem estragar as imagens; pode entrar depois para economizar cota); Supabase Pro (US$ 25/mês, limite por arquivo em GBs).
+- Como reverter: em `cloudBooks.ts`, `pdfPathFor` sem partes, e o bloqueio de 50 MB de volta no `BookForm`. Os livros já em partes continuam abrindo.
+- Precisa do usuário? sim: testar logado com o PDF grande (o envio para o Supabase de verdade não roda nos testes).

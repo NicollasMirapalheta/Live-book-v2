@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { FIXTURE_BOOKS, type FixtureBook } from '../book/fixtures'
 import { cloudConfigured, cloudDb, startAccount, useAccount } from './cloud'
-import { fromRow, migrateLocal, removeBook as removeCloudBook, saveBook as saveCloudBook, type BookRow, type SaveChanges } from './cloudBooks'
+import { fromRow, migrateLocal, pdfPieces, removeBook as removeCloudBook, saveBook as saveCloudBook, type BookRow, type SaveChanges } from './cloudBooks'
 import { deleteBook, deleteCachedFile, listBooks, putBook, putCachedFile, type StoredBook } from './db'
 
 /** A book on the shelf: one of the user's (this browser or the cloud) or a sample. */
@@ -25,7 +25,8 @@ interface LibraryState {
   /** a book just created: the shelf hands it to the reader as soon as it is placed */
   pendingSelect: string | null
   load: () => Promise<void>
-  save: (book: StoredBook, changes?: SaveChanges) => Promise<void>
+  /** `onPart`: a PDF going up to the cloud in parts (over 50 MB) reports each one */
+  save: (book: StoredBook, changes?: SaveChanges, onPart?: (done: number, count: number) => void) => Promise<void>
   remove: (id: string) => Promise<void>
   /** moves localPending to the account (and out of this browser) */
   migrate: (onEach?: (done: number) => void) => Promise<void>
@@ -100,17 +101,17 @@ export const useLibrary = create<LibraryState>((set, get) => ({
     }
   },
 
-  save: async (book, changes = { pdf: true, photo: true }) => {
+  save: async (book, changes = { pdf: true, photo: true }, onPart) => {
     const exists = get().user.some((b) => b.id === book.id)
     let shown: LibraryBook = fromStored(book)
     if (get().mode === 'cloud') {
       const uid = useAccount.getState().account?.id
       if (!uid) throw new Error('entre com a sua conta para guardar')
       const db = await cloudDb()
-      const row = await saveCloudBook(db, uid, book, changes, rows.get(book.id))
+      const row = await saveCloudBook(db, uid, book, changes, rows.get(book.id), onPart)
       rows.set(row.id, row)
       // what was just sent is what this browser would download: keep it as the local copy
-      if (changes.pdf) await putCachedFile(row.pdf_path, book.pdf)
+      if (changes.pdf) for (const [file, bytes] of pdfPieces(row.pdf_path, book.pdf)) await putCachedFile(file, bytes)
       if (changes.photo && row.photo_path && book.coverPhoto) await putCachedFile(row.photo_path, book.coverPhoto)
       shown = { ...fromRow(row, db.download), pdf: book.pdf, coverPhoto: book.coverPhoto }
     } else {
