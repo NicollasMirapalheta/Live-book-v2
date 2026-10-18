@@ -444,3 +444,17 @@ Formato de cada entrada:
 - Alternativas: compressão no app (não chega a 50 MB sem estragar as imagens; pode entrar depois para economizar cota); Supabase Pro (US$ 25/mês, limite por arquivo em GBs).
 - Como reverter: em `cloudBooks.ts`, `pdfPathFor` sem partes, e o bloqueio de 50 MB de volta no `BookForm`. Os livros já em partes continuam abrindo.
 - Precisa do usuário? sim: testar logado com o PDF grande (o envio para o Supabase de verdade não roda nos testes).
+
+## 2026-10-18 — Leitura sem "névoa": a cor da sala fica mais leve com o livro aberto
+- Contexto: o usuário testou o RPG logado e achou as páginas "nevoadas, um pouco opacas", tendo que forçar a vista. Medido no notebook (1366×768), o contraste do texto era 5,1:1. Três causas se somavam:
+  - o AgX achata o tom;
+  - o piso de sombra da sala (#2A1A12) e a dessaturação de 80% levam o preto da tinta para marrom-acinzentado;
+  - o tratamento de "tinta" do fac-símile diagramado (decisão da revisão F2) clareava ainda mais o preto.
+- Escolha:
+  - com o livro aberto, o piso de sombra cai para 25% e entra uma curva em S suave (`READING_CONTRAST` 0,45, `src/scene/Effects.tsx`): papel mais claro, tinta mais escura;
+  - a transição acompanha a abertura (0,8 s) e a sala volta à cor aprovada ao fechar o livro;
+  - a tinta do fac-símile perto do preto (`#080605`) e 97% da saturação;
+  - contraste medido: 5,1:1 → 7,5:1 no RPG; o Foucault fica em 6:1, com papel mais claro.
+- Alternativa testada: tirar o reflexo do ambiente do papel e o piso de sombra inteiro. Ganho quase nulo (5,9:1), porque a causa principal é o tom geral.
+- Como reverter: `READING_CONTRAST = 0` e `READING_FLOOR = 1`.
+- Precisa do usuário? sim: aprovar a leitura no notebook.

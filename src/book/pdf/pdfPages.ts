@@ -137,10 +137,10 @@ export class PdfPages implements PdfPageSource {
   }
 }
 
-/** the darkest ink on paper (art direction: no pure black) */
-const INK_FLOOR = [22, 18, 16]
-/** colour kept from a laid-out page: printed ink is less saturated than a screen */
-const INK_SATURATION = 0.92
+/** the darkest ink: a touch off black (the room's grade lifts the rest; more here read as haze, user 18/10) */
+const INK_FLOOR = [8, 6, 5]
+/** colour kept from a laid-out page: printed ink is a little less saturated than a screen */
+const INK_SATURATION = 0.97
 
 /**
  * A laid-out page as printed ink: a little less saturated and no deeper than ink gets, so multiplied onto the
