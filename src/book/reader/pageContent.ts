@@ -155,7 +155,7 @@ function drawPlan(ctx: CanvasRenderingContext2D, book: PageBook, layout: BookLay
         continue
       }
       ctx.save()
-      // a scan prints on the paper (its paper is white); a laid-out page covers it
+      // printed on the paper: a scan's paper is white, a laid-out page's colours are ink (pdf/pdfPages.ts)
       if (it.blend === 'multiply') ctx.globalCompositeOperation = 'multiply'
       ctx.imageSmoothingQuality = 'high'
       ctx.drawImage(img, it.x * H, it.y * H, it.w * H, it.h * H)

@@ -12,6 +12,7 @@ Não altera o visual da sala, por isso pode ser desenvolvida em paralelo ao look
 - **Movimento reduzido:** com `prefers-reduced-motion`, a caminhada continua (o usuário pediu "andar até o ponto"), mais curta (0,9 s) e sem girar a câmera. (Antes: fade de 0,3 s — lia como teletransporte.)
 - **Evolução registrada (pedido do usuário, 15/10):** caminhada mais "física" entre os nós — leve balanço de passo opcional, desaceleração natural e, no futuro, parar em pontos intermediários do trajeto (clicar no piso entre dois nós). Momento: depois da Fase 4, junto com a revisão de UX da Fase 6.
 - **N2:** ao chegar, a câmera se orienta para a estante (yaw do nó) — é o ponto de interação com os livros (Fase 3).
+- **N3** (18/10/2026): um passo mais perto da estante, depois de N2. As prateleiras de cima enchem a tela, e ali também se escolhem livros. A câmera se orienta para a estante ao chegar.
 - **URL:** `?node=N1&yaw=10&pitch=-5&fov=55` define o estado inicial (usado pelo `npm run shot`). O estado atual **não** é escrito na URL a cada movimento.
 
 ## Código

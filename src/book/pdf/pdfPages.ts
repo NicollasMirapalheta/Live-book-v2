@@ -1,7 +1,7 @@
 // The printed pages of a facsimile book (facsimile.ts), drawn from the open PDF when a page texture asks for
 // them: one render at a time, the most recent request first (the page being looked at), the next pages
-// after it, and a small cache. A scan's paper is brought to white so it prints on the book's paper
-// (multiply); a laid-out page is drawn as it is.
+// after it, and a small cache. Both print on the book's paper (multiply): a scan's paper is brought to
+// white first, a laid-out page's colours to ink.
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import type { Unit } from './facsimile'
 
@@ -123,17 +123,40 @@ export class PdfPages implements PdfPageSource {
       const canvas = document.createElement('canvas')
       canvas.width = Math.max(1, Math.round((u.x1 - u.x0) * scale))
       canvas.height = Math.max(1, Math.round(px))
-      const ctx = canvas.getContext('2d', { willReadFrequently: this.whiten })!
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!
       ctx.fillStyle = '#fff'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       await page.render({ canvasContext: ctx, canvas, viewport }).promise
       if (this.whiten) whitenPaper(ctx, canvas.width, canvas.height)
+      else toInk(ctx, canvas.width, canvas.height)
       return canvas
     } finally {
       // decoded scans are large: let pdf.js drop them (a later size decodes again)
       page.cleanup()
     }
   }
+}
+
+/** the darkest ink on paper (art direction: no pure black) */
+const INK_FLOOR = [22, 18, 16]
+/** colour kept from a laid-out page: printed ink is less saturated than a screen */
+const INK_SATURATION = 0.92
+
+/**
+ * A laid-out page as printed ink: a little less saturated and no deeper than ink gets, so multiplied onto the
+ * book's paper it takes the paper's tone and the room's light instead of glowing over them like a screen.
+ */
+export function toInk(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const img = ctx.getImageData(0, 0, w, h)
+  const d = img.data
+  for (let i = 0; i < d.length; i += 4) {
+    const l = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]
+    for (let k = 0; k < 3; k++) {
+      const v = l + (d[i + k] - l) * INK_SATURATION
+      d[i + k] = INK_FLOOR[k] + (v * (255 - INK_FLOOR[k])) / 255
+    }
+  }
+  ctx.putImageData(img, 0, 0)
 }
 
 /**

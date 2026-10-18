@@ -78,9 +78,9 @@ describe('fac-símile escaneado', () => {
 
   it('sem sumário no PDF, os títulos em caixa alta viram o sumário (cabeço não conta)', () => {
     const units = facsimileUnits(doc)
-    expect(headingsToc(doc, units)).toEqual([{ title: 'AULA DE 7 DE JANEIRO DE 1976', unit: 4 }])
+    expect(headingsToc(doc, units)).toEqual([{ title: 'Aula de 7 de janeiro de 1976', unit: 4 }])
     const layout = paginateFacsimile(doc, { title: 'Em defesa da sociedade' }, 0.7)
-    expect(layout.toc.map((e) => e.title)).toEqual(['Página de rosto', 'AULA DE 7 DE JANEIRO DE 1976', 'Última página'])
+    expect(layout.toc.map((e) => e.title)).toEqual(['Página de rosto', 'Aula de 7 de janeiro de 1976', 'Última página'])
   })
 
   it('linha de texto que o OCR leu maior não vira título', () => {
@@ -108,7 +108,7 @@ describe('fac-símile diagramado', () => {
     const it0 = layout.pages[2].items[0]
     expect(it0.kind).toBe('pdfpage')
     if (it0.kind !== 'pdfpage') return
-    expect(it0.blend).toBe('normal')
+    expect(it0.blend).toBe('multiply')
     // covers the page: as tall as the page or taller, as wide or wider
     expect(it0.h).toBeGreaterThanOrEqual(1 - 1e-9)
     expect(it0.w).toBeGreaterThanOrEqual(0.73 - 1e-9)

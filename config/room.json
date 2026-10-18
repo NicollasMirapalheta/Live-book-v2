@@ -104,10 +104,15 @@
       "position": [0.0, 1.55, -1.0], "yawDeg": 0, "pitchDeg": 0, "fovDeg": 50, "lensShiftY": 0,
       "role": "frente da estante", "initial": true,
       "$comment": "A 1.6 m da frente da estante, enquadra da base (0.8) à cornija (2.3)."
+    },
+    "N3": {
+      "position": [0.0, 1.62, -1.62], "yawDeg": 0, "pitchDeg": 6, "fovDeg": 46, "lensShiftY": 0,
+      "role": "perto da estante", "initial": true,
+      "$comment": "Passo de aproximação (teste no notebook, 18/10/2026: os livros ficavam longe em N2). A ~1 m da frente da estante, na altura de olho de N0/N1, olhando 6° para cima: as três prateleiras de cima (onde os livros começam) enchem a tela, ~1.7× maiores que em N2; a de baixo fica a um olhar para baixo. Sem lensShift: a pose do livro na mão e a de leitura são centradas no eixo da câmera. Também escolhe livros."
     }
   },
 
-  "edges": [["N0", "N1"], ["N1", "N2"]],
+  "edges": [["N0", "N1"], ["N1", "N2"], ["N2", "N3"]],
 
   "screenshot": {
     "width": 1920, "height": 1080,

@@ -190,3 +190,33 @@ Cada entrada: data/hora, o que mudou, notas por critério (art-reviewer), diverg
   - sumário até 80% da altura.
 - O papel mais frio que no shot antigo do N2 vem do ajuste de luz dos livros da Fase 6, já aprovado.
 - Shots: `shots/leitura/notebook_aberto.png`, `notebook_zoom.png`, `monitor_aberto.png`.
+
+## PDF em fac-símile e N3 (pedido do usuário, 18/10)
+
+### F1
+- O que mudou:
+  - PDFs escaneados e diagramados viram fac-símile, impresso no papel do livro;
+  - nó N3, um passo mais perto da estante (1,05 → 1,15 m da frente, olhando 4° para cima).
+- **art-reviewer:** "iterar" nos três pontos. O escaneado está perto do aprovado; o diagramado parece tela sobre o livro; N3 dá só 1,4× e a câmera fica alta.
+- Pontos levantados:
+  - fólio impresso ≠ contador do app;
+  - lixo de OCR no sumário;
+  - linhas tortas e pontinhos de poeira do scanner;
+  - margem de cima apertada no escaneado;
+  - veio da estante saturado de perto, e uma mancha escura no fundo do primeiro compartimento (bake?).
+
+### F2
+- O que mudou:
+  - diagramado como tinta (saturação 92%, preto `#161210`), impresso em multiply: pega o tom do papel e a luz da sala;
+  - sumário de OCR com só a inicial maiúscula;
+  - N3 a ~1 m, olho a 1,62 m, 6° para cima, FOV 46: livros ~1,7× maiores que em N2.
+- Ainda divergem, para próximas iterações:
+  - fólio impresso × contador;
+  - linhas tortas e poeira do scanner;
+  - entradas de editora no sumário de OCR ("Martins Fontes");
+  - veio e mancha da estante vistos de perto.
+- Shots:
+  - `shots/latest/N3.png`;
+  - `shots/latest/N2_facsimile_scan.png`, `N2_facsimile_scan_chapter.png`;
+  - `shots/latest/N2_facsimile_designed.png` (RPG, Ameaças);
+  - `shots/latest/N2_facsimile_designed_text.png` (RPG, Perícias).

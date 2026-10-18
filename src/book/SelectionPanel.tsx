@@ -8,7 +8,7 @@ import { MAX_ZOOM, useReadingZoom } from './reader/readingZoom'
 import { currentSpread, useReader } from './reader/useReader'
 import { shelfBooks } from './shelfData'
 import { SPINE_COLOR_LABELS } from './palette'
-import { SELECTION_NODE, useSelection } from './useSelection'
+import { isSelectionNode, useSelection } from './useSelection'
 import '../ui/ui.css'
 import './selection.css'
 
@@ -54,7 +54,7 @@ function useSelectionKeys() {
         }
         return
       }
-      if (nav.currentNode !== SELECTION_NODE || nav.isTransitioning) return
+      if (!isSelectionNode(nav.currentNode) || nav.isTransitioning) return
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault()
         e.stopImmediatePropagation()

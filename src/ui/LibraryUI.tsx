@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { params } from '../app/params'
-import { SELECTION_NODE, useSelection } from '../book/useSelection'
+import { isSelectionNode, useSelection } from '../book/useSelection'
 import { useAccount } from '../data/cloud'
 import { useNavigation } from '../navigation/useNavigation'
 import { AccountUI, SignInFirst } from './AccountUI'
@@ -13,7 +13,7 @@ import './ui.css'
  * anywhere starts a new book with it, and the account (top right) when the cloud is on.
  */
 export function LibraryUI() {
-  const atShelf = useNavigation((s) => s.currentNode === SELECTION_NODE && !s.isTransitioning)
+  const atShelf = useNavigation((s) => isSelectionNode(s.currentNode) && !s.isTransitioning)
   const selected = useSelection((s) => s.selected)
   const formOpen = useCreator((s) => s.mode !== null)
   const openNew = useCreator((s) => s.openNew)

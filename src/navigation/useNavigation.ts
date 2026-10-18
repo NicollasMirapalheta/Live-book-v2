@@ -11,8 +11,8 @@ const TRANSITION_S = 1.4
 const REDUCED_MOTION_S = 0.9
 /** Orientation is only tweened back to the node default when the user looks this far away. */
 const REORIENT_THRESHOLD = 60
-/** The bookcase node always faces the bookcase on arrival (spec Fase 1). */
-const FACE_ON_ARRIVAL: NodeId[] = ['N2']
+/** The bookcase nodes always face the bookcase on arrival (spec Fase 1). */
+const FACE_ON_ARRIVAL: NodeId[] = ['N2', 'N3']
 
 interface NavigationState {
   currentNode: NodeId

@@ -35,6 +35,26 @@ test('avança N0 → N1 → N2 e volta para N1', async ({ page }, testInfo) => {
   expect(await page.evaluate(() => window.__NAV__?.currentNode)).toBe('N1')
 })
 
+test('na estante, um passo a mais aproxima (N3) e ali também se escolhe um livro', async ({ page }, testInfo) => {
+  await page.goto('/?e2e=1&node=N2')
+  await page.waitForFunction(() => window.__SCENE_READY__ === true && (window.__SEL__?.order.length ?? 0) > 0, undefined, { timeout: 90_000 })
+  await page.getByRole('button', { name: 'Avançar' }).click()
+  await waitIdle(page)
+  expect(await page.evaluate(() => window.__NAV__?.currentNode)).toBe('N3')
+  // the end of the path: only back
+  await expect(page.getByRole('button', { name: 'Avançar' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Novo livro' })).toBeVisible()
+  await page.screenshot({ path: testInfo.outputPath('N3.png') })
+  const first = await page.evaluate(() => window.__SEL__!.order[0])
+  await page.evaluate((id) => window.__SEL__!.select(id), first)
+  await page.waitForFunction(() => window.__SEL__!.phase === 'hand')
+  await page.keyboard.press('Escape')
+  await page.waitForFunction(() => window.__SEL__!.selected === null)
+  await page.getByRole('button', { name: 'Voltar' }).click()
+  await waitIdle(page)
+  expect(await page.evaluate(() => window.__NAV__?.currentNode)).toBe('N2')
+})
+
 test('__NAV__ só existe com ?e2e=1', async ({ page }) => {
   await page.goto('/')
   await page.waitForFunction(() => window.__SCENE_READY__ === true, undefined, { timeout: 90_000 })

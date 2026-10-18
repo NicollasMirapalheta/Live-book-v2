@@ -2,8 +2,9 @@ import { create } from 'zustand'
 import { params } from '../app/params'
 import { useNavigation } from '../navigation/useNavigation'
 
-/** Node where the books can be selected (spec Fase 3). */
-export const SELECTION_NODE = 'N2'
+/** Nodes where the books can be selected (spec Fase 3): the front of the bookcase and the step closer. */
+export const SELECTION_NODES: readonly string[] = ['N2', 'N3']
+export const isSelectionNode = (id: string) => SELECTION_NODES.includes(id)
 
 interface SelectionState {
   /** ids in shelf order (left → right, top shelf first) */
@@ -48,7 +49,7 @@ export const readFocus = { distance: 0.4 }
 
 const canSelect = () => {
   const nav = useNavigation.getState()
-  return nav.currentNode === SELECTION_NODE && !nav.isTransitioning
+  return isSelectionNode(nav.currentNode) && !nav.isTransitioning
 }
 
 export const useSelection = create<SelectionState>((set, get) => ({
@@ -113,9 +114,9 @@ export const useSelection = create<SelectionState>((set, get) => ({
   },
 }))
 
-/** Leaving the bookcase node drops the keyboard focus. */
+/** Leaving the bookcase drops the keyboard focus. */
 useNavigation.subscribe((s, prev) => {
-  if (s.currentNode !== prev.currentNode && s.currentNode !== SELECTION_NODE) {
+  if (s.currentNode !== prev.currentNode && !isSelectionNode(s.currentNode)) {
     useSelection.setState({ focused: null, hovered: null })
   }
 })

@@ -384,3 +384,49 @@ Formato de cada entrada:
 - Alternativa: guardar o nível na conta (Supabase). Descartada porque o nível depende do aparelho, não da pessoa.
 - Como reverter: tirar `FullscreenButton`, `SettingsButton` e `SettingsPanel` de `AccountUI.tsx`. O modo automático continua sozinho.
 - Precisa do usuário? não.
+
+## 2026-10-18 — PDF: fac-símile para escaneamentos e livros diagramados
+- Contexto: depois do lançamento, o usuário mandou dois PDFs de referência que o projeto tem que tratar bem.
+  - "Em defesa da sociedade" é um livro escaneado: duas páginas por folha do PDF e uma camada de OCR sem acentos ("nao", "urn", "0" no lugar de "o", "," no lugar de "ç"). Recomposto, o texto ficava ilegível.
+  - O livro de regras de "Ordem Paranormal" (332 páginas, 179 MB) é um livro já diagramado: colunas, tabelas, fichas, arte de página inteira e fundo texturizado. Recomposto, virava 1360 páginas com capítulos falsos e sem as tabelas, e lia 350 imagens para a memória (15 s).
+- Escolha: o analisador classifica o PDF por uma amostra de até 12 páginas (`src/book/pdf/facsimile.ts`, `classifyPages`):
+  - **rediagramar** (como antes): texto corrido, mesmo com alguns desenhos;
+  - **escaneado** (a maioria das páginas é uma imagem, sem texto ou com OCR invisível): fac-símile.
+    - Cada folha dupla vira duas páginas, divididas no vão do texto.
+    - Cada página é recortada no tamanho da mancha impressa: o mesmo tamanho para todas, logo uma escala só, e as bordas do scanner ficam de fora.
+    - O papel do escaneamento vai para o branco e a imagem é impressa no papel do livro (multiply).
+    - A página esquerda da folha dupla cai numa página par do livro.
+  - **diagramado** (imagens cobrindo boa parte das páginas, ou arte sob texto visível): fac-símile página a página, sangrando quando a proporção é parecida com a do livro. As cores viram tinta: saturação a 92% e preto no máximo `#161210`. A página é impressa no papel (multiply). Sem isso, o `art-reviewer` viu "tela de tablet sobre o livro".
+  - O sumário vem do outline do PDF. Sem outline, vem dos títulos achados no texto: linhas maiores que o corpo, curtas, em caixa alta, o maior por página. Títulos em caixa alta entram com só a inicial maiúscula ("Aula de 7 de janeiro de 1976").
+  - As páginas do fac-símile são desenhadas sob demanda a partir do PDF aberto (`src/book/pdf/pdfPages.ts`):
+    - uma por vez, o pedido mais recente primeiro, e as duas seguintes adiantadas;
+    - cache de 10;
+    - a textura da página espera em branco e é redesenhada quando a página chega.
+  - Os decodificadores wasm do pdf.js (JBIG2, JPEG 2000, ICC) são servidos em `/pdfjs-wasm/` (plugin no `vite.config.ts`).
+  - A leitura do PDF fica guardada por livro: salvar o formulário com o título final não relê o arquivo.
+- Medido no app (notebook 1366×768, viewport do Playwright):
+  - RPG: 332 páginas viram 334 no livro, lidas em ~5 s (antes 15 s e ~350 imagens decodificadas);
+  - Foucault: 199 folhas viram 400 páginas, lidas em ~3 s;
+  - a página aparece ~0,1–0,3 s depois de virar.
+- Alternativas:
+  - corrigir o OCR com regras (urn→um, 0→o, ,→ç): não devolve os acentos perdidos;
+  - recompor o livro diagramado: perde tabelas, fichas e arte;
+  - rasterizar todas as páginas na leitura: memória e tempo (o que o fac-símile sob demanda evita).
+- Contradiz em parte o CLAUDE.md ("conteúdo rediagramado na identidade visual"). O rediagramar continua para texto corrido; quando o PDF já é um livro (escaneado ou diagramado), ele é impresso como é, no papel, na luz e na encadernação da sala.
+- Como reverter: `classifyPages` devolvendo sempre `'reflow'` volta ao comportamento anterior.
+- Ferramenta: `npm run pdf:probe -- <arquivo.pdf> [--src 1-6] [--book 1-12] [--lines 9]` roda o pipeline real no Chromium e grava, em `shots/pdf-probe/`, as páginas originais, as compostas e o sumário.
+- Limite conhecido: logado (nuvem), o plano grátis do Supabase aceita PDFs de até 50 MB. O RPG (179 MB) só entra no modo local.
+- Precisa do usuário? sim: testar os dois PDFs e aprovar o resultado.
+
+## 2026-10-18 — N3: um passo mais perto da estante
+- Contexto: no notebook, a namorada do usuário achou os livros longe em N2 (a 1,6 m da estante, a estante inteira no quadro). O usuário sugeriu um passo de zoom na prateleira.
+- Escolha: nó N3 na `config/room.json`, aresta N2–N3.
+  - Posição: ~1 m da frente da estante, na altura de olho de N0 e N1 (1,62 m), olhando 6° para cima, FOV 46.
+  - As três prateleiras de cima (onde os livros começam) enchem a tela, e os livros ficam ~1,7× maiores que em N2. A de baixo fica a um olhar para baixo.
+  - O `art-reviewer` sugeriu deslocar a lente (`lensShiftY`) em vez de inclinar a câmera, para manter as verticais paralelas. Ficou a inclinação de 6°: a pose do livro na mão e a de leitura são calculadas no eixo da câmera, e com o deslocamento o livro sairia do centro da tela.
+  - Em N3 também se escolhem livros e aparece "Novo livro" (`SELECTION_NODES` em `useSelection.ts`).
+  - A seta "Avançar" em N2 leva a N3, e ↑ também.
+  - A câmera se vira para a estante ao chegar, como em N2.
+- Alternativa: aproximar só pelo FOV (a roda já faz isso, de 70° a 40°): sem o passo, é menos descoberto no trackpad e não dá a sensação de chegar perto.
+- Como reverter: tirar N3 e a aresta da `config/room.json`.
+- Precisa do usuário? sim: aprovar o enquadramento no notebook.

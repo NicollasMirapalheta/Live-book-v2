@@ -208,7 +208,14 @@ export function headingsToc(doc: FacsimileDoc, units: Unit[]): { title: string; 
     if (mine) out.push(mine)
   })
   const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
-  return out.filter((e, k) => k === 0 || norm(e.title) !== norm(out[k - 1].title)).map(({ title, unit }) => ({ title, unit }))
+  return out.filter((e, k) => k === 0 || norm(e.title) !== norm(out[k - 1].title)).map(({ title, unit }) => ({ title: sentenceCase(title), unit }))
+}
+
+/** "AULA DE 7 DE JANEIRO DE 1976" → "Aula de 7 de janeiro de 1976" (titles in capitals read as shouting in the contents) */
+export function sentenceCase(title: string) {
+  if (upperShare(title) < 0.7) return title
+  const lower = title.toLocaleLowerCase('pt-BR')
+  return lower.replace(/\p{L}/u, (c) => c.toLocaleUpperCase('pt-BR'))
 }
 
 /** a laid-out page this close to the book's proportions is cropped to fill it (full bleed); further off, it fits inside */
@@ -233,7 +240,8 @@ export function paginateFacsimile(doc: FacsimileDoc, meta: BookMeta, aspect: num
     if (doc.mode === 'designed') {
       const fill = Math.abs(cw / ch / W - 1) <= BLEED_MISMATCH
       const s = fill ? Math.max(W / cw, 1 / ch) : Math.min(W / cw, 1 / ch)
-      item = { kind: 'pdfpage', unit: i, x: (W - cw * s) / 2, y: (1 - ch * s) / 2, w: cw * s, h: ch * s, blend: 'normal' }
+      // printed too (pdfPages.ts takes its colours to ink): the paper and the room's light show through
+      item = { kind: 'pdfpage', unit: i, x: (W - cw * s) / 2, y: (1 - ch * s) / 2, w: cw * s, h: ch * s, blend: 'multiply' }
     } else {
       // inside the page with book margins, the wider one at the binding
       const recto = page % 2 === 1
