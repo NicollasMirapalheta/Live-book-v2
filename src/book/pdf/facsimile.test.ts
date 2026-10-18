@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { classifyPages, facsimileUnits, gutterOf, headingsToc, outlineToc, paginateFacsimile } from './facsimile'
+import { classifyPages, cleanOcrTitle, facsimileUnits, gutterOf, headingsToc, outlineToc, paginateFacsimile, sentenceCase } from './facsimile'
 import type { FacsimileDoc, FacsimilePage, RawItem } from './types'
 
 const item = (str: string, x: number, y: number, size = 10): RawItem => ({ str, x, y, w: str.length * size * 0.45, size, bold: false, italic: false })
@@ -81,6 +81,24 @@ describe('fac-símile escaneado', () => {
     expect(headingsToc(doc, units)).toEqual([{ title: 'Aula de 7 de janeiro de 1976', unit: 4 }])
     const layout = paginateFacsimile(doc, { title: 'Em defesa da sociedade' }, 0.7)
     expect(layout.toc.map((e) => e.title)).toEqual(['Página de rosto', 'Aula de 7 de janeiro de 1976', 'Última página'])
+  })
+
+  it('títulos de OCR: data com dígitos trocados, cedilha lida como ponto e vírgula, acentos perdidos', () => {
+    expect(cleanOcrTitle('AULA DE lODE MARC;O DE 1976')).toBe('AULA DE 10 DE MARÇO DE 1976')
+    expect(sentenceCase(cleanOcrTitle('AULA DE 3 DE MARCO DE 1976'))).toBe('Aula de 3 de março de 1976')
+    expect(cleanOcrTitle(sentenceCase(cleanOcrTitle('INDICE DAS NOC;;OES E DOS CONCEITOS')))).toBe('Índice das noções e dos conceitos')
+    expect(cleanOcrTitle(sentenceCase('SUMARIO'))).toBe('Sumário')
+    // ordinary words are left alone
+    expect(cleanOcrTitle('O marco zero da cidade')).toBe('O marco zero da cidade')
+  })
+
+  it('página de rosto escaneada (pouco texto corrido) não entra no sumário', () => {
+    const rosto: FacsimilePage = spread(
+      [item('linha curta', 50, 300, 9)],
+      [item('Em Defesa da Sociedade', 450, 500, 18), item('Martins Fontes', 470, 120, 20), item('São Paulo 2005', 470, 105, 12)],
+    )
+    const withRosto: FacsimileDoc = { ...doc, pages: [rosto, ...doc.pages] }
+    expect(headingsToc(withRosto, facsimileUnits(withRosto)).map((e) => e.title)).toEqual(['Aula de 7 de janeiro de 1976'])
   })
 
   it('linha de texto que o OCR leu maior não vira título', () => {

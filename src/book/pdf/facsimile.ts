@@ -179,7 +179,9 @@ const upperShare = (s: string) => {
  * Headings in the text of the printed pages, for a PDF without an outline: lines clearly larger than the
  * body and short, in capitals or (much larger) starting with one; the largest one per page. An OCR layer
  * gives every line its own size, so body lines come out larger now and then: they start in lower case, run
- * long or end mid-sentence. Running heads and folios are smaller than the body or have no words.
+ * long or end mid-sentence. Running heads and folios are smaller than the body or have no words. In a scan, a
+ * page with almost no running text (title page, half-title, copyright) gives no entry: its largest line is
+ * the author or the publisher, not a chapter.
  */
 export function headingsToc(doc: FacsimileDoc, units: Unit[]): { title: string; unit: number }[] {
   const lines = units.map((u, i) => {
@@ -191,6 +193,7 @@ export function headingsToc(doc: FacsimileDoc, units: Unit[]): { title: string; 
   const body = percentile(weighted, 0.5) || 10
   const out: { title: string; unit: number; y: number; size: number }[] = []
   lines.forEach((ls, i) => {
+    if (doc.mode === 'scan' && ls.filter((l) => l.size < body * 1.25 && l.text.length >= 15).length < MIN_TEXT_LINES) return
     let mine: (typeof out)[number] | null = null
     for (const l of ls) {
       const text = l.text.trim()
@@ -208,7 +211,54 @@ export function headingsToc(doc: FacsimileDoc, units: Unit[]): { title: string; 
     if (mine) out.push(mine)
   })
   const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
-  return out.filter((e, k) => k === 0 || norm(e.title) !== norm(out[k - 1].title)).map(({ title, unit }) => ({ title: sentenceCase(title), unit }))
+  return out.filter((e, k) => k === 0 || norm(e.title) !== norm(out[k - 1].title)).map(({ title, unit }) => ({ title: cleanOcrTitle(sentenceCase(cleanOcrTitle(title))), unit }))
+}
+
+/** lines of running text a scanned page needs for its heading to count (a chapter opening has a page of it) */
+const MIN_TEXT_LINES = 8
+
+const MONTHS = 'JANEIRO|FEVEREIRO|MAR[CÇ]O|ABRIL|MAIO|JUNHO|JULHO|AGOSTO|SETEMBRO|OUTUBRO|NOVEMBRO|DEZEMBRO'
+
+/** Heading words an OCR layer often loses the accents of (whole words, lower case). */
+const ACCENTS: Record<string, string> = {
+  sumario: 'sumário',
+  prefacio: 'prefácio',
+  indice: 'índice',
+  introducao: 'introdução',
+  conclusao: 'conclusão',
+  apresentacao: 'apresentação',
+  apendice: 'apêndice',
+  onomastico: 'onomástico',
+  nocoes: 'noções',
+  noçoes: 'noções',
+  situacao: 'situação',
+  capitulo: 'capítulo',
+  licao: 'lição',
+  bibliografia: 'bibliografia',
+}
+
+/**
+ * Common OCR slips in a scanned heading:
+ * - a cedilla read as a semicolon ("MARC;O", "NOC;;OES" → Ç);
+ * - a day of the month read as letters, glued to the next word ("AULA DE lODE MARÇO" → "AULA DE 10 DE MARÇO");
+ * - accents lost in the usual heading words ("Sumario" → "Sumário") and in "março" within a date.
+ */
+export function cleanOcrTitle(title: string) {
+  let t = title.replace(/([cC]);+(?=\p{L})/gu, (_, c: string) => (c === 'C' ? 'Ç' : 'ç'))
+  // "DE lO DE MARÇO", "DE lODE MARÇO": the day, in digits that came out as l, I, O
+  t = t.replace(new RegExp(`\\b(DE|de)\\s+([0-9lIOo|]{1,2})\\s*(DE|de)\\s+(${MONTHS})\\b`, 'giu'), (_, a: string, day: string, b: string, month: string) => {
+    const digits = day.replace(/[lI|]/g, '1').replace(/[Oo]/g, '0')
+    // in a date "marco" is the month (a "marco" elsewhere is a landmark)
+    const m = /^mar[cç]o$/i.test(month) ? (month === month.toUpperCase() ? 'MARÇO' : 'março') : month
+    return `${a} ${digits} ${b} ${m}`
+  })
+  return t.replace(/\p{L}+/gu, (w) => {
+    const fixed = ACCENTS[w.toLocaleLowerCase('pt-BR')]
+    if (!fixed) return w
+    if (w === w.toLocaleUpperCase('pt-BR') && w.length > 1) return fixed.toLocaleUpperCase('pt-BR')
+    if (w[0] === w[0].toLocaleUpperCase('pt-BR')) return fixed[0].toLocaleUpperCase('pt-BR') + fixed.slice(1)
+    return fixed
+  })
 }
 
 /** "AULA DE 7 DE JANEIRO DE 1976" → "Aula de 7 de janeiro de 1976" (titles in capitals read as shouting in the contents) */
