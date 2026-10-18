@@ -50,3 +50,20 @@ Alternativa descartada: rasterizar as páginas do PDF como texturas. É mais fie
 - `npm run books:samples` gera os PDFs de exemplo em `public/books/`.
 - Medido nos exemplos (navegador com GPU): 19 páginas A4 → 48 páginas em 0,55 s; 68 páginas A4 com 5 desenhos → 208 páginas em 0,6 s.
 - Testes: 13 unitários (estrutura e composição), 4 e2e (`e2e/pdf.spec.ts`: espessura, sumário do PDF, ir ao capítulo, soltar um PDF).
+
+## Fac-símile (2026-10-18)
+
+Nem todo PDF é texto para rediagramar. Antes da extração, uma amostra de até 12 páginas decide o caminho (`src/book/pdf/facsimile.ts`, decisão em `docs/decisoes.md`):
+
+| Tipo | Como se reconhece | Como vira livro |
+|------|-------------------|-----------------|
+| `reflow` | texto corrido, poucas imagens | composição deste spec (inalterada) |
+| `scan` | a maioria das páginas é uma imagem, sem texto ou com OCR invisível | página escaneada impressa no papel (multiply, papel do scan levado ao branco); folha dupla dividida; recorte do mesmo tamanho em todas as páginas (a mancha impressa) |
+| `designed` | imagens cobrindo boa parte das páginas, ou arte sob texto visível | página do PDF inteira, sangrando quando a proporção é parecida com a do livro |
+
+- Páginas 1 e 2 continuam sendo o rosto e o colofão do Live Book. Depois delas, uma página do livro por página do PDF (ou por metade de uma folha dupla).
+- Sumário: o outline do PDF (nível de cima; um nível a mais quando o de cima tem menos de 3 entradas). Sem outline, os títulos do texto: maiores que o corpo, curtos, em caixa alta, um por página. O cabeço e o fólio são menores que o corpo e ficam de fora.
+- Desenho sob demanda (`pdfPages.ts`): a textura da página (`PageTextures`) pede a impressão no tamanho em que vai desenhar. Enquanto ela não chega, a página fica em papel. Quando chega, a mesma textura é redesenhada. Enquanto a página está à vista, o pedido se renova (o folhear rápido enche a fila).
+- O documento do pdf.js fica aberto enquanto o livro está entre os 3 compostos. Quando ele sai, o documento é destruído.
+- Testes: `facsimile.test.ts` (tipo, divisão da folha dupla, recorte, paridade, sumário por outline e por títulos, OCR ruidoso). E2e: `test-designed.pdf` (4 páginas com arte sob o texto viram 6 páginas no livro).
+- Inspeção: `npm run pdf:probe -- <arquivo.pdf>` (páginas do original e do livro lado a lado em `shots/pdf-probe/`).

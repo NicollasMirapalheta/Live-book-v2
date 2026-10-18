@@ -25,7 +25,8 @@
     "pipeline": "node --env-file-if-exists=.env.local --import tsx scripts/pipeline.ts",
     "blender:assets": "node --env-file-if-exists=.env.local scripts/blender.mjs assets",
     "textures": "node --import tsx scripts/prepare-textures.ts",
-    "books:samples": "node --import tsx scripts/make-sample-pdfs.ts"
+    "books:samples": "node --import tsx scripts/make-sample-pdfs.ts",
+    "pdf:probe": "node --import tsx scripts/pdf-probe.ts"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",

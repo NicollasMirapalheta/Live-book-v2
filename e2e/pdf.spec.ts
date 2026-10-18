@@ -57,3 +57,18 @@ test('PDF com a mesma imagem em várias páginas não fica preparando para sempr
   await expect(form).toContainText(/\d+ páginas/, { timeout: 20_000 })
   await expect(form.getByRole('alert')).toHaveCount(0)
 })
+
+test('PDF diagramado (arte sob o texto) vira fac-símile: uma página do PDF por página do livro', async ({ page }) => {
+  await page.goto('/?e2e=1&node=N2')
+  await page.waitForFunction(() => window.__SCENE_READY__ === true && (window.__SEL__?.order.length ?? 0) > 0, undefined, { timeout: 90_000 })
+  await page.evaluate(async () => {
+    const blob = await (await fetch('/books/test-designed.pdf')).blob()
+    const dt = new DataTransfer()
+    dt.items.add(new File([blob], 'manual.pdf', { type: 'application/pdf' }))
+    window.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, cancelable: true }))
+  })
+  const form = page.getByRole('dialog', { name: 'Um livro para a estante' })
+  // rosto + colofão + as 4 páginas do PDF (set again, its 184 lines would take far more)
+  await expect(form).toContainText('6 páginas', { timeout: 20_000 })
+  await expect(form.getByRole('alert')).toHaveCount(0)
+})

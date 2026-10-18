@@ -4,7 +4,7 @@
 // the same plan draws line for line at any texture resolution.
 import type { TocEntry } from '../reader/toc'
 import { hyphenPoints } from './hyphenate'
-import type { Block, DocStructure } from './types'
+import type { Block, DocStructure, PdfMode } from './types'
 
 export interface FontSpec {
   /** fraction of the page height */
@@ -42,6 +42,12 @@ export type PlanItem =
   | { kind: 'text'; x: number; y: number; text: string; font: FontSpec; align: 'left' | 'center' }
   | { kind: 'image'; id: string; x: number; y: number; w: number; h: number }
   | { kind: 'rule'; x0: number; x1: number; y: number }
+  /**
+   * A page of the PDF printed as it is (facsimile.ts): `unit` indexes the layout's units; the box is in page
+   * units from the page's own top left (not the text block), and may run past the edges (full bleed).
+   * 'multiply' prints a scan on the paper (its paper brought to white); 'normal' lays a designed page over it.
+   */
+  | { kind: 'pdfpage'; unit: number; x: number; y: number; w: number; h: number; blend: 'multiply' | 'normal' }
 
 export interface PagePlan {
   /** 1-based */
@@ -58,6 +64,8 @@ export interface BookLayout {
   pages: PagePlan[]
   toc: TocEntry[]
   pageCount: number
+  /** how the PDF became this book (types.ts) */
+  mode?: PdfMode
 }
 
 export interface BookMeta {
@@ -200,18 +208,11 @@ export function breakLines(text: string, width: number, firstIndent: number, mea
   return lines
 }
 
-export function paginate(doc: DocStructure, meta: BookMeta, aspect: number, measure: Measure): BookLayout {
+/** Pages 1 and 2: the title page and, on its verso, the colophon. */
+export function frontMatter(title: string, subtitle: string | undefined, meta: BookMeta, aspect: number, note = 'Composto em Georgia no Live Book'): PagePlan[] {
   const W = aspect
   const textW = W * (1 - PAGE.inner - PAGE.outer)
-  const lineH = PAGE.body * PAGE.leading
-  // the book's own title (the user's) wins over whatever the PDF calls itself
-  const title = meta.title || doc.title || ''
-  // the PDF cover's subtitle only when it is one short line (a cover's list of stamps and labels is not one)
-  const subtitle = meta.subtitle ?? (doc.subtitle && doc.subtitle.length <= 70 ? doc.subtitle : undefined)
   const pages: PagePlan[] = []
-  const toc: TocEntry[] = [{ title: 'Página de rosto', page: 1 }]
-
-  // 1: title page; 2: colophon
   pages.push({
     page: 1,
     folio: false,
@@ -226,7 +227,7 @@ export function paginate(doc: DocStructure, meta: BookMeta, aspect: number, meas
     { text: title, italic: true },
     ...(subtitle ? [{ text: subtitle, italic: true }] : []),
     { text: '' },
-    { text: 'Composto em Georgia no Live Book' },
+    { text: note },
     ...(meta.source ? [{ text: `a partir de ${meta.source}` }] : []),
     ...(meta.year ? [{ text: String(meta.year) }] : []),
   ]
@@ -238,6 +239,19 @@ export function paginate(doc: DocStructure, meta: BookMeta, aspect: number, meas
       .filter((c) => c.text)
       .map((c) => ({ kind: 'text' as const, x: 0, y: colY + colophon.indexOf(c) * 0.026, text: c.text, font: { size: 0.0165, italic: c.italic }, align: 'left' as const })),
   })
+  return pages
+}
+
+export function paginate(doc: DocStructure, meta: BookMeta, aspect: number, measure: Measure): BookLayout {
+  const W = aspect
+  const textW = W * (1 - PAGE.inner - PAGE.outer)
+  const lineH = PAGE.body * PAGE.leading
+  // the book's own title (the user's) wins over whatever the PDF calls itself
+  const title = meta.title || doc.title || ''
+  // the PDF cover's subtitle only when it is one short line (a cover's list of stamps and labels is not one)
+  const subtitle = meta.subtitle ?? (doc.subtitle && doc.subtitle.length <= 70 ? doc.subtitle : undefined)
+  const pages = frontMatter(title, subtitle, meta, aspect)
+  const toc: TocEntry[] = [{ title: 'Página de rosto', page: 1 }]
 
   let cur: PagePlan | null = null
   let y = 0
@@ -374,5 +388,5 @@ export function paginate(doc: DocStructure, meta: BookMeta, aspect: number, meas
   if (last > 2) toc.push({ title: 'Última página', page: last })
   // a book has whole sheets
   if (pages.length % 2 === 1) pages.push({ page: pages.length + 1, items: [], folio: false })
-  return { title, subtitle, pages, toc, pageCount: pages.length }
+  return { title, subtitle, pages, toc, pageCount: pages.length, mode: 'reflow' }
 }

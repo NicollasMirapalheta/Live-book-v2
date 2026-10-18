@@ -99,7 +99,7 @@ export function BookReader({ book, d, openState, coverMesh, spineFoil, rightStac
   // the composed PDF, when the book has one (Fase 5); otherwise the provisional pages
   const content = useBookContent((s) => s.byId[book.id])
   const pages = useMemo<PageBook>(
-    () => (content?.status === 'ready' && content.layout ? { ...book, pageCount: content.layout.pageCount, layout: content.layout, images: content.images } : book),
+    () => (content?.status === 'ready' && content.layout ? { ...book, pageCount: content.layout.pageCount, layout: content.layout, images: content.images, pdfPages: content.pdfPages } : book),
     [book, content],
   )
   // drawn at the size the page shows on screen (framing.ts): sharp on a laptop, zoomed in or not

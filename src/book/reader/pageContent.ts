@@ -3,6 +3,7 @@
 // and the page number, on cream paper with a soft gutter shadow on the binding side.
 import { CanvasTexture, SRGBColorSpace, type Texture } from 'three'
 import { PAGE, type BookLayout, type FontSpec, type Measure } from '../pdf/paginate'
+import type { PdfPageSource } from '../pdf/pdfPages'
 import { chapterAt } from './toc'
 
 /** page texture height (px): 1.5K on the high tier, 1K on the low tier (budget: ≤ 2K / 1K) */
@@ -82,6 +83,20 @@ export interface PageBook {
   /** the PDF composed into pages (Fase 5); without it the provisional pages are drawn */
   layout?: BookLayout
   images?: Map<string, CanvasImageSource & { width: number; height: number }>
+  /** a facsimile's printed pages, drawn on demand (pdf/pdfPages.ts) */
+  pdfPages?: PdfPageSource
+}
+
+/** A facsimile print a page waits for: its unit and the height (px) it is drawn at. */
+export interface PrintRequest {
+  unit: number
+  px: number
+}
+
+/** While a page is drawn: whether it may ask for facsimile renders, and the prints it is still waiting for. */
+interface DrawJob {
+  request: boolean
+  waiting: PrintRequest[]
 }
 
 const fontCss = (f: FontSpec, H: number) => `${f.italic ? 'italic ' : ''}${f.bold ? 'bold ' : ''}${f.size * H}px ${SERIF}`
@@ -97,7 +112,7 @@ export function canvasMeasure(): Measure {
 }
 
 /** A composed page (pdf/paginate.ts): running head, lines, headings, images, folio. */
-function drawPlan(ctx: CanvasRenderingContext2D, book: PageBook, layout: BookLayout, page: number, W: number, H: number) {
+function drawPlan(ctx: CanvasRenderingContext2D, book: PageBook, layout: BookLayout, page: number, W: number, H: number, job: DrawJob) {
   const plan = layout.pages[page - 1]
   if (!plan) return
   const recto = page % 2 === 1
@@ -133,6 +148,18 @@ function drawPlan(ctx: CanvasRenderingContext2D, book: PageBook, layout: BookLay
       ctx.font = fontCss(it.font, H)
       const text = it.text.startsWith('CAPÍTULO') ? it.text.split('').join(String.fromCharCode(8202)) : it.text
       ctx.fillText(text, left + it.x * H, it.y * H, textW)
+    } else if (it.kind === 'pdfpage') {
+      const img = book.pdfPages?.get(it.unit, it.h * H, job.request)
+      if (!img) {
+        job.waiting.push({ unit: it.unit, px: it.h * H })
+        continue
+      }
+      ctx.save()
+      // a scan prints on the paper (its paper is white); a laid-out page covers it
+      if (it.blend === 'multiply') ctx.globalCompositeOperation = 'multiply'
+      ctx.imageSmoothingQuality = 'high'
+      ctx.drawImage(img, it.x * H, it.y * H, it.w * H, it.h * H)
+      ctx.restore()
     } else if (it.kind === 'image') {
       const img = book.images?.get(it.id)
       if (!img) continue
@@ -181,7 +208,7 @@ function scratchCanvas(W: number, H: number): HTMLCanvasElement {
  * Draws page `page` (1-based) of the book. Odd pages are rectos (binding on the left of the image),
  * even pages versos (binding on the right). Pages past pageCount are blank paper.
  */
-export function drawPage(book: PageBook, page: number, aspect: number, H: number = PAGE_TEX_HEIGHT.high): HTMLCanvasElement {
+export function drawPage(book: PageBook, page: number, aspect: number, H: number = PAGE_TEX_HEIGHT.high, waiting: PrintRequest[] = []): HTMLCanvasElement {
   const W = Math.round(H * aspect)
   const c = document.createElement('canvas')
   c.width = W
@@ -202,7 +229,7 @@ export function drawPage(book: PageBook, page: number, aspect: number, H: number
   const back = recto ? page + 1 : page - 1
   if (back >= 1 && back <= book.pageCount) {
     const off = scratchCanvas(W, H)
-    drawContent(off.getContext('2d')!, book, back, H * aspect, H)
+    drawContent(off.getContext('2d')!, book, back, H * aspect, H, { request: false, waiting: [] })
     ctx.save()
     // faint, diffuse (it comes through the paper, not printed on it: sharp, it read as a misprint when
     // zoomed in) and half a line off: the two sides never print on exactly the same baselines
@@ -213,7 +240,7 @@ export function drawPage(book: PageBook, page: number, aspect: number, H: number
     ctx.drawImage(off, 0, Math.round(H * 0.015))
     ctx.restore()
   }
-  drawContent(ctx, book, page, H * aspect, H)
+  drawContent(ctx, book, page, H * aspect, H, { request: true, waiting })
 
   // gutter: the paper curves into the binding and darkens
   const gw = W * 0.11
@@ -229,8 +256,8 @@ export function drawPage(book: PageBook, page: number, aspect: number, H: number
 /** The printed part of a page (no paper): title page, colophon or running head + body + folio. */
 // sizes are fractions of the page, never rounded: the same page lays out line for line at any resolution
 // (rounded font sizes reflowed the text between the riffle textures and the full-size ones)
-function drawContent(ctx: CanvasRenderingContext2D, book: PageBook, page: number, W: number, H: number) {
-  if (book.layout) return drawPlan(ctx, book, book.layout, page, W, H)
+function drawContent(ctx: CanvasRenderingContext2D, book: PageBook, page: number, W: number, H: number, job: DrawJob) {
+  if (book.layout) return drawPlan(ctx, book, book.layout, page, W, H, job)
   const recto = page % 2 === 1
   const inner = W * 0.13
   const outer = W * 0.1
@@ -321,14 +348,38 @@ export class PageTextures {
   private book: PageBook
   private aspect: number
   private max: number
-
   private height: number
+  /** facsimile pages drawn before their print arrived: page → prints still missing */
+  private waiting = new Map<string, PrintRequest[]>()
+  private unsubscribe?: () => void
 
   constructor(book: PageBook, aspect: number, height: number = PAGE_TEX_HEIGHT.high, max = 8) {
     this.height = height
     this.book = book
     this.aspect = aspect
     this.max = max
+    // a print landed: the textures that were waiting for it are drawn again (same texture, new canvas)
+    this.unsubscribe = book.pdfPages?.subscribe((unit) => {
+      for (const [key, prints] of this.waiting) if (prints.some((p) => p.unit === unit)) this.redraw(key)
+    })
+  }
+
+  private redraw(key: string) {
+    const t = this.cache.get(key)
+    if (!t) {
+      this.waiting.delete(key)
+      return
+    }
+    t.image = this.draw(key)
+    t.needsUpdate = true
+  }
+
+  private draw(key: string) {
+    const waiting: PrintRequest[] = []
+    const canvas = drawPage(this.book, Number(key), this.aspect, this.height, waiting)
+    if (waiting.length) this.waiting.set(key, waiting)
+    else this.waiting.delete(key)
+    return canvas
   }
 
   get(page: number): Texture {
@@ -337,9 +388,16 @@ export class PageTextures {
     if (hit) {
       this.cache.delete(key)
       this.cache.set(key, hit)
+      // still waiting for a print: ask again while the page is in view (a fast riffle's requests can push
+      // it out of the render queue), and draw it if another texture's request brought it meanwhile
+      const prints = this.waiting.get(key)
+      if (prints && this.book.pdfPages) {
+        const pdf = this.book.pdfPages
+        if (prints.some((p) => pdf.get(p.unit, p.px) !== undefined)) this.redraw(key)
+      }
       return hit
     }
-    const t = new CanvasTexture(drawPage(this.book, page, this.aspect, this.height))
+    const t = new CanvasTexture(this.draw(key))
     t.colorSpace = SRGBColorSpace
     t.anisotropy = 8
     this.cache.set(key, t)
@@ -347,12 +405,15 @@ export class PageTextures {
       const [oldKey, old] = this.cache.entries().next().value as [string, Texture]
       old.dispose()
       this.cache.delete(oldKey)
+      this.waiting.delete(oldKey)
     }
     return t
   }
 
   dispose() {
+    this.unsubscribe?.()
     for (const t of this.cache.values()) t.dispose()
     this.cache.clear()
+    this.waiting.clear()
   }
 }

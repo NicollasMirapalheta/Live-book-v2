@@ -3,8 +3,10 @@ import { params } from '../../app/params'
 import { TRIM_SIZES } from '../geometry'
 import { canvasMeasure } from '../reader/pageContent'
 import type { Trim } from '../types'
-import { extractPdf } from './extract'
+import { extractPdf, type Extracted } from './extract'
+import { facsimileUnits, paginateFacsimile, type Unit } from './facsimile'
 import { paginate, type BookLayout } from './paginate'
+import { PdfPages, type PdfPageSource } from './pdfPages'
 import { buildStructure } from './structure'
 
 export interface ContentBook {
@@ -26,6 +28,8 @@ export interface BookContent {
   status: 'loading' | 'ready' | 'error'
   layout?: BookLayout
   images?: Map<string, CanvasImageSource & { width: number; height: number }>
+  /** a facsimile's printed pages (scan or laid-out book), drawn on demand from the open PDF */
+  pdfPages?: PdfPageSource
   error?: string
   /** 0..1 while loading (reading the PDF is most of it) */
   progress?: number
@@ -54,22 +58,57 @@ interface ContentState {
   forget: (id: string) => void
 }
 
-/** PDF → structure → pages, timed for the console (the budget is < 1 s for a 300-page book). */
-async function compose(book: ContentBook, data: ArrayBuffer, source: string, onProgress: (p: number) => void): Promise<Pick<BookContent, 'layout' | 'images'>> {
-  const t0 = performance.now()
-  const { raw, images } = await extractPdf(data, (p) => onProgress(p * 0.95))
-  const t1 = performance.now()
-  const structure = buildStructure(raw)
+/** A PDF as read: kept per book, so composing it again (the form saves with the final title, a new trim) only lays out the pages. */
+interface Source {
+  /** the file it came from: the same Blob, URL or loader is the same PDF */
+  of: unknown
+  extracted: Extracted
+  /** facsimile: its printed pages, drawn from the open document */
+  pdfPages?: PdfPages
+  units?: Unit[]
+}
+
+const sources = new Map<string, Source>()
+const sourceOf = (book: ContentBook) => book.pdf ?? book.loadPdf ?? book.pdfUrl
+
+function dropSource(id: string) {
+  sources.get(id)?.pdfPages?.destroy()
+  sources.delete(id)
+}
+
+/** Reads the PDF (pdf.js), or reuses the reading of the same file. */
+async function readSource(book: ContentBook, onProgress: (p: number) => void): Promise<Source> {
+  const prev = sources.get(book.id)
+  if (prev && prev.of === sourceOf(book)) return prev
+  const data = await (book.pdf
+    ? book.pdf.arrayBuffer()
+    : book.loadPdf
+      ? book.loadPdf().then((b) => b.arrayBuffer())
+      : fetch(book.pdfUrl!).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${book.pdfUrl}: ${r.status}`)))))
+  const extracted = await extractPdf(data, (p) => onProgress(p * 0.95))
+  const source: Source = { of: sourceOf(book), extracted }
+  if (extracted.facsimile && extracted.doc) {
+    source.units = facsimileUnits(extracted.facsimile)
+    source.pdfPages = new PdfPages(extracted.doc, source.units, extracted.mode === 'scan')
+  }
+  return source
+}
+
+/** The pages of the book from its PDF as read (the budget is < 1 s for a 300-page book). */
+function compose(book: ContentBook, source: Source, name: string): Pick<BookContent, 'layout' | 'images' | 'pdfPages'> {
+  const { mode, raw, images, facsimile } = source.extracted
   const { width, height } = TRIM_SIZES[book.trim]
   const year = book.createdAt ? new Date(book.createdAt).getFullYear() : undefined
   // colophon: the PDF's own title, else a readable file name; nothing when it just repeats the book's title
-  const origin = raw.title || titleFromFile(source).replace(/-+/g, ' ')
+  const origin = raw.title || titleFromFile(name).replace(/-+/g, ' ')
   const from = origin && origin.toLowerCase() !== book.title.toLowerCase() ? origin : undefined
-  const layout = paginate(structure, { title: book.title, subtitle: book.subtitle, source: from, year }, width / height, canvasMeasure())
-  const t2 = performance.now()
-  if (import.meta.env.DEV || params.e2e)
-    console.info(`[pdf] ${book.id}: ${raw.pages.length} páginas no PDF → ${layout.pageCount} no livro (leitura ${Math.round(t1 - t0)} ms, composição ${Math.round(t2 - t1)} ms)`)
-  return { layout, images }
+  const meta = { title: book.title, subtitle: book.subtitle, source: from, year }
+  const layout: BookLayout =
+    facsimile && source.units
+      ? paginateFacsimile(facsimile, meta, width / height, source.units)
+      : paginate(buildStructure(raw), meta, width / height, canvasMeasure())
+  if (import.meta.env.DEV || params.e2e) console.info(`[pdf] ${book.id}: ${facsimile?.pages.length ?? raw.pages.length} páginas no PDF → ${layout.pageCount} no livro, ${mode}`)
+  return { layout, images, pdfPages: source.pdfPages }
 }
 
 /** Book ids, most recently used last. */
@@ -86,6 +125,7 @@ function evict(byId: Record<string, BookContent>, keep: string): Record<string, 
   const ready = recent.filter((id) => byId[id]?.status === 'ready')
   for (const id of ready.slice(0, Math.max(0, ready.length - KEEP_BOOKS))) {
     if (id === keep) continue
+    dropSource(id)
     delete byId[id]
     recent.splice(recent.indexOf(id), 1)
   }
@@ -95,28 +135,29 @@ function evict(byId: Record<string, BookContent>, keep: string): Record<string, 
 export const useBookContent = create<ContentState>((set, get) => {
   const load = (book: ContentBook): Promise<BookContent> => {
     const startedAt = performance.now()
+    // another file for this book: the reading of the old one (and a facsimile's open PDF) goes
+    if (sources.has(book.id) && sources.get(book.id)!.of !== sourceOf(book)) dropSource(book.id)
     set((s) => ({ byId: { ...s.byId, [book.id]: { status: 'loading', progress: 0, startedAt } } }))
     const current = () => get().byId[book.id]?.startedAt === startedAt
     const progress = (p: number) => {
       if (current()) set((s) => ({ byId: { ...s.byId, [book.id]: { ...s.byId[book.id], progress: p } } }))
     }
     const name = book.pdfName ?? book.pdfUrl?.split('/').pop() ?? 'livro.pdf'
-    const read = (): Promise<ArrayBuffer> => {
-      if (book.pdf) return book.pdf.arrayBuffer()
-      if (book.loadPdf) return book.loadPdf().then((b) => b.arrayBuffer())
-      const url = book.pdfUrl!
-      return fetch(url).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${url}: ${r.status}`))))
-    }
     let timer: ReturnType<typeof setTimeout> | undefined
     const timeout = new Promise<never>((_, reject) => {
       timer = setTimeout(() => reject(new Error('o PDF demorou demais para ler')), TIMEOUT_MS)
     })
-    return read()
-      .then((data) => Promise.race([compose(book, data, name, progress), timeout]))
-      .then((done): BookContent => {
-        const content: BookContent = { status: 'ready', ...done }
+    const t0 = performance.now()
+    return Promise.race([readSource(book, progress), timeout])
+      .then((source): BookContent => {
+        const t1 = performance.now()
+        const content: BookContent = { status: 'ready', ...compose(book, source, name) }
+        if (import.meta.env.DEV || params.e2e) console.info(`[pdf] ${book.id}: leitura ${Math.round(t1 - t0)} ms, composição ${Math.round(performance.now() - t1)} ms`)
         // a newer composition may have replaced this one meanwhile
-        if (current()) set((s) => ({ byId: evict({ ...s.byId, [book.id]: content }, book.id) }))
+        if (current()) {
+          sources.set(book.id, source)
+          set((s) => ({ byId: evict({ ...s.byId, [book.id]: content }, book.id) }))
+        } else if (sources.get(book.id) !== source) source.pdfPages?.destroy()
         return content
       })
       .catch((err: unknown): BookContent => {
@@ -141,6 +182,7 @@ export const useBookContent = create<ContentState>((set, get) => {
     forget: (id) =>
       set((s) => {
         const byId = { ...s.byId }
+        dropSource(id)
         delete byId[id]
         return { byId }
       }),
@@ -149,7 +191,7 @@ export const useBookContent = create<ContentState>((set, get) => {
 
 declare global {
   interface Window {
-    __CONTENT__?: { status: (id: string) => BookContent['status'] | null; pageCount: (id: string) => number | null; toc: (id: string) => string[] }
+    __CONTENT__?: { status: (id: string) => BookContent['status'] | null; pageCount: (id: string) => number | null; toc: (id: string) => string[]; mode: (id: string) => string | null }
   }
 }
 
@@ -158,5 +200,6 @@ if (params.e2e) {
     status: (id) => useBookContent.getState().byId[id]?.status ?? null,
     pageCount: (id) => useBookContent.getState().byId[id]?.layout?.pageCount ?? null,
     toc: (id) => useBookContent.getState().byId[id]?.layout?.toc.map((e) => e.title) ?? [],
+    mode: (id) => useBookContent.getState().byId[id]?.layout?.mode ?? null,
   }
 }

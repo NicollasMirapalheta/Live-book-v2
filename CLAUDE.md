@@ -43,7 +43,7 @@ Combinação de versões verificada em 14/10/2026: three 0.186, fiber 9.8, drei 
 
 ## Comandos
 
-`npm run dev` · `npm run check` (tsc + lint + build) · `npm run test` · `npm run e2e` · `npm run shot` (screenshots, ver spec da Fase 0) · `npm run pipeline -- --quality draft|final` · `npm run assets:fetch`. O Blender é sempre chamado pelo wrapper `scripts/blender.mjs` (nunca `$BLENDER_BIN` no `package.json`).
+`npm run dev` · `npm run check` (tsc + lint + build) · `npm run test` · `npm run e2e` · `npm run shot` (screenshots, ver spec da Fase 0) · `npm run pipeline -- --quality draft|final` · `npm run assets:fetch` · `npm run pdf:probe -- <arquivo.pdf>` (pipeline de PDF real no Chromium: páginas originais × compostas). O Blender é sempre chamado pelo wrapper `scripts/blender.mjs` (nunca `$BLENDER_BIN` no `package.json`).
 
 ## Fluxo de trabalho
 

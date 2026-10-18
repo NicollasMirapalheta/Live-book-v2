@@ -335,3 +335,19 @@ mkdirSync(OUT, { recursive: true })
   writeFileSync(`${OUT}/test-shared-image.pdf`, await pdf.save())
   console.log('[samples] test-shared-image.pdf: 3 páginas com a mesma imagem')
 }
+
+// Fixture (e2e): a laid-out book — every page has a full-page picture under its text, the way an RPG
+// manual or a magazine is set. It becomes a facsimile (one PDF page per book page), not text set again.
+{
+  const pdf = await PDFDocument.create()
+  const times = await pdf.embedFont(StandardFonts.TimesRoman)
+  const art = await pdf.embedPng(await drawing('coast', 11))
+  for (let n = 0; n < 4; n++) {
+    const page = pdf.addPage([A4.w, A4.h])
+    page.drawImage(art, { x: 0, y: 0, width: A4.w, height: A4.h, opacity: 0.35 })
+    let y = A4.h - M.top
+    for (let i = 0; i < 46; i++, y -= LEAD) page.drawText(`Linha ${i + 1} da página ${n + 1}, composta sobre uma ilustração de página inteira.`, { x: M.left, y, size: BODY, font: times })
+  }
+  writeFileSync(`${OUT}/test-designed.pdf`, await pdf.save())
+  console.log('[samples] test-designed.pdf: 4 páginas diagramadas (ilustração sob o texto)')
+}
